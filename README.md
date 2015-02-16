@@ -1,2 +1,2 @@
-# rpntt
-Raspberry PI NFC Time Tracker
+# rpntts
+Raspberry PI NFC Time Tracking System  [ˈɑːpˈiːˈɛntˈɪtɪz]
