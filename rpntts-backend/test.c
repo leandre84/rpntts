@@ -71,7 +71,8 @@ int main(int argc, char **argv) {
 	phbalReg_RpiSpi_DataParams_t balReader;
 	phhalHw_Rc523_DataParams_t halReader;
 	phStatus_t status;
-	uint8_t bHalBufferReader[0x40];
+	uint8_t bHalBufferTx[0x40];
+	uint8_t bHalBufferRx[0x40];
 
 	argc = argc;
 	argv = argv;
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* Init HAL */
-	status = phhalHw_Rc523_Init(&halReader, sizeof(phhalHw_Rc523_DataParams_t), &balReader, 0, bHalBufferReader, sizeof(bHalBufferReader), bHalBufferReader, sizeof(bHalBufferReader));
+	status = phhalHw_Rc523_Init(&halReader, sizeof(phhalHw_Rc523_DataParams_t), &balReader, 0, bHalBufferTx, sizeof(bHalBufferTx), bHalBufferRx, sizeof(bHalBufferRx));
 	if (status != PH_ERR_SUCCESS) {
 		fprintf(stderr, "Error initializing HAL!\n");
 		return 3;
@@ -156,7 +157,7 @@ uint32_t DetectMifare(void *halReader) {
 
 	/* Initialize the Mifare PAL component */
 	PH_CHECK_SUCCESS_FCT(status, phpalMifare_Sw_Init(&palMifare,
-			sizeof(phpalMifare_Sw_DataParams_t), halReader, &I14443p4));
+			sizeof(phpalMifare_Sw_DataParams_t), halReader, &I14443p3a));
 
 	/* Initialize Ultralight(-C) AL component */
 	PH_CHECK_SUCCESS_FCT(status, phalMful_Sw_Init(&alMful,
@@ -325,7 +326,7 @@ uint32_t DetectMifare(void *halReader) {
 		/* Test block read MF classic */
 		if (detected_card == mifare_classic) {
 			fprintf(stdout, "Trying to authenticate...\n");
-			status = phalMfc_Authenticate(&alMfc, 1, PHHAL_HW_MFC_KEYB, 1, 0, bUid, bLength);
+			status = phalMfc_Authenticate(&alMfc, 0, PHHAL_HW_MFC_KEYA, 1, 0, bUid, bLength);
 			if (status != PH_ERR_SUCCESS) {
 				if (status == PH_ERR_AUTH_ERROR) {
 					fprintf(stderr, "Auth error while trying to authenticate to Mifare Classic\n");
@@ -337,9 +338,9 @@ uint32_t DetectMifare(void *halReader) {
 					fprintf(stderr, "Timeout while trying to authenticate to Mifare Classic\n");
 				}
 				else {
-					fprintf(stderr, "Unknown error while trying to authenticate to Mifare Classic: %d\n", status);
+					fprintf(stderr, "Unknown error while trying to authenticate to Mifare Classic: 0x%02X\n", status);
 				}
-				continue;
+				/* continue; */
 			}
 			for(j=0; j<16; j++) {
 			        readstatus = phalMfc_Read(&alMfc, j, pBlockData);
