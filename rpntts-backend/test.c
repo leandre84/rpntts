@@ -337,14 +337,14 @@ uint32_t DetectMifare(void *halReader) {
                     readstatus = phalMfc_Read(&alMfc, j, pBlockData);
             }
                     if (readstatus == PH_ERR_SUCCESS) {
-                    printf("Block %d: ", j);
-                    for(i = 0; i < 16; i++) {
+                        printf("Block %d: ", j);
+                        for(i = 0; i < 16; i++) {
                             printf("%02X ", pBlockData[i]);
-                    }
-                    printf("\n");
+                        }
+                        printf("\n");
                     }
                     else {
-                    printf("Cannot read block %d\n", j);
+                        printf("Cannot read block %d\n", j);
                     }
             }
         }
