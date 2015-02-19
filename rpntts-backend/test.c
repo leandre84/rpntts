@@ -64,7 +64,6 @@
 
 
 uint32_t DetectMifare(void *halReader);
-phStatus_t readerIC_Cmd_SoftReset(void *halReader);
 
 int main(int argc, char **argv) {
 
@@ -131,7 +130,7 @@ uint32_t DetectMifare(void *halReader) {
     phKeyStore_Sw_KeyEntry_t pKeyEntries[NUMBER_OF_KEYENTRIES];
     phKeyStore_Sw_KeyVersionPair_t pKeyVersionPairs[NUMBER_OF_KEYVERSIONPAIRS * NUMBER_OF_KEYENTRIES];
     phKeyStore_Sw_KUCEntry_t pKUCEntries[NUMBER_OF_KUCENTRIES];
-    uint8_t Key[PH_KEYSTORE_KEY_TYPE_MIFARE_SIZE];
+    uint8_t Key[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
     uint8_t bUid[10];
     uint8_t bLength;
@@ -147,66 +146,107 @@ uint32_t DetectMifare(void *halReader) {
     phStatus_t readstatus;
 
     /* Initialize the 14443-3A PAL (Protocol Abstraction Layer) component */
-    PH_CHECK_SUCCESS_FCT(status, phpalI14443p3a_Sw_Init(&I14443p3a,
-            sizeof(phpalI14443p3a_Sw_DataParams_t), halReader));
+    status = phpalI14443p3a_Sw_Init(&I14443p3a, sizeof(phpalI14443p3a_Sw_DataParams_t), halReader);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error initializing the 14443-3A PAL\n");
+        return false;
+    }
 
     /* Initialize the 14443-4 PAL component */
-    PH_CHECK_SUCCESS_FCT(status, phpalI14443p4_Sw_Init(&I14443p4,
-            sizeof(phpalI14443p4_Sw_DataParams_t), halReader));
+    status =  phpalI14443p4_Sw_Init(&I14443p4, sizeof(phpalI14443p4_Sw_DataParams_t), halReader);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error initializing the 14443-P4 PAL\n");
+        return false;
+    }
 
     /* Initialize the Mifare PAL component */
-    PH_CHECK_SUCCESS_FCT(status, phpalMifare_Sw_Init(&palMifare,
-            sizeof(phpalMifare_Sw_DataParams_t), halReader, &I14443p3a));
+    status = phpalMifare_Sw_Init(&palMifare, sizeof(phpalMifare_Sw_DataParams_t), halReader, &I14443p3a);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error initializing the Mifare PAL\n");
+        return false;
+    }
 
     /* Initialize Ultralight(-C) AL component */
-    PH_CHECK_SUCCESS_FCT(status, phalMful_Sw_Init(&alMful,
-            sizeof(phalMful_Sw_DataParams_t), &palMifare, NULL, NULL, NULL));
+    status = phalMful_Sw_Init(&alMful, sizeof(phalMful_Sw_DataParams_t), &palMifare, NULL, NULL, NULL);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error initializing the Mifare Ultralight AL\n");
+        return false;
+    }
 
     /* Initialize Classic AL component */
-    PH_CHECK_SUCCESS_FCT(status, phalMfc_Sw_Init(&alMfc,
-            sizeof(phalMfc_Sw_DataParams_t), &palMifare, NULL));
+    status = phalMfc_Sw_Init(&alMfc, sizeof(phalMfc_Sw_DataParams_t), &palMifare, NULL);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error initializing the 14443-3A PAL\n");
+        return false;
+    }
 
     /* Initialize the keystore component */
-    PH_CHECK_SUCCESS_FCT(status, phKeyStore_Sw_Init(&SwkeyStore,
-        sizeof(phKeyStore_Sw_DataParams_t),
-        &pKeyEntries[0],NUMBER_OF_KEYENTRIES,&pKeyVersionPairs[0],
-        NUMBER_OF_KEYVERSIONPAIRS, &pKUCEntries[0], NUMBER_OF_KUCENTRIES));
+    status = phKeyStore_Sw_Init(&SwkeyStore, sizeof(phKeyStore_Sw_DataParams_t), &pKeyEntries[0],NUMBER_OF_KEYENTRIES,&pKeyVersionPairs[0], NUMBER_OF_KEYVERSIONPAIRS, &pKUCEntries[0], NUMBER_OF_KUCENTRIES);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error initializing the keystore\n");
+        return false;
+    }
 
     /* Format the keystore */
-    PH_CHECK_SUCCESS_FCT(status, phKeyStore_FormatKeyEntry(&SwkeyStore, 1, PH_KEYSTORE_KEY_TYPE_MIFARE));
+    status = phKeyStore_FormatKeyEntry(&SwkeyStore, 1, PH_KEYSTORE_KEY_TYPE_MIFARE);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error formating entry 1 of the keystore\n");
+        return false;
+    }
 
     /* Put key into keystore */
-        memcpy(Key, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", PH_KEYSTORE_KEY_TYPE_MIFARE_SIZE);
-    PH_CHECK_SUCCESS_FCT(status, phKeyStore_SetKey(&SwkeyStore, 1, 0, PH_KEYSTORE_KEY_TYPE_MIFARE, Key, 0));
+    status = phKeyStore_SetKey(&SwkeyStore, 1, 0, PH_KEYSTORE_KEY_TYPE_MIFARE, Key, 0);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error setting keystore element 1\n");
+        return false;
+    }
 
     /* Soft reset the IC */
     phhalHw_Rc523_Cmd_SoftReset(halReader);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error soft resetting the HAL\n");
+        return false;
+    }
 
-    /* Reset the Rf field */
-    phhalHw_FieldReset(halReader);
-
+    /* TODO: redundant? */
     /* Reset the RF field */
-    PH_CHECK_SUCCESS_FCT(status, phhalHw_FieldReset(halReader));
+    phhalHw_FieldReset(halReader);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error resetting the RF field\n");
+        return false;
+    }
 
-    /* Apply the type A protocol settings
-     * and activate the RF field. */
-    PH_CHECK_SUCCESS_FCT(status,
-            phhalHw_ApplyProtocolSettings(halReader, PHHAL_HW_CARDTYPE_ISO14443A));
+    /* Apply the type A protocol settings and activate the RF field. */
+    status = phhalHw_ApplyProtocolSettings(halReader, PHHAL_HW_CARDTYPE_ISO14443A);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error applying protocol settings and activating the RF field\n");
+        return false;
+    }
 
     /* Empty the pAtqa */
     memset(pAtqa, '\0', 2);
     status = phpalI14443p3a_RequestA(&I14443p3a, pAtqa);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error doing Request A\n");
+        return false;
+    }
 
-    /* Reset the RF field */
-    PH_CHECK_SUCCESS_FCT(status, phhalHw_FieldReset(halReader));
+    /* Reset the RF field  */
+    status = phhalHw_FieldReset(halReader);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error doing Request A\n");
+        return false;
+    }
 
     /* Empty the bSak */
     memset(bSak, '\0', 1);
 
-    /* Activate the communication layer part 3
-     * of the ISO 14443A standard. */
-    status = phpalI14443p3a_ActivateCard(&I14443p3a,
-        NULL, 0x00, bUid, &bLength, bSak, &bMoreCardsAvailable);
+    /* Activate the communication layer part 3 of the ISO 14443A standard. */
+    status = phpalI14443p3a_ActivateCard(&I14443p3a, NULL, 0x00, bUid, &bLength, bSak, &bMoreCardsAvailable);
+    if (status != PH_ERR_SUCCESS) {
+        fprintf(stderr, "Error activating card\n");
+        /* return false; */
+    }
 
     sak_atqa = bSak[0] << 24 | pAtqa[0] << 8 | pAtqa[1];
     sak_atqa &= 0xFFFF0FFF;
