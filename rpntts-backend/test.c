@@ -145,6 +145,12 @@ uint32_t DetectMifare(void *halReader) {
     uint8_t pBlockData[16];
     phStatus_t readstatus;
 
+    /* Test keystore */
+    uint16_t wKeyVersion = 0xFFFF;
+    uint16_t wKeyVersionLength = 0xFFFF;
+    uint16_t wKeyType = 0xFFFF;
+     
+
     /* Initialize the 14443-3A PAL (Protocol Abstraction Layer) component */
     status = phpalI14443p3a_Sw_Init(&I14443p3a, sizeof(phpalI14443p3a_Sw_DataParams_t), halReader);
     if (status != PH_ERR_SUCCESS) {
@@ -370,8 +376,15 @@ uint32_t DetectMifare(void *halReader) {
                     }
                     else {
                         fprintf(stderr, "Unknown error while trying to authenticate to Mifare Classic: 0x%02X\n", status);
+                        status = phKeyStore_GetKeyEntry(&SwkeyStore, 0, 1, &wKeyVersion, &wKeyVersionLength, &wKeyType);
+                        if (status == PH_ERR_SUCCESS) {
+                            fprintf(stderr, "KeyVersion: %d, KeyVersionLength: %d, KeyType: %d\n", wKeyVersion, wKeyVersionLength, wKeyType);
+                        }
+                        else {
+                            fprintf(stderr, "Error reading from keystore: Status: %02X\n", status);
+                        }
                 }
-                /* return detected_card */
+                return detected_card;
             }
             for(j=0; j<16; j++) {
                     readstatus = phalMfc_Read(&alMfc, j, pBlockData);
