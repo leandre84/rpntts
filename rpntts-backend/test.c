@@ -393,7 +393,9 @@ int32_t DetectMifare(void *halReader, uint8_t *bUid, uint8_t *pbLength) {
                 }
             }
 
-            /* Read block */
+            /* Read block
+             * phalMfcRead and phalMfulRead resolve to the same Mifare read function
+             * so we may use either function to read data blocks of Mifare cards */
             readstatus = phalMfc_Read(&alMfc, i, pBlockData);
             if (readstatus == PH_ERR_SUCCESS) {
                 printf("Block %2d: ", i);
