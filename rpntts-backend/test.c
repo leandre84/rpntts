@@ -365,10 +365,12 @@ uint32_t DetectMifare(void *halReader) {
 
     /* Read MF classic */
     if (detected_card == mifare_classic || detected_card == mifare_ultralight) {
+
         /* Set number of data blocks according to detected card */
         datablocks = (detected_card == mifare_classic) ? 64 : 16;
 
         for (i = 0; i < datablocks; i++) {
+
             /* Authenticate to Mifare Classic Sector */
             if (detected_card == mifare_classic && i % 4 == 0) {
                 for (j = 0; j < NUMBER_OF_KEYENTRIES; j++) {
@@ -388,6 +390,7 @@ uint32_t DetectMifare(void *halReader) {
                     }
                 }
             }
+
             /* Read block */
             readstatus = phalMfc_Read(&alMfc, i, pBlockData);
             if (readstatus == PH_ERR_SUCCESS) {
@@ -400,6 +403,7 @@ uint32_t DetectMifare(void *halReader) {
             else {
                 printf("Cannot read block %d\n", i);
             }
+
         }
     }
 
