@@ -294,121 +294,119 @@ uint32_t DetectMifare(void *halReader) {
                 break;
             default:
                 break;
-            }
-
-            if (detected_card == 0xFFFF) {
-                sak_atqa = bSak[0] << 24 | pAtqa[0] << 8 | pAtqa[1];
-                switch (sak_atqa)    {
-                    case sak_ul << 24 | atqa_ul:
-                    printf("MIFARE Ultralight detected\n");
-                    detected_card &= mifare_ultralight;
-                    break;
-                case sak_mfp_2k_sl2 << 24 | atqa_mfp_s:
-                    printf("MIFARE Plus detected\n");
-                    detected_card &= mifare_plus;
-                    break;
-                case sak_mfp_2k_sl3 << 24 | atqa_mfp_s_2K:
-                    printf("MIFARE Plus detected\n");
-                    detected_card &= mifare_plus;
-                    break;
-                case sak_mfp_2k_sl3 << 24 | atqa_mfp_s:
-                    printf("MIFARE Plus detected\n");
-                    detected_card &= mifare_plus;
-                    break;
-                case sak_mfp_4k_sl2 << 24 | atqa_mfp_s:
-                    printf("MIFARE Plus detected\n");
-                    detected_card &= mifare_plus;
-                    break;
-                case sak_mfp_2k_sl2 << 24 | atqa_mfp_x:
-                    printf("MIFARE Plus detected\n");
-                    detected_card &= mifare_plus;
-                    break;
-                case sak_mfp_2k_sl3 << 24 | atqa_mfp_x:
-                    printf("MIFARE Plus detected\n");
-                    detected_card &= mifare_plus;
-                    break;
-                case sak_mfp_4k_sl2 << 24 | atqa_mfp_x:
-                    printf("MIFARE Plus detected\n");
-                    detected_card &= mifare_plus;
-                    break;
-                case sak_desfire << 24 | atqa_desfire:
-                    printf("MIFARE DESFire detected\n");
-                    detected_card &= mifare_desfire;
-                    break;
-                case sak_layer4 << 24 | atqa_nPA:
-                    printf("German eID (neuer Personalausweis) detected\n");
-                    detected_card &= nPA;
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-        else {
-            /* No MIFARE card is in the field */
-            return false;
         }
 
-        /* There is a MIFARE card in the field, but we cannot determine it */
-        if (!status && detected_card == 0xFFFF) {
-            printf("Unknown MIFARE card detected\n");
-        }
-
-        /* Print card's UID */
-        if (bLength > 0) {
-            printf("UID: ");
-            for(i = 0; i < bLength; i++) {
-                printf("%02X ", bUid[i]);
+        if (detected_card == 0xFFFF) {
+            sak_atqa = bSak[0] << 24 | pAtqa[0] << 8 | pAtqa[1];
+            switch (sak_atqa)    {
+                case sak_ul << 24 | atqa_ul:
+                printf("MIFARE Ultralight detected\n");
+                detected_card &= mifare_ultralight;
+                break;
+            case sak_mfp_2k_sl2 << 24 | atqa_mfp_s:
+                printf("MIFARE Plus detected\n");
+                detected_card &= mifare_plus;
+                break;
+            case sak_mfp_2k_sl3 << 24 | atqa_mfp_s_2K:
+                printf("MIFARE Plus detected\n");
+                detected_card &= mifare_plus;
+                break;
+            case sak_mfp_2k_sl3 << 24 | atqa_mfp_s:
+                printf("MIFARE Plus detected\n");
+                detected_card &= mifare_plus;
+                break;
+            case sak_mfp_4k_sl2 << 24 | atqa_mfp_s:
+                printf("MIFARE Plus detected\n");
+                detected_card &= mifare_plus;
+                break;
+            case sak_mfp_2k_sl2 << 24 | atqa_mfp_x:
+                printf("MIFARE Plus detected\n");
+                detected_card &= mifare_plus;
+                break;
+            case sak_mfp_2k_sl3 << 24 | atqa_mfp_x:
+                printf("MIFARE Plus detected\n");
+                detected_card &= mifare_plus;
+                break;
+            case sak_mfp_4k_sl2 << 24 | atqa_mfp_x:
+                printf("MIFARE Plus detected\n");
+                detected_card &= mifare_plus;
+                break;
+            case sak_desfire << 24 | atqa_desfire:
+                printf("MIFARE DESFire detected\n");
+                detected_card &= mifare_desfire;
+                break;
+            case sak_layer4 << 24 | atqa_nPA:
+                printf("German eID (neuer Personalausweis) detected\n");
+                detected_card &= nPA;
+                break;
+            default:
+                break;
             }
-            printf("\n\n");
         }
+    }
+    else {
+        /* No MIFARE card is in the field */
+        return false;
+    }
 
-        /* Read MF classic */
-        if (detected_card == mifare_classic || detected_card == mifare_ultralight) {
-            if (detected_card == mifare_classic) {
-            }
+    /* There is a MIFARE card in the field, but we cannot determine it */
+    if (!status && detected_card == 0xFFFF) {
+        printf("Unknown MIFARE card detected\n");
+    }
 
-            /* Set number of data blocks according to detected card */
-            datablocks = (detected_card == mifare_classic) ? 64 : 32;
+    /* Print card's UID */
+    if (bLength > 0) {
+        printf("UID: ");
+        for(i = 0; i < bLength; i++) {
+            printf("%02X ", bUid[i]);
+        }
+        printf("\n\n");
+    }
 
-            for (i = 0; i < datablocks; i++) {
-                    /* Authenticate to Mifare Classic Sector */
-                    if (detected_card == mifare_classic && i % 4 == 0) {
-                        for (j = 0; j < NUMBER_OF_KEYENTRIES; j++) {
-                            /* fprintf(stdout, "Trying to authenticate with key %d\n", j+1); */
-                            status = phalMfc_Authenticate(&alMfc, i, PHHAL_HW_MFC_KEYA, j+1, 0, bUid, bLength);
-                            if (status != PH_ERR_SUCCESS) {
-                                /* fprintf(stderr, "Error while trying to authenticate to Mifare Classic: 0x%02X\n", status); */
-                                status = phpalI14443p3a_ActivateCard(&I14443p3a, NULL, 0x00, bUid, &bLength, bSak, &bMoreCardsAvailable);
-                                if (status != PH_ERR_SUCCESS) {
-                                    fprintf(stderr, "Error reactivating card after failed auth\n");
-                                    status = phpalI14443p3a_HaltA(&I14443p3a);
-                                    return detected_card;
-                                }
-                            }
-                            else {
-                                break;
-                            }
+    /* Read MF classic */
+    if (detected_card == mifare_classic || detected_card == mifare_ultralight) {
+        /* Set number of data blocks according to detected card */
+        datablocks = (detected_card == mifare_classic) ? 64 : 16;
+
+        for (i = 0; i < datablocks; i++) {
+            /* Authenticate to Mifare Classic Sector */
+            if (detected_card == mifare_classic && i % 4 == 0) {
+                for (j = 0; j < NUMBER_OF_KEYENTRIES; j++) {
+                    /* fprintf(stdout, "Trying to authenticate with key %d\n", j+1); */
+                    status = phalMfc_Authenticate(&alMfc, i, PHHAL_HW_MFC_KEYA, j+1, 0, bUid, bLength);
+                    if (status != PH_ERR_SUCCESS) {
+                        /* fprintf(stderr, "Error while trying to authenticate to Mifare Classic: 0x%02X\n", status); */
+                        status = phpalI14443p3a_ActivateCard(&I14443p3a, NULL, 0x00, bUid, &bLength, bSak, &bMoreCardsAvailable);
+                        if (status != PH_ERR_SUCCESS) {
+                            fprintf(stderr, "Error reactivating card after failed auth\n");
+                            status = phpalI14443p3a_HaltA(&I14443p3a);
+                            return detected_card;
                         }
-                    }
-                    /* Read block */
-                    readstatus = phalMfc_Read(&alMfc, i, pBlockData);
-                    if (readstatus == PH_ERR_SUCCESS) {
-                        printf("Block %2d: ", i);
-                        for(j = 0; j < 16; j++) {
-                            printf("%02X ", pBlockData[j]);
-                        }
-                        printf("\n");
                     }
                     else {
-                        printf("Cannot read block %d\n", i);
+                        break;
                     }
+                }
+            }
+            /* Read block */
+            readstatus = phalMfc_Read(&alMfc, i, pBlockData);
+            if (readstatus == PH_ERR_SUCCESS) {
+                printf("Block %2d: ", i);
+                for(j = 0; j < 16; j++) {
+                    printf("%02X ", pBlockData[j]);
+                }
+                printf("\n");
+            }
+            else {
+                printf("Cannot read block %d\n", i);
             }
         }
+    }
 
-        printf("\n\n");
+    printf("\n\n");
 
-        status = phpalI14443p3a_HaltA(&I14443p3a);
+    status = phpalI14443p3a_HaltA(&I14443p3a);
 
     return detected_card;
+
 }
