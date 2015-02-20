@@ -58,7 +58,8 @@
 #define nPA                   0x11
 
 /* Keystore constants */
-#define NUMBER_OF_KEYENTRIES 2
+#define MFC_DEFAULT_KEYS 9
+#define NUMBER_OF_KEYENTRIES MFC_DEFAULT_KEYS + 1 
 #define NUMBER_OF_KEYVERSIONPAIRS 1
 #define NUMBER_OF_KUCENTRIES 1
 
@@ -131,19 +132,21 @@ uint32_t DetectMifare(void *halReader) {
     phKeyStore_Sw_KeyVersionPair_t pKeyVersionPairs[NUMBER_OF_KEYVERSIONPAIRS * NUMBER_OF_KEYENTRIES];
     phKeyStore_Sw_KUCEntry_t pKUCEntries[NUMBER_OF_KUCENTRIES];
 
-    uint8_t MfcDefaultKeys[9][6] = {
-        { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-        { 0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7 },
-        { 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5 },
-        { 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5 },
-        { 0x4D, 0x3A, 0x99, 0xC3, 0x51, 0xDD },
-        { 0x1A, 0x98, 0x2C, 0x7E, 0x45, 0x9A },
-        { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-        { 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56 }
+    uint8_t MfcDefaultKeys[][6] = {
+        {0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+        {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5},
+        {0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7},
+        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+        {0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5},
+        {0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd},
+        {0x1a, 0x98, 0x2c, 0x7e, 0x45, 0x9a},
+        {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+        {0x71, 0x4c, 0x5c, 0x88, 0x6e, 0x97},
+        {0x58, 0x7e, 0xe5, 0xf9, 0x35, 0x0f},
+        {0xa0, 0x47, 0x8c, 0xc3, 0x90, 0x91},
+        {0x53, 0x3c, 0xb6, 0xc7, 0x23, 0xf6},
+        {0x8f, 0xd0, 0xa4, 0xf2, 0x56, 0xe9}
     };
-
-    uint8_t *Key = &MfcDefaultKeys[2];
 
     uint8_t bUid[10];
     uint8_t bLength;
@@ -158,11 +161,7 @@ uint32_t DetectMifare(void *halReader) {
     uint8_t pBlockData[16];
     phStatus_t readstatus;
 
-    /* Test keystore */
-    uint16_t wKeyVersion[NUMBER_OF_KEYVERSIONPAIRS];
-    uint16_t wKeyVersionLength[NUMBER_OF_KEYVERSIONPAIRS];
-    uint16_t wKeyType[NUMBER_OF_KEYVERSIONPAIRS];
-     
+    uint8_t datablocks = 0;
 
     /* Initialize the 14443-3A PAL (Protocol Abstraction Layer) component */
     status = phpalI14443p3a_Sw_Init(&I14443p3a, sizeof(phpalI14443p3a_Sw_DataParams_t), halReader);
@@ -193,24 +192,24 @@ uint32_t DetectMifare(void *halReader) {
     }
 
     /* Initialize the keystore component */
-    status = phKeyStore_Sw_Init(&SwkeyStore, sizeof(phKeyStore_Sw_DataParams_t), &pKeyEntries[0],NUMBER_OF_KEYENTRIES,&pKeyVersionPairs[0], NUMBER_OF_KEYVERSIONPAIRS, &pKUCEntries[0], NUMBER_OF_KUCENTRIES);
+    status = phKeyStore_Sw_Init(&SwkeyStore, sizeof(phKeyStore_Sw_DataParams_t), &pKeyEntries[0], NUMBER_OF_KEYENTRIES, &pKeyVersionPairs[0], NUMBER_OF_KEYVERSIONPAIRS, &pKUCEntries[0], NUMBER_OF_KUCENTRIES);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error initializing the keystore\n");
         return false;
     }
 
-    /* Format the keystore */
-    status = phKeyStore_FormatKeyEntry(&SwkeyStore, 1, PH_KEYSTORE_KEY_TYPE_MIFARE);
-    if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error formating entry 1 of the keystore\n");
-        return false;
-    }
-
-    /* Put key into keystore */
-    status = phKeyStore_SetKey(&SwkeyStore, 1, 0, PH_KEYSTORE_KEY_TYPE_MIFARE, Key, 0);
-    if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error setting keystore element 1\n");
-        return false;
+    /* Format keystore and put key into it */
+    for (i=0; i<MFC_DEFAULT_KEYS; i++) {
+        status = phKeyStore_FormatKeyEntry(&SwkeyStore, i+1, PH_KEYSTORE_KEY_TYPE_MIFARE);
+        if (status != PH_ERR_SUCCESS) {
+            fprintf(stderr, "Error formating keystore element %d\n", i+1);
+            return false;
+        }
+        status = phKeyStore_SetKey(&SwkeyStore, i+1, 0, PH_KEYSTORE_KEY_TYPE_MIFARE, MfcDefaultKeys[i], 0);
+        if (status != PH_ERR_SUCCESS) {
+            fprintf(stderr, "Error setting keystore element %d\n", i+1);
+            return false;
+        }
     }
 
     /* Initialize Classic AL component */
@@ -220,30 +219,10 @@ uint32_t DetectMifare(void *halReader) {
         return false;
     }
 
-    /* Read key just stored */
-    status = phKeyStore_GetKeyEntry(&SwkeyStore, 1, sizeof(wKeyVersion), wKeyVersion, wKeyVersionLength, wKeyType);
-    if (status == PH_ERR_SUCCESS) {
-        for(i=0; i<NUMBER_OF_KEYVERSIONPAIRS; i++) {
-            fprintf(stderr, "KeyVersion: %d, KeyVersionLength: %d, KeyType: %d\n", wKeyVersion[i], wKeyVersionLength[i], wKeyType[i]);
-        }
-    }
-    else {
-        fprintf(stderr, "Error reading from keystore: Status: %02X\n", status);
-        return false;
-    }
-
     /* Soft reset the IC */
     phhalHw_Rc523_Cmd_SoftReset(halReader);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error soft resetting the HAL\n");
-        return false;
-    }
-
-    /* TODO: redundant? */
-    /* Reset the RF field */
-    phhalHw_FieldReset(halReader);
-    if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error resetting the RF field\n");
         return false;
     }
 
@@ -265,7 +244,7 @@ uint32_t DetectMifare(void *halReader) {
     /* Reset the RF field  */
     status = phhalHw_FieldReset(halReader);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error doing Request A\n");
+        fprintf(stderr, "Error reseting the field\n");
         return false;
     }
 
@@ -387,38 +366,47 @@ uint32_t DetectMifare(void *halReader) {
         /* Read MF classic */
         if (detected_card == mifare_classic || detected_card == mifare_ultralight) {
             if (detected_card == mifare_classic) {
-                fprintf(stdout, "Trying to authenticate...\n");
-                status = phalMfc_Authenticate(&alMfc, 0, PHHAL_HW_MFC_KEYA, 1, 0, bUid, bLength);
-                if (status != PH_ERR_SUCCESS) {
-                    if (status == PH_ERR_AUTH_ERROR) {
-                        fprintf(stderr, "Auth error while trying to authenticate to Mifare Classic\n");
-                    }
-                    else if (status == PH_ERR_INVALID_PARAMETER) {
-                        fprintf(stderr, "Parameter error while trying to authenticate to Mifare Classic\n");
-                    }
-                    else if (status == PH_ERR_IO_TIMEOUT) {
-                        fprintf(stderr, "Timeout while trying to authenticate to Mifare Classic\n");
-                    }
-                    else {
-                        fprintf(stderr, "Unknown error while trying to authenticate to Mifare Classic: 0x%02X\n", status);
-                    }
-                    return detected_card;
-                }
             }
-            for(j=0; j<16; j++) {
-                    readstatus = phalMfc_Read(&alMfc, j, pBlockData);
+
+            /* Set number of data blocks according to detected card */
+            datablocks = (detected_card == mifare_classic) ? 64 : 32;
+
+            for (i = 0; i < datablocks; i++) {
+                    /* Authenticate to Mifare Classic Sector */
+                    if (detected_card == mifare_classic && i % 4 == 0) {
+                        for (j = 0; j < NUMBER_OF_KEYENTRIES; j++) {
+                            /* fprintf(stdout, "Trying to authenticate with key %d\n", j+1); */
+                            status = phalMfc_Authenticate(&alMfc, i, PHHAL_HW_MFC_KEYA, j+1, 0, bUid, bLength);
+                            if (status != PH_ERR_SUCCESS) {
+                                /* fprintf(stderr, "Error while trying to authenticate to Mifare Classic: 0x%02X\n", status); */
+                                status = phpalI14443p3a_ActivateCard(&I14443p3a, NULL, 0x00, bUid, &bLength, bSak, &bMoreCardsAvailable);
+                                if (status != PH_ERR_SUCCESS) {
+                                    fprintf(stderr, "Error reactivating card after failed auth\n");
+                                    status = phpalI14443p3a_HaltA(&I14443p3a);
+                                    return detected_card;
+                                }
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                    }
+                    /* Read block */
+                    readstatus = phalMfc_Read(&alMfc, i, pBlockData);
                     if (readstatus == PH_ERR_SUCCESS) {
-                        printf("Block %d: ", j);
-                        for(i = 0; i < 16; i++) {
-                            printf("%02X ", pBlockData[i]);
+                        printf("Block %2d: ", i);
+                        for(j = 0; j < 16; j++) {
+                            printf("%02X ", pBlockData[j]);
                         }
                         printf("\n");
                     }
                     else {
-                        printf("Cannot read block %d\n", j);
+                        printf("Cannot read block %d\n", i);
                     }
             }
         }
+
+        printf("\n\n");
 
         status = phpalI14443p3a_HaltA(&I14443p3a);
 
