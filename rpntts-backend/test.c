@@ -64,7 +64,7 @@
 #define NUMBER_OF_KUCENTRIES 1
 
 
-uint32_t DetectMifare(void *halReader);
+int32_t DetectMifare(void *halReader, uint8_t *bUid, uint8_t *pbLength);
 
 int main(int argc, char **argv) {
 
@@ -73,6 +73,8 @@ int main(int argc, char **argv) {
     phStatus_t status;
     uint8_t bHalBufferTx[256];
     uint8_t bHalBufferRx[256];
+    uint8_t bUid[10];
+    uint8_t bLength;
 
     argc = argc;
     argv = argv;
@@ -107,7 +109,7 @@ int main(int argc, char **argv) {
 
     /* Let's do something :) */
     while(1) {
-        if (! DetectMifare(&halReader)) {
+        if (! DetectMifare(&halReader, bUid, &bLength)) {
             fprintf(stdout, "Nothing found!\n");
         }
         sleep(1);
@@ -117,7 +119,7 @@ int main(int argc, char **argv) {
 
 }
 
-uint32_t DetectMifare(void *halReader) {
+int32_t DetectMifare(void *halReader, uint8_t *bUid, uint8_t *pbLength) {
 
     phpalI14443p3a_Sw_DataParams_t I14443p3a;
     phpalI14443p4_Sw_DataParams_t I14443p4;
@@ -148,8 +150,6 @@ uint32_t DetectMifare(void *halReader) {
         {0x8f, 0xd0, 0xa4, 0xf2, 0x56, 0xe9}
     };
 
-    uint8_t bUid[10];
-    uint8_t bLength;
     uint8_t bMoreCardsAvailable;
     uint32_t sak_atqa = 0;
     uint8_t pAtqa[2];
@@ -167,35 +167,35 @@ uint32_t DetectMifare(void *halReader) {
     status = phpalI14443p3a_Sw_Init(&I14443p3a, sizeof(phpalI14443p3a_Sw_DataParams_t), halReader);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error initializing the 14443-3A PAL\n");
-        return false;
+        return -1;
     }
 
     /* Initialize the 14443-4 PAL component */
     status =  phpalI14443p4_Sw_Init(&I14443p4, sizeof(phpalI14443p4_Sw_DataParams_t), halReader);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error initializing the 14443-P4 PAL\n");
-        return false;
+        return -2;
     }
 
     /* Initialize the Mifare PAL component */
     status = phpalMifare_Sw_Init(&palMifare, sizeof(phpalMifare_Sw_DataParams_t), halReader, &I14443p3a);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error initializing the Mifare PAL\n");
-        return false;
+        return -3;
     }
 
     /* Initialize Ultralight(-C) AL component */
     status = phalMful_Sw_Init(&alMful, sizeof(phalMful_Sw_DataParams_t), &palMifare, NULL, NULL, NULL);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error initializing the Mifare Ultralight AL\n");
-        return false;
+        return -4;
     }
 
     /* Initialize the keystore component */
     status = phKeyStore_Sw_Init(&SwkeyStore, sizeof(phKeyStore_Sw_DataParams_t), &pKeyEntries[0], NUMBER_OF_KEYENTRIES, &pKeyVersionPairs[0], NUMBER_OF_KEYVERSIONPAIRS, &pKUCEntries[0], NUMBER_OF_KUCENTRIES);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error initializing the keystore\n");
-        return false;
+        return -5;
     }
 
     /* Format keystore and put key into it */
@@ -203,12 +203,12 @@ uint32_t DetectMifare(void *halReader) {
         status = phKeyStore_FormatKeyEntry(&SwkeyStore, i+1, PH_KEYSTORE_KEY_TYPE_MIFARE);
         if (status != PH_ERR_SUCCESS) {
             fprintf(stderr, "Error formating keystore element %d\n", i+1);
-            return false;
+            return -6;
         }
         status = phKeyStore_SetKey(&SwkeyStore, i+1, 0, PH_KEYSTORE_KEY_TYPE_MIFARE, MfcDefaultKeys[i], 0);
         if (status != PH_ERR_SUCCESS) {
             fprintf(stderr, "Error setting keystore element %d\n", i+1);
-            return false;
+            return -7;
         }
     }
 
@@ -216,46 +216,47 @@ uint32_t DetectMifare(void *halReader) {
     status = phalMfc_Sw_Init(&alMfc, sizeof(phalMfc_Sw_DataParams_t), &palMifare, &SwkeyStore);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error initializing the Mifare Classic AL\n");
-        return false;
+        return -8;
     }
 
     /* Soft reset the IC */
     phhalHw_Rc523_Cmd_SoftReset(halReader);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error soft resetting the HAL\n");
-        return false;
+        return -9;
     }
 
     /* Apply the type A protocol settings and activate the RF field. */
     status = phhalHw_ApplyProtocolSettings(halReader, PHHAL_HW_CARDTYPE_ISO14443A);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error applying protocol settings and activating the RF field\n");
-        return false;
+        return -10;
     }
 
     /* Empty the pAtqa */
     memset(pAtqa, '\0', 2);
     status = phpalI14443p3a_RequestA(&I14443p3a, pAtqa);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error doing Request A\n");
-        return false;
+        /* fprintf(stderr, "Error doing Request A\n"); */
+        return 0;
     }
 
     /* Reset the RF field  */
     status = phhalHw_FieldReset(halReader);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error reseting the field\n");
-        return false;
+        return -11;
     }
 
     /* Empty the bSak */
     memset(bSak, '\0', 1);
 
     /* Activate the communication layer part 3 of the ISO 14443A standard. */
-    status = phpalI14443p3a_ActivateCard(&I14443p3a, NULL, 0x00, bUid, &bLength, bSak, &bMoreCardsAvailable);
+    status = phpalI14443p3a_ActivateCard(&I14443p3a, NULL, 0x00, bUid, pbLength, bSak, &bMoreCardsAvailable);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error activating card\n");
-        /* return false; */
+        (void) phpalI14443p3a_HaltA(&I14443p3a);
+        return -12;
     }
 
     sak_atqa = bSak[0] << 24 | pAtqa[0] << 8 | pAtqa[1];
@@ -346,7 +347,8 @@ uint32_t DetectMifare(void *halReader) {
     }
     else {
         /* No MIFARE card is in the field */
-        return false;
+        (void) phpalI14443p3a_HaltA(&I14443p3a);
+        return -13;
     }
 
     /* There is a MIFARE card in the field, but we cannot determine it */
@@ -355,9 +357,9 @@ uint32_t DetectMifare(void *halReader) {
     }
 
     /* Print card's UID */
-    if (bLength > 0) {
+    if (*pbLength > 0) {
         printf("UID: ");
-        for(i = 0; i < bLength; i++) {
+        for(i = 0; i < *pbLength; i++) {
             printf("%02X ", bUid[i]);
         }
         printf("\n\n");
@@ -375,14 +377,14 @@ uint32_t DetectMifare(void *halReader) {
             if (detected_card == mifare_classic && i % 4 == 0) {
                 for (j = 0; j < NUMBER_OF_KEYENTRIES; j++) {
                     /* fprintf(stdout, "Trying to authenticate with key %d\n", j+1); */
-                    status = phalMfc_Authenticate(&alMfc, i, PHHAL_HW_MFC_KEYA, j+1, 0, bUid, bLength);
+                    status = phalMfc_Authenticate(&alMfc, i, PHHAL_HW_MFC_KEYA, j+1, 0, bUid, *pbLength);
                     if (status != PH_ERR_SUCCESS) {
                         /* fprintf(stderr, "Error while trying to authenticate to Mifare Classic: 0x%02X\n", status); */
-                        status = phpalI14443p3a_ActivateCard(&I14443p3a, NULL, 0x00, bUid, &bLength, bSak, &bMoreCardsAvailable);
+                        status = phpalI14443p3a_ActivateCard(&I14443p3a, NULL, 0x00, bUid, pbLength, bSak, &bMoreCardsAvailable);
                         if (status != PH_ERR_SUCCESS) {
                             fprintf(stderr, "Error reactivating card after failed auth\n");
-                            status = phpalI14443p3a_HaltA(&I14443p3a);
-                            return detected_card;
+                            (void) phpalI14443p3a_HaltA(&I14443p3a);
+                            return -14;
                         }
                     }
                     else {
@@ -409,7 +411,7 @@ uint32_t DetectMifare(void *halReader) {
 
     printf("\n\n");
 
-    status = phpalI14443p3a_HaltA(&I14443p3a);
+    (void) phpalI14443p3a_HaltA(&I14443p3a);
 
     return detected_card;
 
