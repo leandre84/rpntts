@@ -14,6 +14,9 @@
 #include <phalMfc.h>
 #include <phKeyStore.h>
 
+#include <my_global.h>
+#include <mysql.h>
+
 #define sak_ul                0x00
 #define sak_ulc               0x00
 #define sak_mini              0x09
@@ -76,6 +79,8 @@ int main(int argc, char **argv) {
     uint8_t bUid[10];
     uint8_t bLength;
 
+    MYSQL mysql;
+
     argc = argc;
     argv = argv;
 
@@ -107,13 +112,26 @@ int main(int argc, char **argv) {
         return 4;
     }
 
+    /* Init DB */
+    mysql_init(&mysql);
+    if (! mysql_real_connect(&mysql, "localhost", "rpntts", "rpntts", "rpntts", 0, NULL, 0)) {
+        fprintf(stderr, "Error connecting to mysql: %s\n", mysql_error(&mysql));
+        return 5;
+    }
+
     /* Let's do something :) */
     while(1) {
         if (! DetectMifare(&halReader, bUid, &bLength)) {
             fprintf(stdout, "Nothing found!\n");
+            sleep(1);
         }
-        sleep(1);
+        else {
+            break;
+        }
     }
+
+    fprintf(stderr, "Closing DB connection...\n");
+    mysql_close(&mysql);
 
     return 0;
 
