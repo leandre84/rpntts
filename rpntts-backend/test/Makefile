@@ -3,7 +3,7 @@
 ##
 CC=gcc
 #CFLAGS=-DDEBUG -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -fno-common -g -O3
-CFLAGS=-DDEBUG -Wall -pedantic -Wextra -fno-common -g -O3
+CFLAGS=-DDEBUG -Wall -pedantic -Wextra -fno-common -g -O3 -std=gnu99
 CP=cp
 CD=cd
 MV=mv
@@ -22,11 +22,11 @@ LINKLIBS=-lwiringPi -lnxprdlib -lmysqlclient -lz
 ##
 ## --------------------------------------------------------------- targets --
 ##
-all:	rpntts	
+all:	test
 
-rpntts:	rpntts-nfc.o rpntts.o
+test:	test.o
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LINKPATHS) $(LINKLIBS)
 
 
 clean:
-	rm -f *.o rpntts
+	rm *.o test
