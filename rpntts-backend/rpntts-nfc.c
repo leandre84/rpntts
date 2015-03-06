@@ -40,63 +40,54 @@ uint8_t initNxprdlib(nxprdlibparams *params, uint8_t *bHalBufferTx, uint8_t *bHa
     /* Init SPI BAL */
     status = phbalReg_RpiSpi_Init(balReader, sizeof(phbalReg_RpiSpi_DataParams_t));
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error initializing BAL!\n");
         return 1;
     }
 
     /* Open BAL */
     status = phbalReg_OpenPort(balReader);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error opening BAL!\n");
         return 2;
     }
 
     /* Init HAL */
     status = phhalHw_Rc523_Init(halReader, sizeof(phhalHw_Rc523_DataParams_t), balReader, 0, bHalBufferTx, HALBUFSIZE, bHalBufferRx, HALBUFSIZE);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error initializing HAL!\n");
         return 3;
     }
 
     /* Configure HAL for SPI */
     status = phhalHw_SetConfig(halReader, PHHAL_HW_CONFIG_BAL_CONNECTION, PHHAL_HW_BAL_CONNECTION_SPI);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error configuring HAL for SPI!\n");
         return 4;
     }
 
     /* Initialize the 14443-3A PAL (Protocol Abstraction Layer) component */
     status = phpalI14443p3a_Sw_Init(palI14443p3a, sizeof(phpalI14443p3a_Sw_DataParams_t), halReader);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error initializing the 14443-3A PAL\n");
         return 5;
     }
 
     /* Initialize the 14443-4 PAL component */
     status =  phpalI14443p4_Sw_Init(palI14443p4, sizeof(phpalI14443p4_Sw_DataParams_t), halReader);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error initializing the 14443-P4 PAL\n");
         return 6;
     }
 
     /* Initialize the Mifare PAL component */
     status = phpalMifare_Sw_Init(palMifare, sizeof(phpalMifare_Sw_DataParams_t), halReader, palI14443p3a);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error initializing the Mifare PAL\n");
         return 7;
     }
 
     /* Initialize Ultralight(-C) AL component */
     status = phalMful_Sw_Init(alMful, sizeof(phalMful_Sw_DataParams_t), palMifare, NULL, NULL, NULL);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error initializing the Mifare Ultralight AL\n");
         return 8;
     }
 
     /* Initialize the keystore component */
     status = phKeyStore_Sw_Init(SwkeyStore, sizeof(phKeyStore_Sw_DataParams_t), &pKeyEntries[0], NUMBER_OF_KEYENTRIES, &pKeyVersionPairs[0], NUMBER_OF_KEYVERSIONPAIRS, &pKUCEntries[0], NUMBER_OF_KUCENTRIES);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error initializing the keystore\n");
         return 9;
     }
 
@@ -104,12 +95,10 @@ uint8_t initNxprdlib(nxprdlibparams *params, uint8_t *bHalBufferTx, uint8_t *bHa
     for (i=0; i<MFC_DEFAULT_KEYS; i++) {
         status = phKeyStore_FormatKeyEntry(SwkeyStore, i+1, PH_KEYSTORE_KEY_TYPE_MIFARE);
         if (status != PH_ERR_SUCCESS) {
-            fprintf(stderr, "Error formating keystore element %d\n", i+1);
             return 10;
         }
         status = phKeyStore_SetKey(SwkeyStore, i+1, 0, PH_KEYSTORE_KEY_TYPE_MIFARE, MfcDefaultKeys[i], 0);
         if (status != PH_ERR_SUCCESS) {
-            fprintf(stderr, "Error setting keystore element %d\n", i+1);
             return 11;
         }
     }
@@ -117,7 +106,6 @@ uint8_t initNxprdlib(nxprdlibparams *params, uint8_t *bHalBufferTx, uint8_t *bHa
     /* Initialize Classic AL component */
     status = phalMfc_Sw_Init(alMfc, sizeof(phalMfc_Sw_DataParams_t), palMifare, SwkeyStore);
     if (status != PH_ERR_SUCCESS) {
-        fprintf(stderr, "Error initializing the Mifare Classic AL\n");
         return 12;
     } 
 
@@ -125,3 +113,58 @@ uint8_t initNxprdlib(nxprdlibparams *params, uint8_t *bHalBufferTx, uint8_t *bHa
 
 }
 
+uint8_t detectCard(nxprdlibparams *params, uint8_t *cardUID, uint8_t *cardUIDlen) {
+
+    phhalHw_Rc523_DataParams_t *phalReader = &(params->halReader);
+    phpalI14443p3a_Sw_DataParams_t *ppalI14443p3a = &(params->palI14443p3a);
+    uint8_t atqa[2] = { 0, 0 };
+    uint8_t sak[1] = { 0 };
+    uint8_t morecards;
+    phStatus_t status;
+
+    /* Init params */
+    *cardUIDlen = 0;
+    memset(cardUID, '\0', MAXUIDLEN);
+
+    /* Soft reset the IC */
+    phhalHw_Rc523_Cmd_SoftReset(phalReader);
+    if (status != PH_ERR_SUCCESS) {
+        return 1;
+    }
+
+    /* Apply the type A protocol settings and activate the RF field. */
+    status = phhalHw_ApplyProtocolSettings(phalReader, PHHAL_HW_CARDTYPE_ISO14443A);
+    if (status != PH_ERR_SUCCESS) {
+        return 2;
+    }
+
+    /* Perform Request A */
+    status = phpalI14443p3a_RequestA(ppalI14443p3a, atqa);
+    if (status != PH_ERR_SUCCESS) {
+        if (status & PH_ERR_PROTOCOL_ERROR) {
+            return 3;
+        }
+        else {
+            /* No card in field */
+            return 0;
+        }
+
+    }
+
+    /* Reset the RF field  */
+    status = phhalHw_FieldReset(phalReader);
+    if (status != PH_ERR_SUCCESS) {
+        return 4;
+    }
+
+    /* Activate the communication layer part 3 of the ISO 14443A standard. */
+    status = phpalI14443p3a_ActivateCard(ppalI14443p3a, NULL, 0x00, cardUID, cardUIDlen, sak, &morecards);
+    if (status != PH_ERR_SUCCESS) {
+        (void) phpalI14443p3a_HaltA(ppalI14443p3a);
+        return 5;
+    }
+
+    (void) phpalI14443p3a_HaltA(ppalI14443p3a);
+
+    return 0;
+}

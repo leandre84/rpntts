@@ -18,6 +18,7 @@
 #define NUMBER_OF_KUCENTRIES 1
 
 #define HALBUFSIZE 256
+#define MAXUIDLEN 10
 
 typedef struct {
     phbalReg_RpiSpi_DataParams_t balReader;
@@ -32,6 +33,7 @@ typedef struct {
 
 
 uint8_t initNxprdlib(nxprdlibparams *params, uint8_t *bHalBufferTx, uint8_t *bHalBufferRx);
+uint8_t detectCard(nxprdlibparams *params, uint8_t *cardUID, uint8_t *cardUIDlen);
 
 
 #endif /* RPNTTS_NFC_H */
