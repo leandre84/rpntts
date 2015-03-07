@@ -126,6 +126,8 @@ uint8_t detectCard(nxprdlibparams *params, uint8_t *cardUID, uint8_t *cardUIDlen
     *cardUIDlen = 0;
     memset(cardUID, '\0', MAXUIDLEN);
 
+    memset(&status, '\0', sizeof(phStatus_t));
+
     /* Soft reset the IC */
     phhalHw_Rc523_Cmd_SoftReset(phalReader);
     if (status != PH_ERR_SUCCESS) {

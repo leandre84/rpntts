@@ -18,6 +18,7 @@ void usage(char *progname);
 int main(int argc, char **argv) {
 
     int vflag = 0;
+    int xflag = 0;
     char *dbhost = NULL;
     char dbhostdefault[] = "localhost";
     char *dbname = NULL;
@@ -42,7 +43,7 @@ int main(int argc, char **argv) {
     int status = 0;
     unsigned int i = 0;
 
-    while ((option = getopt(argc, argv, "vh:d:u:p:s:")) != -1) {
+    while ((option = getopt(argc, argv, "vh:d:u:p:s:x")) != -1) {
        switch (option) {
            case 'v':
             vflag = 1;
@@ -65,6 +66,9 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "Invalid port argument given: %s\n", optarg);
                 return -2;
             }
+            break;
+           case 'x':
+            xflag = 1;
             break;
            default:
             usage(argv[0]);
@@ -98,13 +102,6 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    /* Connect to mysql DB */
-    if (! mysql_real_connect(&mysql, dbhost, dbuser, dbpassword, dbname, dbtcpsocket, NULL, 0)) {
-        fprintf(stderr, "Error connecting to mysql: %s\n", mysql_error(&mysql));
-        mysql_close(&mysql);
-        return 3;
-    }
-
     while (1) {
         /* Search for card in field */
         status = detectCard(&nxpparams, bcardUID, &cardUIDlen);
@@ -123,6 +120,19 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "Found card with UID: %s\n", cardUID);
             }
 
+            if (xflag) {
+                sleep(SLEEPSECONDS);
+                continue;
+            }
+
+            /* Connect to mysql DB */
+            if (! mysql_real_connect(&mysql, dbhost, dbuser, dbpassword, dbname, dbtcpsocket, NULL, 0)) {
+                fprintf(stderr, "Error connecting to mysql: %s\n", mysql_error(&mysql));
+                mysql_close(&mysql);
+                sleep(SLEEPSECONDS);
+                continue;
+            }
+
             memset(&user, '\0', sizeof(rpntts_user));
             status = getUserByCardID(&mysql, cardUID, &user);
             if (status != 0) {
@@ -137,6 +147,8 @@ int main(int argc, char **argv) {
             if (status != 0) {
                 fprintf(stderr, "Error during booking: %s\n", mysql_error(&mysql));
             }
+
+            mysql_close(&mysql);
 
         }
         else {
@@ -157,6 +169,7 @@ int main(int argc, char **argv) {
 void usage(char *progname) {
     fprintf(stderr, "%s: usage: \n", progname);
     fprintf(stderr, "   -v verbose output\n");
+    fprintf(stderr, "   -x just try to detect card, no mysql interaction\n");
     fprintf(stderr, "   -h [host] mysql host to connect to, default localhost\n");
     fprintf(stderr, "   -s [port] mysql tcp socket to connect to, default 3306\n");
     fprintf(stderr, "   -d [db name] mysql db name to connect to, default rpntts\n");
