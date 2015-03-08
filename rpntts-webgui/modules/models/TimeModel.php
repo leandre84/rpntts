@@ -13,5 +13,5 @@ class TimeModel {
     private $friday = 0;
     private $saturday = 0;
     private $sunday = 0;
-    
+
 }
