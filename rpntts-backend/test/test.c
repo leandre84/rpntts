@@ -112,12 +112,13 @@ int main(int argc, char **argv) {
         return 4;
     }
 
-    /* Init DB */
+    /* Init DB 
     mysql_init(&mysql);
     if (! mysql_real_connect(&mysql, "localhost", "rpntts", "rpntts", "rpntts", 0, NULL, 0)) {
         fprintf(stderr, "Error connecting to mysql: %s\n", mysql_error(&mysql));
         return 5;
     }
+    */
 
     /* Let's do something :) */
     while(1) {
@@ -130,8 +131,10 @@ int main(int argc, char **argv) {
         }
     }
 
+    /*
     fprintf(stderr, "Closing DB connection...\n");
     mysql_close(&mysql);
+    */
 
     return 0;
 
@@ -384,7 +387,7 @@ int32_t DetectMifare(void *halReader, uint8_t *bUid, uint8_t *pbLength) {
     }
 
     /* Read MF classic */
-    if (detected_card == mifare_classic || detected_card == mifare_ultralight) {
+    if (detected_card == mifare_classic || detected_card == mifare_ultralight || 1) {
 
         /* Set number of data blocks according to detected card */
         datablocks = (detected_card == mifare_classic) ? 64 : 16;
@@ -406,6 +409,7 @@ int32_t DetectMifare(void *halReader, uint8_t *bUid, uint8_t *pbLength) {
                         }
                     }
                     else {
+                        fprintf(stderr, "Auth succeded with key: %d\n", j);
                         break;
                     }
                 }

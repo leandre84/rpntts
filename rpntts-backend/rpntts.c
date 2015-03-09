@@ -139,6 +139,7 @@ int main(int argc, char **argv) {
                 if (vflag) {
                     fprintf(stderr, "Can not find user, status: %d\n", status);
                 }
+                mysql_close(&mysql);
                 sleep(SLEEPSECONDS);
                 continue;
             }
@@ -146,6 +147,7 @@ int main(int argc, char **argv) {
             status = doBooking(&mysql, user.pk);
             if (status != 0) {
                 fprintf(stderr, "Error during booking: %s\n", mysql_error(&mysql));
+                mysql_close(&mysql);
             }
 
             mysql_close(&mysql);
