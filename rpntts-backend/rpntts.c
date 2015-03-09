@@ -11,8 +11,6 @@
 
 #define SLEEPSECONDS 3
 
-#define RPNTTSDEBUG
-
 void usage(char *progname);
 
 int main(int argc, char **argv) {
@@ -146,8 +144,17 @@ int main(int argc, char **argv) {
 
             status = doBooking(&mysql, user.pk);
             if (status != 0) {
-                fprintf(stderr, "Error during booking: %s\n", mysql_error(&mysql));
+                fprintf(stderr, "Error during booking: ");
+                if (status == -1) {
+                    fprintf(stderr, "booking time intervall below limit\n");
+                }
+                else {
+                    fprintf(stderr, "%s\n", mysql_error(&mysql));
+                }
                 mysql_close(&mysql);
+            }
+            else if (vflag) {
+                fprintf(stderr, "INFO: Successfully performed booking\n");
             }
 
             mysql_close(&mysql);

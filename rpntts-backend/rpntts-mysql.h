@@ -12,6 +12,8 @@
 
 #define SQLBUF 256
 
+#define BOOKINGDIFF 60
+
 typedef struct {
     char pk[USER_PK_LEN+1];
     char username[USER_USERNAME_LEN+1];
@@ -22,5 +24,6 @@ typedef struct {
 
 int getUserByCardID(MYSQL *mysql, char *cardUID, rpntts_user *user);
 int doBooking(MYSQL *mysql, char *userpk);
+int getMinBookingTimeDiff(MYSQL *mysql, char *userpk);
 
 #endif /* RPNTTS_MYSQL_H */
