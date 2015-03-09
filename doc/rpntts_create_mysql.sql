@@ -19,7 +19,7 @@ CREATE TABLE timemodel (
 CREATE TABLE user (
     pk INTEGER PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(32) NOT NULL,
-    password CHAR(32),
+    password VARCHAR(64),
     persno VARCHAR(32),
     firstname VARCHAR(64) NOT NULL,
     lastname VARCHAR(64) NOT NULL,
