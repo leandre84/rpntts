@@ -10,12 +10,15 @@
 
 #define SLEEPUSECONDS 2000000
 
+#define ESPEAK_BUFFER 500
+#define ESPEAK_RATE 180
 #define ESPEAK_TEXT_LENGTH 256
 
 void usage(char *progname);
 
 int main(int argc, char **argv) {
 
+    int optopt = 0;
     int vflag = 0;
     int xflag = 0;
     char *dbhost = NULL;
@@ -28,7 +31,6 @@ int main(int argc, char **argv) {
     const char dbuserdefault[] = "rpntts";
     const char dbpassworddefault[] = "rpntts";
     char *strtolep = NULL;
-    int option = 0;
     nxprdlibparams nxpparams;
     uint8_t bHalBufferTx[HALBUFSIZE];
     uint8_t bHalBufferRx[HALBUFSIZE];
@@ -45,8 +47,8 @@ int main(int argc, char **argv) {
     int status = 0;
     unsigned int i = 0;
 
-    while ((option = getopt(argc, argv, "vh:d:u:p:s:x")) != -1) {
-       switch (option) {
+    while ((optopt = getopt(argc, argv, "vh:d:u:p:s:x")) != -1) {
+       switch (optopt) {
            case 'v':
             vflag = 1;
             break;
@@ -110,17 +112,17 @@ int main(int argc, char **argv) {
     espeak_voice.languages = "de";
     espeak_voice.gender = 1;
     espeak_voice.variant = 1;
-    if ((espeak_error = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, 500, NULL, 0)) != EE_OK) {
+    if ((espeak_error = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, ESPEAK_BUFFER, NULL, 0)) == EE_INTERNAL_ERROR) {
         fprintf(stderr, "Error initializing espeak: %d\n", espeak_error);
-        //return 2;
+        return 3;
     }
     if ((espeak_error = espeak_SetVoiceByProperties(&espeak_voice)) != EE_OK) {
         fprintf(stderr, "Error setting espeak voice: %d\n", espeak_error);
-        //return 3;
+        return 4;
     }
-    if ((espeak_error = espeak_SetParameter(espeakRATE, 180, 0)) != EE_OK) {
+    if ((espeak_error = espeak_SetParameter(espeakRATE, ESPEAK_RATE, 0)) != EE_OK) {
         fprintf(stderr, "Error setting espeak rate: %d\n", espeak_error);
-        //return 4;
+        return 5;
     }
 
     strncpy(espeak_text, "rpntts initialisiert, akzeptiere Buchungen", ESPEAK_TEXT_LENGTH-1);
@@ -128,22 +130,26 @@ int main(int argc, char **argv) {
     espeak_Synchronize();
 
     while (1) {
+
         /* Search for card in field */
         status = detectCard(&nxpparams, bcardUID, &cardUIDlen);
         if (status != 0) {
             fprintf(stderr, "Error detecting card: %d\n", status);
         }
+
         else if (cardUIDlen > 0) {
+
+            if (vflag) {
+                fprintf(stderr, "Found card with UID: %s\n", cardUID);
+            }
+
+            /* UID to string */
             ppos = cardUID;
             for(i = 0; i < cardUIDlen; i++) {
                 sprintf(ppos, "%02X", bcardUID[i]);
                 ppos += 2;
             }
             ppos = NULL;
-
-            if (vflag) {
-                fprintf(stderr, "Found card with UID: %s\n", cardUID);
-            }
 
             if (xflag) {
                 usleep(SLEEPUSECONDS);
@@ -158,6 +164,7 @@ int main(int argc, char **argv) {
                 continue;
             }
 
+            /* Lookup user corresponding to card UID */
             memset(&user, '\0', sizeof(rpntts_user));
             status = getUserByCardID(&mysql, cardUID, &user);
             if (status != 0) {
@@ -169,6 +176,7 @@ int main(int argc, char **argv) {
                 continue;
             }
 
+            /* Do booking */
             status = doBooking(&mysql, user.pk);
             if (status != 0) {
                 fprintf(stderr, "Error during booking: ");
@@ -199,7 +207,8 @@ int main(int argc, char **argv) {
 
     mysql_close(&mysql);
 
-    return 0;
+    return EXIT_SUCCESS;
+
 }
 
 void usage(char *progname) {
