@@ -3,13 +3,14 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#include <my_global.h>
-#include <mysql.h>
+#include <speak_lib.h>
 
 #include "rpntts-nfc.h"
 #include "rpntts-mysql.h"
 
-#define SLEEPSECONDS 3
+#define SLEEPUSECONDS 2000000
+
+#define ESPEAK_TEXT_LENGTH 256
 
 void usage(char *progname);
 
@@ -18,17 +19,16 @@ int main(int argc, char **argv) {
     int vflag = 0;
     int xflag = 0;
     char *dbhost = NULL;
-    char dbhostdefault[] = "localhost";
     char *dbname = NULL;
-    char dbnamedefault[] = "rpntts";
     char *dbuser = NULL;
-    char dbuserdefault[] = "rpntts";
     char *dbpassword = NULL;
-    char dbpassworddefault[] = "rpntts";
-    unsigned int dbtcpsocket = 3306;
+    uint16_t dbtcpsocket = 3306;
+    const char dbhostdefault[] = "localhost";
+    const char dbnamedefault[] = "rpntts";
+    const char dbuserdefault[] = "rpntts";
+    const char dbpassworddefault[] = "rpntts";
     char *strtolep = NULL;
     int option = 0;
-
     nxprdlibparams nxpparams;
     uint8_t bHalBufferTx[HALBUFSIZE];
     uint8_t bHalBufferRx[HALBUFSIZE];
@@ -38,6 +38,10 @@ int main(int argc, char **argv) {
     char *ppos = NULL;
     MYSQL mysql;
     rpntts_user user;
+    espeak_VOICE espeak_voice;
+    espeak_POSITION_TYPE espeak_position_type;
+    espeak_ERROR espeak_error;
+    char espeak_text[ESPEAK_TEXT_LENGTH] = { 0 };
     int status = 0;
     unsigned int i = 0;
 
@@ -75,16 +79,16 @@ int main(int argc, char **argv) {
     }
 
     if (dbhost == NULL) {
-        dbhost = dbhostdefault;
+        dbhost = (char*) dbhostdefault;
     }
     if (dbname == NULL) {
-        dbname = dbnamedefault;
+        dbname = (char*) dbnamedefault;
     }
     if (dbuser == NULL) {
-        dbuser = dbuserdefault;
+        dbuser = (char*) dbuserdefault;
     }
     if (dbpassword == NULL) {
-        dbpassword = dbpassworddefault;
+        dbpassword = (char*) dbpassworddefault;
     }
 
     /* Initialize NXP Reader Library params */
@@ -96,9 +100,32 @@ int main(int argc, char **argv) {
 
     /* Init mysql structure */
     if (mysql_init(&mysql) == NULL) {
-        fprintf(stderr, "Error initializing mysql structure%d\n", status);
+        fprintf(stderr, "Error initializing mysql structure: %d\n", status);
         return 2;
     }
+
+    /* Init espeak */
+    memset(&espeak_voice, '\0', sizeof(espeak_VOICE));
+    memset(&espeak_position_type, '\0', sizeof(espeak_POSITION_TYPE));
+    espeak_voice.languages = "de";
+    espeak_voice.gender = 1;
+    espeak_voice.variant = 1;
+    if ((espeak_error = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, 500, NULL, 0)) != EE_OK) {
+        fprintf(stderr, "Error initializing espeak: %d\n", espeak_error);
+        //return 2;
+    }
+    if ((espeak_error = espeak_SetVoiceByProperties(&espeak_voice)) != EE_OK) {
+        fprintf(stderr, "Error setting espeak voice: %d\n", espeak_error);
+        //return 3;
+    }
+    if ((espeak_error = espeak_SetParameter(espeakRATE, 180, 0)) != EE_OK) {
+        fprintf(stderr, "Error setting espeak rate: %d\n", espeak_error);
+        //return 4;
+    }
+
+    strncpy(espeak_text, "rpntts initialisiert, akzeptiere Buchungen", ESPEAK_TEXT_LENGTH-1);
+    espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
+    espeak_Synchronize();
 
     while (1) {
         /* Search for card in field */
@@ -119,7 +146,7 @@ int main(int argc, char **argv) {
             }
 
             if (xflag) {
-                sleep(SLEEPSECONDS);
+                usleep(SLEEPUSECONDS);
                 continue;
             }
 
@@ -127,7 +154,7 @@ int main(int argc, char **argv) {
             if (! mysql_real_connect(&mysql, dbhost, dbuser, dbpassword, dbname, dbtcpsocket, NULL, 0)) {
                 fprintf(stderr, "Error connecting to mysql: %s\n", mysql_error(&mysql));
                 mysql_close(&mysql);
-                sleep(SLEEPSECONDS);
+                usleep(SLEEPUSECONDS);
                 continue;
             }
 
@@ -138,7 +165,7 @@ int main(int argc, char **argv) {
                     fprintf(stderr, "Can not find user, status: %d\n", status);
                 }
                 mysql_close(&mysql);
-                sleep(SLEEPSECONDS);
+                usleep(SLEEPUSECONDS);
                 continue;
             }
 
@@ -166,7 +193,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        sleep(SLEEPSECONDS);
+        usleep(SLEEPUSECONDS);
 
     }
 
