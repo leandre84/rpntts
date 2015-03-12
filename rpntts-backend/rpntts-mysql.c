@@ -90,7 +90,8 @@ int getMinBookingTimeDiff(MYSQL *mysql, char *userpk) {
 
     row = mysql_fetch_row(result);
 
-    if (strcmp(row[0], "NULL") == 0) {
+    if (row == NULL || row[0] == NULL) {
+        /* First booking */
         retval = BOOKINGDIFF;
     }
     else {

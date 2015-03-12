@@ -139,10 +139,6 @@ int main(int argc, char **argv) {
 
         else if (cardUIDlen > 0) {
 
-            if (vflag) {
-                fprintf(stderr, "Found card with UID: %s\n", cardUID);
-            }
-
             /* UID to string */
             ppos = cardUID;
             for(i = 0; i < cardUIDlen; i++) {
@@ -150,6 +146,10 @@ int main(int argc, char **argv) {
                 ppos += 2;
             }
             ppos = NULL;
+
+            if (vflag) {
+                fprintf(stderr, "Found card with UID: %s\n", cardUID);
+            }
 
             if (xflag) {
                 usleep(SLEEPUSECONDS);
@@ -175,6 +175,14 @@ int main(int argc, char **argv) {
                 usleep(SLEEPUSECONDS);
                 continue;
             }
+
+            memset(espeak_text, '\0', ESPEAK_TEXT_LENGTH);
+            strcat(espeak_text, "Hallo ");
+            strcat(espeak_text, user.firstname);
+            strcat(espeak_text, " ");
+            strcat(espeak_text, user.lastname);
+            espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
+            espeak_Synchronize();
 
             /* Do booking */
             status = doBooking(&mysql, user.pk);
