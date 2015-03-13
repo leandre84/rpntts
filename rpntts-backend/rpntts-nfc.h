@@ -9,6 +9,8 @@
 #include <phpalI14443p4a.h>
 #include <phalMful.h>
 #include <phalMfc.h>
+#include <phalTop.h>
+#include <phalT1T.h>
 #include <phKeyStore.h>
 
 /* Keystore constants */
@@ -28,12 +30,19 @@ typedef struct {
     phpalMifare_Sw_DataParams_t palMifare;
     phalMful_Sw_DataParams_t alMful;
     phalMfc_Sw_DataParams_t alMfc;
+    phalT1T_Sw_DataParams_t alT1T;
+    phalTop_Sw_DataParams_t tagop;
+    phalTop_T1T_t t1tparam;
+    phalTop_T2T_t t2tparam;
+    phalTop_T3T_t t3tparam;
+    phalTop_T4T_t t4tparam;
     phKeyStore_Sw_DataParams_t SwkeyStore;
-} nxprdlibparams;
+} nxprdlibParams;
 
 
-uint8_t initNxprdlib(nxprdlibparams *params, uint8_t *bHalBufferTx, uint8_t *bHalBufferRx);
-uint8_t detectCard(nxprdlibparams *params, uint8_t *cardUID, uint8_t *cardUIDlen);
+uint8_t init_nxprdlib(nxprdlibParams *params, uint8_t *bHalBufferTx, uint8_t *bHalBufferRx);
+uint8_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid_len);
+int32_t detect_ndef(nxprdlibParams *params);
 
 
 #endif /* RPNTTS_NFC_H */

@@ -31,12 +31,12 @@ int main(int argc, char **argv) {
     const char dbuserdefault[] = "rpntts";
     const char dbpassworddefault[] = "rpntts";
     char *strtolep = NULL;
-    nxprdlibparams nxpparams;
+    nxprdlibParams nxp_params;
     uint8_t bHalBufferTx[HALBUFSIZE];
     uint8_t bHalBufferRx[HALBUFSIZE];
-    uint8_t bcardUID[MAXUIDLEN];
-    uint8_t cardUIDlen = 0;
-    char cardUID[(MAXUIDLEN*2)+1];
+    uint8_t bcard_uid[MAXUIDLEN];
+    uint8_t card_uid_len = 0;
+    char card_uid[(MAXUIDLEN*2)+1];
     char *ppos = NULL;
     MYSQL mysql;
     rpntts_user user;
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
     }
 
     /* Initialize NXP Reader Library params */
-    status = initNxprdlib(&nxpparams, bHalBufferTx, bHalBufferRx);
+    status = init_nxprdlib(&nxp_params, bHalBufferTx, bHalBufferRx);
     if (status != 0) {
         fprintf(stderr, "Error initializing nxp reader library structures: %d\n", status);
         return 1;
@@ -132,24 +132,27 @@ int main(int argc, char **argv) {
     while (1) {
 
         /* Search for card in field */
-        status = detectCard(&nxpparams, bcardUID, &cardUIDlen);
+        status = detect_card(&nxp_params, bcard_uid, &card_uid_len);
         if (status != 0) {
             fprintf(stderr, "Error detecting card: %d\n", status);
         }
 
-        else if (cardUIDlen > 0) {
+        else if (card_uid_len > 0) {
 
             /* UID to string */
-            ppos = cardUID;
-            for(i = 0; i < cardUIDlen; i++) {
-                sprintf(ppos, "%02X", bcardUID[i]);
+            ppos = card_uid;
+            for(i = 0; i < card_uid_len; i++) {
+                sprintf(ppos, "%02X", bcard_uid[i]);
                 ppos += 2;
             }
             ppos = NULL;
 
             if (vflag) {
-                fprintf(stderr, "Found card with UID: %s\n", cardUID);
+                fprintf(stderr, "Found card with UID: %s\n", card_uid);
             }
+
+            /* Check ndef presence */
+            printf("detect_ndef returned with: %d\n", detect_ndef(&nxp_params));
 
             if (xflag) {
                 usleep(SLEEPUSECONDS);
@@ -166,7 +169,7 @@ int main(int argc, char **argv) {
 
             /* Lookup user corresponding to card UID */
             memset(&user, '\0', sizeof(rpntts_user));
-            status = getUserByCardID(&mysql, cardUID, &user);
+            status = get_user_by_card_uid(&mysql, card_uid, &user);
             if (status != 0) {
                 if (vflag) {
                     fprintf(stderr, "Can not find user, status: %d\n", status);
@@ -176,6 +179,7 @@ int main(int argc, char **argv) {
                 continue;
             }
 
+            /* Greet user */
             memset(espeak_text, '\0', ESPEAK_TEXT_LENGTH);
             strcat(espeak_text, "Hallo ");
             strcat(espeak_text, user.firstname);
@@ -185,7 +189,7 @@ int main(int argc, char **argv) {
             espeak_Synchronize();
 
             /* Do booking */
-            status = doBooking(&mysql, user.pk);
+            status = do_booking(&mysql, user.pk);
             if (status != 0) {
                 fprintf(stderr, "Error during booking: ");
                 if (status == -1) {

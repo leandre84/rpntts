@@ -5,7 +5,7 @@
 
 #include "rpntts-mysql.h"
 
-int getUserByCardID(MYSQL *mysql, char *cardUID, rpntts_user *user) {
+int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
@@ -13,7 +13,7 @@ int getUserByCardID(MYSQL *mysql, char *cardUID, rpntts_user *user) {
     unsigned int i = 0;
 
     strcat(sql, "SELECT user.pk, username, persno, firstname, lastname FROM user, card WHERE card.user_fk = user.pk AND carduid = '");
-    strcat(sql, cardUID);
+    strcat(sql, card_uid);
     strcat(sql, "'");
 
     if ((status = mysql_query(mysql, sql)) != 0) {
@@ -53,22 +53,22 @@ int getUserByCardID(MYSQL *mysql, char *cardUID, rpntts_user *user) {
 
 }
 
-int doBooking(MYSQL *mysql, char *userpk) {
+int do_booking(MYSQL *mysql, char *user_pk) {
     char sql[SQLBUF] = { 0 };
     int diff = 0;
 
     strcat(sql, "INSERT INTO booking (timestamp, text, user_fk) VALUES (now(), 'Automatic booking from rpntts-backend', '");
-    strcat(sql, userpk);
+    strcat(sql, user_pk);
     strcat(sql, "')");
 
-    if ((diff = getMinBookingTimeDiff(mysql, userpk)) < BOOKINGDIFF) {
+    if ((diff = get_min_bookingtime_diff(mysql, user_pk)) < BOOKINGDIFF) {
         return -1;
     }
 
     return mysql_query(mysql, sql);
 }
 
-int getMinBookingTimeDiff(MYSQL *mysql, char *userpk) {
+int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
@@ -76,7 +76,7 @@ int getMinBookingTimeDiff(MYSQL *mysql, char *userpk) {
     int retval = 0;
 
     strcat(sql, "select min(timestampdiff(second, timestamp, now())) from booking where user_fk='");
-    strcat(sql, userpk);
+    strcat(sql, user_pk);
     strcat(sql, "'");
 
     if ((status = mysql_query(mysql, sql)) != 0) {
