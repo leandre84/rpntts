@@ -10,9 +10,9 @@ MV=mv
 GREP=grep
 DOXYGEN=doxygen
 
-INCLUDES=-I/usr/local/nxprdlib/types -I/usr/local/nxprdlib/intfs -I/usr/include/mysql -I/usr/include/espeak
+INCLUDES=-I/usr/local/nxprdlib/types -I/usr/local/nxprdlib/intfs -I/usr/include/mysql -I/usr/include/espeak -I/usr/include/glib-2.0 -I/usr/lib/arm-linux-gnueabihf/glib-2.0/include 
 LINKPATHS=-L/usr/local/lib -L/usr/local/nxprdlib 
-LINKLIBS=-lwiringPi -lnxprdlib -lmysqlclient -lz -lespeak
+LINKLIBS=-lwiringPi -lnxprdlib -lmysqlclient -lz -lespeak -lglib-2.0
 
 ##
 ## ----------------------------------------------------------------- rules --

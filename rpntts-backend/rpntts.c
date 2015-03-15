@@ -8,7 +8,7 @@
 #include "rpntts-nfc.h"
 #include "rpntts-mysql.h"
 
-#define SLEEPUSECONDS 2000000
+#define SLEEPUSECONDS 200000
 
 #define ESPEAK_BUFFER 500
 #define ESPEAK_RATE 180
@@ -21,6 +21,7 @@ int main(int argc, char **argv) {
     int optopt = 0;
     int vflag = 0;
     int xflag = 0;
+    int qflag = 0;
     char *dbhost = NULL;
     char *dbname = NULL;
     char *dbuser = NULL;
@@ -47,7 +48,7 @@ int main(int argc, char **argv) {
     int status = 0;
     unsigned int i = 0;
 
-    while ((optopt = getopt(argc, argv, "vh:d:u:p:s:x")) != -1) {
+    while ((optopt = getopt(argc, argv, "vh:d:u:p:s:xq")) != -1) {
        switch (optopt) {
            case 'v':
             vflag = 1;
@@ -74,6 +75,9 @@ int main(int argc, char **argv) {
            case 'x':
             xflag = 1;
             break;
+           case 'q':
+            qflag = 1;
+            break;
            default:
             usage(argv[0]);
             return -1;
@@ -93,6 +97,9 @@ int main(int argc, char **argv) {
         dbpassword = (char*) dbpassworddefault;
     }
 
+    nxp_params.pHalMainContext = g_main_context_new();
+    nxp_params.pHalMainLoop = g_main_loop_new(nxp_params.pHalMainContext, FALSE);
+
     /* Initialize NXP Reader Library params */
     status = init_nxprdlib(&nxp_params, bHalBufferTx, bHalBufferRx);
     if (status != 0) {
@@ -107,27 +114,29 @@ int main(int argc, char **argv) {
     }
 
     /* Init espeak */
-    memset(&espeak_voice, '\0', sizeof(espeak_VOICE));
-    memset(&espeak_position_type, '\0', sizeof(espeak_POSITION_TYPE));
-    espeak_voice.languages = "de";
-    espeak_voice.gender = 1;
-    espeak_voice.variant = 1;
-    if ((espeak_error = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, ESPEAK_BUFFER, NULL, 0)) == EE_INTERNAL_ERROR) {
-        fprintf(stderr, "Error initializing espeak: %d\n", espeak_error);
-        return 3;
-    }
-    if ((espeak_error = espeak_SetVoiceByProperties(&espeak_voice)) != EE_OK) {
-        fprintf(stderr, "Error setting espeak voice: %d\n", espeak_error);
-        return 4;
-    }
-    if ((espeak_error = espeak_SetParameter(espeakRATE, ESPEAK_RATE, 0)) != EE_OK) {
-        fprintf(stderr, "Error setting espeak rate: %d\n", espeak_error);
-        return 5;
-    }
+    if (! qflag) {
+        memset(&espeak_voice, '\0', sizeof(espeak_VOICE));
+        memset(&espeak_position_type, '\0', sizeof(espeak_POSITION_TYPE));
+        espeak_voice.languages = "de";
+        espeak_voice.gender = 1;
+        espeak_voice.variant = 1;
+        if ((espeak_error = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, ESPEAK_BUFFER, NULL, 0)) == EE_INTERNAL_ERROR) {
+            fprintf(stderr, "Error initializing espeak: %d\n", espeak_error);
+            return 3;
+        }
+        if ((espeak_error = espeak_SetVoiceByProperties(&espeak_voice)) != EE_OK) {
+            fprintf(stderr, "Error setting espeak voice: %d\n", espeak_error);
+            return 4;
+        }
+        if ((espeak_error = espeak_SetParameter(espeakRATE, ESPEAK_RATE, 0)) != EE_OK) {
+            fprintf(stderr, "Error setting espeak rate: %d\n", espeak_error);
+            return 5;
+        }
 
-    strncpy(espeak_text, "rpntts initialisiert, akzeptiere Buchungen", ESPEAK_TEXT_LENGTH-1);
-    espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
-    espeak_Synchronize();
+        strncpy(espeak_text, "rpntts initialisiert, akzeptiere Buchungen", ESPEAK_TEXT_LENGTH-1);
+        espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
+        espeak_Synchronize();
+    }
 
     while (1) {
 
@@ -136,7 +145,6 @@ int main(int argc, char **argv) {
         if (status != 0) {
             fprintf(stderr, "Error detecting card: %d\n", status);
         }
-
         else if (card_uid_len > 0) {
 
             /* UID to string */
@@ -153,6 +161,7 @@ int main(int argc, char **argv) {
 
             /* Check ndef presence */
             printf("detect_ndef returned with: %d\n", detect_ndef(&nxp_params));
+            printf("disc loop: %d\n", do_discovery_loop(&nxp_params));
 
             if (xflag) {
                 usleep(SLEEPUSECONDS);
@@ -180,13 +189,15 @@ int main(int argc, char **argv) {
             }
 
             /* Greet user */
-            memset(espeak_text, '\0', ESPEAK_TEXT_LENGTH);
-            strcat(espeak_text, "Hallo ");
-            strcat(espeak_text, user.firstname);
-            strcat(espeak_text, " ");
-            strcat(espeak_text, user.lastname);
-            espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
-            espeak_Synchronize();
+            if (! qflag) {
+                memset(espeak_text, '\0', ESPEAK_TEXT_LENGTH);
+                strcat(espeak_text, "Hallo ");
+                strcat(espeak_text, user.firstname);
+                strcat(espeak_text, " ");
+                strcat(espeak_text, user.lastname);
+                espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
+                espeak_Synchronize();
+            }
 
             /* Do booking */
             status = do_booking(&mysql, user.pk);
@@ -227,6 +238,7 @@ void usage(char *progname) {
     fprintf(stderr, "%s: usage: \n", progname);
     fprintf(stderr, "   -v verbose output\n");
     fprintf(stderr, "   -x just try to detect card, no mysql interaction\n");
+    fprintf(stderr, "   -q be quiet - no espeak output\n");
     fprintf(stderr, "   -h [host] mysql host to connect to, default localhost\n");
     fprintf(stderr, "   -s [port] mysql tcp socket to connect to, default 3306\n");
     fprintf(stderr, "   -d [db name] mysql db name to connect to, default rpntts\n");
