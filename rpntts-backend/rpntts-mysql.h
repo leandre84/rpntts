@@ -22,8 +22,8 @@ typedef struct {
     char lastname[USER_LASTNAME_LEN+1];
 } rpntts_user;
 
-int getUserByCardID(MYSQL *mysql, char *cardUID, rpntts_user *user);
-int doBooking(MYSQL *mysql, char *userpk);
-int getMinBookingTimeDiff(MYSQL *mysql, char *userpk);
+int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user);
+int do_booking(MYSQL *mysql, char *user_pk);
+int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk);
 
 #endif /* RPNTTS_MYSQL_H */
