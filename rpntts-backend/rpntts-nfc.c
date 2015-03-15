@@ -131,8 +131,9 @@ uint8_t init_nxprdlib(nxprdlibParams *params, uint8_t *bHalBufferTx, uint8_t *bH
         return 11;
     }
 
-    /* Initialize the OvrHal component (???) */
+    /* Initialize the OvrHal component (???) 
     phlnLlcp_Fri_OvrHal_Init();
+    */
 
     /* Initialize the Mifare PAL component */
     status = phpalMifare_Sw_Init(ppalMifare, sizeof(phpalMifare_Sw_DataParams_t), phalReader, ppalI14443p3a);
@@ -210,7 +211,6 @@ uint8_t init_nxprdlib(nxprdlibParams *params, uint8_t *bHalBufferTx, uint8_t *bH
     if (status != PH_ERR_SUCCESS) {
         return 26;
     }
-
 
     /* Initialize Discoveryloop component */
     status = phacDiscLoop_Sw_Init(pdiscLoop, sizeof(phacDiscLoop_Sw_DataParams_t), phalReader, posal);
@@ -295,7 +295,7 @@ int32_t detect_ndef(nxprdlibParams *params) {
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     phStatus_t status;
     uint8_t ndef_presence = 0;
-    uint8_t tags[] = { PHAL_TOP_TAG_TYPE_T2T_TAG, PHAL_TOP_TAG_TYPE_T3T_TAG, PHAL_TOP_TAG_TYPE_T4T_TAG };
+    uint8_t tags[] = { PHAL_TOP_TAG_TYPE_T1T_TAG, PHAL_TOP_TAG_TYPE_T2T_TAG, PHAL_TOP_TAG_TYPE_T3T_TAG, PHAL_TOP_TAG_TYPE_T4T_TAG };
     uint8_t i = 0;
 
     status = phalTop_Reset(ptagop);
@@ -327,20 +327,34 @@ int32_t detect_ndef(nxprdlibParams *params) {
 int32_t do_discovery_loop(nxprdlibParams *params) {
     phhalHw_Rc523_DataParams_t *phalReader = &(params->halReader);
     phpalI14443p4_Sw_DataParams_t *ppalI14443p4 = &(params->palI14443p4);
+    phpalI18092mPI_Sw_DataParams_t *ppalI18092mPI = &(params->palI18092mPI);
+    phpalI18092mT_Sw_DataParams_t *ppalI18092mT = &(params->palI18092mT);
     phacDiscLoop_Sw_DataParams_t *pdiscLoop = &(params->discLoop);
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     uint16_t config_value = 0;
     phStatus_t status;
 
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_MODE, PHAC_DISCLOOP_SET_POLL_MODE);
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_MODE, PHAC_DISCLOOP_SET_POLL_MODE | PHAC_DISCLOOP_SET_PAUSE_MODE);
+    if (status != PH_ERR_SUCCESS) { return -3; };
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_DETECT_TAGS, PHAC_DISCLOOP_CON_POLL_F | PHAC_DISCLOOP_CON_POLL_A | PHAC_DISCLOOP_CON_POLL_B);
+    if (status != PH_ERR_SUCCESS) { return -3; };
     status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_PAUSE_PERIOD_MS, 500);
+    if (status != PH_ERR_SUCCESS) { return -3; };
     status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_NUM_POLL_LOOPS, 5);
+    if (status != PH_ERR_SUCCESS) { return -3; };
     status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEB_NCODING_SLOT, 0);
+    if (status != PH_ERR_SUCCESS) { return -3; };
     status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEB_AFI_REQ, 0);
+    if (status != PH_ERR_SUCCESS) { return -3; };
     status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEB_EXTATQB, 0);
+    if (status != PH_ERR_SUCCESS) { return -3; };
     status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEB_POLL_LIMIT, 5);
+    if (status != PH_ERR_SUCCESS) { return -3; };
 
     phpalI14443p4_ResetProtocol(ppalI14443p4);
+    phpalI18092mPI_ResetProtocol(ppalI18092mPI);
+    phpalI18092mT_ResetProtocol(ppalI18092mT);
+
     phhalHw_FieldOff(phalReader);
 
     status = phacDiscLoop_Start(pdiscLoop);
@@ -349,8 +363,12 @@ int32_t do_discovery_loop(nxprdlibParams *params) {
         if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE1)) {
         }
         else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE2)) {
+            /*
             status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_T2T_GET_TAG_STATE, &config_value);
             return status+100;
+            */
+            status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
+            return status;
         }
         else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE4A)) {
         }
