@@ -3,7 +3,7 @@ namespace Rpntts\Model;
 
 use Zend\Db\TableGateway\TableGateway;
 
-class TimeModelTable
+class BookingTable
 {
     protected $tableGateway;
     
@@ -19,7 +19,7 @@ class TimeModelTable
         return $resultSet;
     }
 
-    public function getTimeModel($id)
+    public function getBooking($id)
     {
         $id  = (int) $id;
         $rowset = $this->tableGateway->select(array('primaryKey' => $id));
@@ -31,33 +31,29 @@ class TimeModelTable
         return $row;
     }
 
-    public function saveTimeModel(TimeModel $timeModel)
+    public function saveBooking(Booking $booking)
     {
         $data = array(
-            'primaryKey' => $timeModel->primaryKey,
-            'modelName' => $timeModel->modelName,
-            'monday' => $timeModel->monday,
-            'tuesday' => $timeModel->tuesday,
-            'wednesday' => $timeModel->wednesday,
-            'thursday' => $timeModel->thursday,
-            'friday' => $timeModel->friday,
-            'saturday' => $timeModel->saturday,
-            'sunday' => $timeModel->sunday,
+            'primaryKey' => $booking->primaryKey,
+            'timeStamp' => $booking->timeStamp,
+            'type' => $booking->type,
+            'text' => $booking->text,
+            'userForeignKey' => $booking->userForeignKey,
         );
 
-        $id = (int) $timeModel->primaryKey;
+        $id = (int) $booking->primaryKey;
         if ($id == 0) {
             $this->tableGateway->insert($data);
         } else {
-            if ($this->getTimeModel($id)) {
+            if ($this->getBooking($id)) {
                 $this->tableGateway->update($data, array('primaryKey' => $id));
             } else {
-                throw new \Exception("Time model id " . $id . " does not exist");
+                throw new \Exception("Booking id " . $id . " does not exist");
             }
         }
     }
 
-    public function deleteTimeModel($id)
+    public function deleteBooking($id)
     {
         $this->tableGateway->delete(array('primaryKey' => (int) $id));
     }
