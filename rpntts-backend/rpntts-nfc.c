@@ -239,7 +239,7 @@ uint8_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid
     phpalI14443p3a_Sw_DataParams_t *ppalI14443p3a = &(params->palI14443p3a);
     uint8_t atqa[2] = { 0, 0 };
     uint8_t sak[1] = { 0 };
-    uint8_t morecards;
+    uint8_t morecards = 0;
     phStatus_t status;
 
     /* Init params */
@@ -295,8 +295,14 @@ int32_t detect_ndef(nxprdlibParams *params) {
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     phStatus_t status;
     uint8_t ndef_presence = 0;
-    uint8_t tags[] = { PHAL_TOP_TAG_TYPE_T1T_TAG, PHAL_TOP_TAG_TYPE_T2T_TAG, PHAL_TOP_TAG_TYPE_T3T_TAG, PHAL_TOP_TAG_TYPE_T4T_TAG };
+    /* uint8_t tags[] = { PHAL_TOP_TAG_TYPE_T1T_TAG, PHAL_TOP_TAG_TYPE_T2T_TAG, PHAL_TOP_TAG_TYPE_T3T_TAG, PHAL_TOP_TAG_TYPE_T4T_TAG }; */
+    uint8_t tags[] = { PHAL_TOP_TAG_TYPE_T2T_TAG, PHAL_TOP_TAG_TYPE_T3T_TAG, PHAL_TOP_TAG_TYPE_T4T_TAG };
     uint8_t i = 0;
+    uint8_t ndef_record[1024] = { 0 };
+    uint16_t ndef_record_length = 0;
+    uint16_t j = 0;
+
+    uint8_t *ppos = NULL;
 
     status = phalTop_Reset(ptagop);
     if (status != PH_ERR_SUCCESS) {
@@ -316,6 +322,21 @@ int32_t detect_ndef(nxprdlibParams *params) {
             return status;
         }
         if (ndef_presence) {
+            status = phalTop_ReadNdef(ptagop, ndef_record, &ndef_record_length);
+            if (status != PH_ERR_SUCCESS) {
+                fprintf(stderr, "Error reading NDEF record\n");
+            }
+            else {
+                fprintf(stderr, "Got NDEF record with length: %d\n", ndef_record_length);
+                /* UID to string */
+                ppos = ndef_record;
+                for(j = 0; j < ndef_record_length; j++) {
+                   fprintf(stdout, "%02X", ndef_record[j]);
+                   ppos += 2;
+                }
+                fprintf(stdout, "\n");
+                ppos = NULL;
+            }
             return ndef_presence;
         }
     }
@@ -330,7 +351,6 @@ int32_t do_discovery_loop(nxprdlibParams *params) {
     phpalI18092mPI_Sw_DataParams_t *ppalI18092mPI = &(params->palI18092mPI);
     phpalI18092mT_Sw_DataParams_t *ppalI18092mT = &(params->palI18092mT);
     phacDiscLoop_Sw_DataParams_t *pdiscLoop = &(params->discLoop);
-    phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     uint16_t config_value = 0;
     phStatus_t status;
 
@@ -340,15 +360,9 @@ int32_t do_discovery_loop(nxprdlibParams *params) {
     if (status != PH_ERR_SUCCESS) { return -3; };
     status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_PAUSE_PERIOD_MS, 500);
     if (status != PH_ERR_SUCCESS) { return -3; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_NUM_POLL_LOOPS, 5);
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_NUM_POLL_LOOPS, 1);
     if (status != PH_ERR_SUCCESS) { return -3; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEB_NCODING_SLOT, 0);
-    if (status != PH_ERR_SUCCESS) { return -3; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEB_AFI_REQ, 0);
-    if (status != PH_ERR_SUCCESS) { return -3; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEB_EXTATQB, 0);
-    if (status != PH_ERR_SUCCESS) { return -3; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEB_POLL_LIMIT, 5);
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEA_DEVICE_LIMIT, 3);
     if (status != PH_ERR_SUCCESS) { return -3; };
 
     phpalI14443p4_ResetProtocol(ppalI14443p4);
@@ -356,21 +370,31 @@ int32_t do_discovery_loop(nxprdlibParams *params) {
     phpalI18092mT_ResetProtocol(ppalI18092mT);
 
     phhalHw_FieldOff(phalReader);
-
     status = phacDiscLoop_Start(pdiscLoop);
+    phhalHw_FieldReset(phalReader);
+
     if ((status & PH_ERR_MASK) == PH_ERR_SUCCESS) {
         phacDiscLoop_GetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TAGS_DETECTED, &config_value);
         if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE1)) {
+            fprintf(stderr, "Detected Type 1 Card\n");
         }
         else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE2)) {
-            /*
-            status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_T2T_GET_TAG_STATE, &config_value);
-            return status+100;
-            */
+            fprintf(stderr, "Detected Type 2 Card\n");
             status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
-            return status;
+            if (status != PH_ERR_SUCCESS) {
+                fprintf(stderr, "Error activating Type 2 card: %d\n", status);
+                return -4;
+            }
+            fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params));
         }
         else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE4A)) {
+            fprintf(stderr, "Detected Type 4A Card\n");
+            status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
+            if (status != PH_ERR_SUCCESS) {
+                fprintf(stderr, "Error activating Type 4A card: %d\n", status);
+                return -5;
+            }
+            fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params));
         }
         else {
             return -1;

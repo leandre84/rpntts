@@ -20,6 +20,7 @@
 #include <phacDiscLoop.h>
 #include <phOsal_GLib.h>
 #include <phKeyStore.h>
+#include <phacDiscLoop_Sw.h>
 
 #include <glib.h>
 

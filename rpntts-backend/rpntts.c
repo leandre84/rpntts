@@ -160,7 +160,6 @@ int main(int argc, char **argv) {
             }
 
             /* Check ndef presence */
-            printf("detect_ndef returned with: %d\n", detect_ndef(&nxp_params));
             printf("disc loop: %d\n", do_discovery_loop(&nxp_params));
 
             if (xflag) {
