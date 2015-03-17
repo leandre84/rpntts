@@ -1,3 +1,4 @@
+<?php
 return array(
      'controllers' => array(
          'invokables' => array(
@@ -29,4 +30,4 @@ return array(
              'rpntts' => __DIR__ . '/../view',
          ),
      ),
- );
+ )
