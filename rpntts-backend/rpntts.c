@@ -33,8 +33,6 @@ int main(int argc, char **argv) {
     const char dbpassworddefault[] = "rpntts";
     char *strtolep = NULL;
     nxprdlibParams nxp_params;
-    uint8_t bHalBufferTx[HALBUFSIZE];
-    uint8_t bHalBufferRx[HALBUFSIZE];
     uint8_t bcard_uid[MAXUIDLEN];
     uint8_t card_uid_len = 0;
     char card_uid[(MAXUIDLEN*2)+1];
@@ -101,7 +99,7 @@ int main(int argc, char **argv) {
     nxp_params.pHalMainLoop = g_main_loop_new(nxp_params.pHalMainContext, FALSE);
 
     /* Initialize NXP Reader Library params */
-    status = init_nxprdlib(&nxp_params, bHalBufferTx, bHalBufferRx);
+    status = init_nxprdlib(&nxp_params);
     if (status != 0) {
         fprintf(stderr, "Error initializing nxp reader library structures: %d\n", status);
         return 1;

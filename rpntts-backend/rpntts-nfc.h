@@ -24,6 +24,50 @@
 
 #include <glib.h>
 
+/* Error code definitions */
+#define RPNTTS_NFC_INIT_ERR_BAL 1
+#define RPNTTS_NFC_INIT_ERR_HAL 2
+#define RPNTTS_NFC_INIT_ERR_HAL_SPICONFIG 3
+#define RPNTTS_NFC_INIT_ERR_BAL_OPEN 4
+#define RPNTTS_NFC_INIT_ERR_PAL_I14443P3A 5
+#define RPNTTS_NFC_INIT_ERR_PAL_I14443P3B 6
+#define RPNTTS_NFC_INIT_ERR_PAL_I14443P4 7
+#define RPNTTS_NFC_INIT_ERR_PAL_I14443P4A 8
+#define RPNTTS_NFC_INIT_ERR_PAL_FELICA 9
+#define RPNTTS_NFC_INIT_ERR_PAL_I18092MPI 10
+#define RPNTTS_NFC_INIT_ERR_PAL_I18092MT 11
+#define RPNTTS_NFC_INIT_ERR_PAL_MIFARE 12
+#define RPNTTS_NFC_INIT_ERR_AL_MF 13
+#define RPNTTS_NFC_INIT_ERR_AL_MFUL 14
+#define RPNTTS_NFC_INIT_ERR_AL_MFC 15
+#define RPNTTS_NFC_INIT_ERR_AL_MFDF 16
+#define RPNTTS_NFC_INIT_ERR_AL_FELICA 17
+#define RPNTTS_NFC_INIT_ERR_AL_T1T 18
+#define RPNTTS_NFC_INIT_ERR_AL_TAGOP 19
+#define RPNTTS_NFC_INIT_ERR_CM_KEYSTORE 20
+#define RPNTTS_NFC_INIT_ERR_CM_KEYSTORE_FORMAT 21
+#define RPNTTS_NFC_INIT_ERR_CM_KEYSTORE_SETKEY 22
+#define RPNTTS_NFC_INIT_ERR_CM_OSAL 23
+#define RPNTTS_NFC_INIT_ERR_CM_OSAL_TIMER 24
+#define RPNTTS_NFC_INIT_ERR_CM_DISCLOOP 25
+
+#define RPNTTS_NFC_DETECTCARD_SOFTRESET 1
+#define RPNTTS_NFC_DETECTCARD_APPLYPROTOCOL 2
+#define RPNTTS_NFC_DETECTCARD_REQUESTA 3
+#define RPNTTS_NFC_DETECTCARD_FIELDRESET 4
+#define RPNTTS_NFC_DETECTCARD_ACTIVATECARD 5
+
+#define RPNTTS_NFC_DETECTNDEF_NDEFPRESENT 1
+#define RPNTTS_NFC_DETECTNDEF_RESETCONFIG 2
+#define RPNTTS_NFC_DETECTNDEF_SETCONFIG 3
+#define RPNTTS_NFC_DETECTNDEF_CHECKNDEF 4
+#define RPNTTS_NFC_DETECTNDEF_READNDEF 5
+
+#define RPNTTS_NFC_DISCLOOP_SETCONFIG 1
+#define RPNTTS_NFC_DISCLOOP_DISCLOOPSTART 2
+#define RPNTTS_NFC_DISCLOOP_UNKNOWNTYPE 3
+#define RPNTTS_NFC_DISCLOOP_ACTIVATECARD 4
+
 /* Keystore constants */
 #define MFC_DEFAULT_KEYS 9
 #define NUMBER_OF_KEYENTRIES MFC_DEFAULT_KEYS + 1 
@@ -36,10 +80,12 @@
 typedef struct {
     phbalReg_RpiSpi_DataParams_t balReader;
     phhalHw_Rc523_DataParams_t halReader;
+    uint8_t halBufTx[HALBUFSIZE];
+    uint8_t halBufRx[HALBUFSIZE];
     phpalI14443p3a_Sw_DataParams_t palI14443p3a;
     phpalI14443p3b_Sw_DataParams_t palI14443p3b;
-    phpalI14443p4a_Sw_DataParams_t palI14443p4a;
     phpalI14443p4_Sw_DataParams_t palI14443p4;
+    phpalI14443p4a_Sw_DataParams_t palI14443p4a;
     phpalFelica_Sw_DataParams_t palFelica;
     phpalI18092mPI_Sw_DataParams_t palI18092mPI;
     phpalI18092mT_Sw_DataParams_t palI18092mT;
@@ -62,10 +108,10 @@ typedef struct {
 } nxprdlibParams;
 
 
-uint8_t init_nxprdlib(nxprdlibParams *params, uint8_t *bHalBufferTx, uint8_t *bHalBufferRx);
+uint8_t init_nxprdlib(nxprdlibParams *params);
 uint8_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid_len);
-int32_t detect_ndef(nxprdlibParams *params);
-int32_t do_discovery_loop(nxprdlibParams *params);
+uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type);
+uint8_t do_discovery_loop(nxprdlibParams *params);
 
 
 #endif /* RPNTTS_NFC_H */
