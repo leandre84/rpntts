@@ -2,11 +2,20 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <alloca.h>
 
 #include <speak_lib.h>
 
+#include "rpntts-common.h"
 #include "rpntts-nfc.h"
 #include "rpntts-mysql.h"
+
+#define RPNTTS_DEFAULT_DB_HOST "localhost"
+#define RPNTTS_DEFAULT_DB_NAME "rpntts"
+#define RPNTTS_DEFAULT_DB_USER "rpntts"
+#define RPNTTS_DEFAULT_DB_PASSWORD "rpntts"
+#define RPNTTS_DEFAULT_DB_PORT 3306 
+
 
 #define SLEEPUSECONDS 200000
 
@@ -14,23 +23,12 @@
 #define ESPEAK_RATE 180
 #define ESPEAK_TEXT_LENGTH 256
 
+
 void usage(char *progname);
 
 int main(int argc, char **argv) {
-
+    rpnttsOptions options;
     int optopt = 0;
-    int vflag = 0;
-    int xflag = 0;
-    int qflag = 0;
-    char *dbhost = NULL;
-    char *dbname = NULL;
-    char *dbuser = NULL;
-    char *dbpassword = NULL;
-    uint16_t dbtcpsocket = 3306;
-    const char dbhostdefault[] = "localhost";
-    const char dbnamedefault[] = "rpntts";
-    const char dbuserdefault[] = "rpntts";
-    const char dbpassworddefault[] = "rpntts";
     char *strtolep = NULL;
     nxprdlibParams nxp_params;
     uint8_t bcard_uid[MAXUIDLEN];
@@ -46,35 +44,54 @@ int main(int argc, char **argv) {
     int status = 0;
     unsigned int i = 0;
 
+    memset(&options, '\0', sizeof(rpnttsOptions));
+    options.db_port = RPNTTS_DEFAULT_DB_PORT;
+
     while ((optopt = getopt(argc, argv, "vh:d:u:p:s:xq")) != -1) {
        switch (optopt) {
            case 'v':
-            vflag = 1;
+            options.verbose = 1;
             break;
            case 'h':
-            dbhost = optarg;
+            if ((options.db_host = alloca(strlen(optarg)+1)) == NULL) {
+                fprintf(stderr, "Unable to allocate memory for argument\n");
+                return -2;
+            }
+            strcpy(options.db_host, optarg);
             break;
            case 'd':
-            dbname = optarg;
+            if ((options.db_name = alloca(strlen(optarg)+1)) == NULL) {
+                fprintf(stderr, "Unable to allocate memory for argument\n");
+                return -2;
+            }
+            strcpy(options.db_name, optarg);
             break;
            case 'u':
-            dbuser = optarg;
+            if ((options.db_user = alloca(strlen(optarg)+1)) == NULL) {
+                fprintf(stderr, "Unable to allocate memory for argument\n");
+                return -2;
+            }
+            strcpy(options.db_user, optarg);
             break;
            case 'p':
-            dbpassword = optarg;
+            if ((options.db_password = alloca(strlen(optarg)+1)) == NULL) {
+                fprintf(stderr, "Unable to allocate memory for argument\n");
+                return -2;
+            }
+            strcpy(options.db_password, optarg);
             break;
            case 's':
-            dbtcpsocket = strtoul(optarg, &strtolep, 10);
+            options.db_port = strtoul(optarg, &strtolep, 10);
             if (strlen(strtolep) > 0) {
                 fprintf(stderr, "Invalid port argument given: %s\n", optarg);
-                return -2;
+                return -3;
             }
             break;
            case 'x':
-            xflag = 1;
+            options.no_booking = 1;
             break;
            case 'q':
-            qflag = 1;
+            options.quiet = 1;
             break;
            default:
             usage(argv[0]);
@@ -82,19 +99,36 @@ int main(int argc, char **argv) {
        }
     }
 
-    if (dbhost == NULL) {
-        dbhost = (char*) dbhostdefault;
+    if (options.db_host == NULL) {
+        if ((options.db_host = alloca(strlen(RPNTTS_DEFAULT_DB_HOST+1))) == NULL) {
+                fprintf(stderr, "Unable to allocate memory for argument\n");
+                return -2;
+        }
+        strcpy(options.db_host, RPNTTS_DEFAULT_DB_HOST);
     }
-    if (dbname == NULL) {
-        dbname = (char*) dbnamedefault;
+    if (options.db_name == NULL) {
+        if ((options.db_name = alloca(strlen(RPNTTS_DEFAULT_DB_NAME+1))) == NULL) {
+                fprintf(stderr, "Unable to allocate memory for argument\n");
+                return -2;
+        }
+        strcpy(options.db_name, RPNTTS_DEFAULT_DB_NAME);
     }
-    if (dbuser == NULL) {
-        dbuser = (char*) dbuserdefault;
+    if (options.db_user == NULL) {
+        if ((options.db_user = alloca(strlen(RPNTTS_DEFAULT_DB_USER+1))) == NULL) {
+                fprintf(stderr, "Unable to allocate memory for argument\n");
+                return -2;
+        }
+        strcpy(options.db_user, RPNTTS_DEFAULT_DB_USER);
     }
-    if (dbpassword == NULL) {
-        dbpassword = (char*) dbpassworddefault;
+    if (options.db_password == NULL) {
+        if ((options.db_password = alloca(strlen(RPNTTS_DEFAULT_DB_PASSWORD+1))) == NULL) {
+                fprintf(stderr, "Unable to allocate memory for argument\n");
+                return -2;
+        }
+        strcpy(options.db_password, RPNTTS_DEFAULT_DB_PASSWORD);
     }
 
+    /* Initialize GLib main context (needed for OSAL) */
     nxp_params.pHalMainContext = g_main_context_new();
     nxp_params.pHalMainLoop = g_main_loop_new(nxp_params.pHalMainContext, FALSE);
 
@@ -112,7 +146,7 @@ int main(int argc, char **argv) {
     }
 
     /* Init espeak */
-    if (! qflag) {
+    if (! options.quiet) {
         memset(&espeak_voice, '\0', sizeof(espeak_VOICE));
         memset(&espeak_position_type, '\0', sizeof(espeak_POSITION_TYPE));
         espeak_voice.languages = "de";
@@ -153,20 +187,22 @@ int main(int argc, char **argv) {
             }
             ppos = NULL;
 
-            if (vflag) {
+            if (options.verbose) {
                 fprintf(stderr, "Found card with UID: %s\n", card_uid);
             }
 
             /* Check ndef presence */
-            printf("disc loop: %d\n", do_discovery_loop(&nxp_params));
+            if (options.verbose) {
+                printf("disc loop: %d\n", do_discovery_loop(&nxp_params));
+            }
 
-            if (xflag) {
+            if (options.no_booking) {
                 usleep(SLEEPUSECONDS);
                 continue;
             }
 
             /* Connect to mysql DB */
-            if (! mysql_real_connect(&mysql, dbhost, dbuser, dbpassword, dbname, dbtcpsocket, NULL, 0)) {
+            if (! mysql_real_connect(&mysql, options.db_host, options.db_user, options.db_password, options.db_name, options.db_port, NULL, 0)) {
                 fprintf(stderr, "Error connecting to mysql: %s\n", mysql_error(&mysql));
                 mysql_close(&mysql);
                 usleep(SLEEPUSECONDS);
@@ -177,7 +213,7 @@ int main(int argc, char **argv) {
             memset(&user, '\0', sizeof(rpntts_user));
             status = get_user_by_card_uid(&mysql, card_uid, &user);
             if (status != 0) {
-                if (vflag) {
+                if (options.verbose) {
                     fprintf(stderr, "Can not find user, status: %d\n", status);
                 }
                 mysql_close(&mysql);
@@ -186,7 +222,7 @@ int main(int argc, char **argv) {
             }
 
             /* Greet user */
-            if (! qflag) {
+            if (! options.quiet) {
                 memset(espeak_text, '\0', ESPEAK_TEXT_LENGTH);
                 strcat(espeak_text, "Hallo ");
                 strcat(espeak_text, user.firstname);
@@ -208,7 +244,7 @@ int main(int argc, char **argv) {
                 }
                 mysql_close(&mysql);
             }
-            else if (vflag) {
+            else if (options.verbose) {
                 fprintf(stderr, "INFO: Successfully performed booking\n");
             }
 
@@ -216,7 +252,7 @@ int main(int argc, char **argv) {
 
         }
         else {
-            if (vflag) {
+            if (options.verbose) {
                 fprintf(stderr, "Nothing found...\n");
             }
         }
