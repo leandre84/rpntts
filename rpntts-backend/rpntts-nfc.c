@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "rpntts-common.h"
 #include "rpntts-nfc.h"
 
 uint8_t mfc_default_keys[][6] = {
@@ -299,9 +300,7 @@ uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     uint8_t ndef_presence = 0;
     uint8_t ndef_record[1024] = { 0 };
     uint16_t ndef_record_length = 0;
-    uint16_t j = 0;
-
-    uint8_t *ppos = NULL;
+    char ndef_text[(1024*2)+1] = { 0 };
 
     status = phalTop_Reset(ptagop);
     if (status != PH_ERR_SUCCESS) {
@@ -325,14 +324,8 @@ uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
         }
         else {
             fprintf(stderr, "Got NDEF record with length: %d\n", ndef_record_length);
-            /* UID to string */
-            ppos = ndef_record;
-            for(j = 0; j < ndef_record_length; j++) {
-               fprintf(stdout, "%02X", ndef_record[j]);
-               ppos += 2;
-            }
-            fprintf(stdout, "\n");
-            ppos = NULL;
+            bin_to_hex(ndef_record, ndef_record_length, ndef_text);
+            fprintf(stdout, "NDEF Record: %s\n", ndef_text);
             return RPNTTS_NFC_DETECTNDEF_NDEFPRESENT;
         }
     }

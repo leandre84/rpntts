@@ -24,7 +24,7 @@ LINKLIBS=-lwiringPi -lnxprdlib -lmysqlclient -lz -lespeak -lglib-2.0
 ##
 all:	rpntts	
 
-rpntts:	rpntts-nfc.o rpntts-mysql.o rpntts.o
+rpntts:	rpntts-common.o rpntts-nfc.o rpntts-mysql.o rpntts.o
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LINKPATHS) $(LINKLIBS)
 
 

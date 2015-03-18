@@ -34,7 +34,6 @@ int main(int argc, char **argv) {
     uint8_t bcard_uid[MAXUIDLEN];
     uint8_t card_uid_len = 0;
     char card_uid[(MAXUIDLEN*2)+1];
-    char *ppos = NULL;
     MYSQL mysql;
     rpntts_user user;
     espeak_VOICE espeak_voice;
@@ -42,7 +41,6 @@ int main(int argc, char **argv) {
     espeak_ERROR espeak_error;
     char espeak_text[ESPEAK_TEXT_LENGTH] = { 0 };
     int status = 0;
-    unsigned int i = 0;
 
     memset(&options, '\0', sizeof(rpnttsOptions));
     options.db_port = RPNTTS_DEFAULT_DB_PORT;
@@ -180,12 +178,7 @@ int main(int argc, char **argv) {
         else if (card_uid_len > 0) {
 
             /* UID to string */
-            ppos = card_uid;
-            for(i = 0; i < card_uid_len; i++) {
-                sprintf(ppos, "%02X", bcard_uid[i]);
-                ppos += 2;
-            }
-            ppos = NULL;
+            bin_to_hex(bcard_uid, card_uid_len, card_uid);
 
             if (options.verbose) {
                 fprintf(stderr, "Found card with UID: %s\n", card_uid);
