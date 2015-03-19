@@ -4,7 +4,7 @@
 #include <inttypes.h>
 
 typedef struct {
-    char **progname;
+    char *progname;
     int verbose;
     int no_booking;
     int quiet;
@@ -15,7 +15,7 @@ typedef struct {
     uint16_t db_port;
 } rpnttsOptions;
 
-extern rpnttsOptions options;
+/* extern rpnttsOptions options; */
 
 void bin_to_hex(uint8_t *in, uint8_t in_length, char *out);
 

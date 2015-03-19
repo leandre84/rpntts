@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
     int status = 0;
 
     memset(&options, '\0', sizeof(rpnttsOptions));
+    options.progname = argv[0];
     options.db_port = RPNTTS_DEFAULT_DB_PORT;
 
     while ((optopt = getopt(argc, argv, "vh:d:u:p:s:xq")) != -1) {
@@ -52,28 +53,28 @@ int main(int argc, char **argv) {
             break;
            case 'h':
             if ((options.db_host = alloca(strlen(optarg)+1)) == NULL) {
-                fprintf(stderr, "Unable to allocate memory for argument\n");
+                fprintf(stderr, "%s: Unable to allocate memory for argument \"%c\"\n", options.progname, 'h');
                 return -2;
             }
             strcpy(options.db_host, optarg);
             break;
            case 'd':
             if ((options.db_name = alloca(strlen(optarg)+1)) == NULL) {
-                fprintf(stderr, "Unable to allocate memory for argument\n");
+                fprintf(stderr, "%s: Unable to allocate memory for argument \"%c\"\n", options.progname, 'd');
                 return -2;
             }
             strcpy(options.db_name, optarg);
             break;
            case 'u':
             if ((options.db_user = alloca(strlen(optarg)+1)) == NULL) {
-                fprintf(stderr, "Unable to allocate memory for argument\n");
+                fprintf(stderr, "%s: Unable to allocate memory for argument \"%c\"\n", options.progname, 'u');
                 return -2;
             }
             strcpy(options.db_user, optarg);
             break;
            case 'p':
             if ((options.db_password = alloca(strlen(optarg)+1)) == NULL) {
-                fprintf(stderr, "Unable to allocate memory for argument\n");
+                fprintf(stderr, "%s: Unable to allocate memory for argument \"%c\"\n", options.progname, 'p');
                 return -2;
             }
             strcpy(options.db_password, optarg);
@@ -81,7 +82,7 @@ int main(int argc, char **argv) {
            case 's':
             options.db_port = strtoul(optarg, &strtolep, 10);
             if (strlen(strtolep) > 0) {
-                fprintf(stderr, "Invalid port argument given: %s\n", optarg);
+                fprintf(stderr, "%s: Invalid port argument given: %s\n", options.progname, optarg);
                 return -3;
             }
             break;
@@ -99,28 +100,28 @@ int main(int argc, char **argv) {
 
     if (options.db_host == NULL) {
         if ((options.db_host = alloca(strlen(RPNTTS_DEFAULT_DB_HOST+1))) == NULL) {
-                fprintf(stderr, "Unable to allocate memory for argument\n");
+                fprintf(stderr, "%s: Unable to allocate memory for default db host\n", options.progname);
                 return -2;
         }
         strcpy(options.db_host, RPNTTS_DEFAULT_DB_HOST);
     }
     if (options.db_name == NULL) {
         if ((options.db_name = alloca(strlen(RPNTTS_DEFAULT_DB_NAME+1))) == NULL) {
-                fprintf(stderr, "Unable to allocate memory for argument\n");
+                fprintf(stderr, "%s: Unable to allocate memory for default db name\n", options.progname);
                 return -2;
         }
         strcpy(options.db_name, RPNTTS_DEFAULT_DB_NAME);
     }
     if (options.db_user == NULL) {
         if ((options.db_user = alloca(strlen(RPNTTS_DEFAULT_DB_USER+1))) == NULL) {
-                fprintf(stderr, "Unable to allocate memory for argument\n");
+                fprintf(stderr, "%s: Unable to allocate memory for default db user\n", options.progname);
                 return -2;
         }
         strcpy(options.db_user, RPNTTS_DEFAULT_DB_USER);
     }
     if (options.db_password == NULL) {
         if ((options.db_password = alloca(strlen(RPNTTS_DEFAULT_DB_PASSWORD+1))) == NULL) {
-                fprintf(stderr, "Unable to allocate memory for argument\n");
+                fprintf(stderr, "%s: Unable to allocate memory for default db password\n", options.progname);
                 return -2;
         }
         strcpy(options.db_password, RPNTTS_DEFAULT_DB_PASSWORD);
@@ -133,13 +134,13 @@ int main(int argc, char **argv) {
     /* Initialize NXP Reader Library params */
     status = init_nxprdlib(&nxp_params);
     if (status != 0) {
-        fprintf(stderr, "Error initializing nxp reader library structures: %d\n", status);
+        fprintf(stderr, "%s: Error initializing nxp reader library structures: %d\n", options.progname, status);
         return 1;
     }
 
     /* Init mysql structure */
     if (mysql_init(&mysql) == NULL) {
-        fprintf(stderr, "Error initializing mysql structure: %d\n", status);
+        fprintf(stderr, "%s: Error initializing mysql structure: %d\n", options.progname, status);
         return 2;
     }
 
@@ -151,15 +152,15 @@ int main(int argc, char **argv) {
         espeak_voice.gender = 1;
         espeak_voice.variant = 1;
         if ((espeak_error = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, ESPEAK_BUFFER, NULL, 0)) == EE_INTERNAL_ERROR) {
-            fprintf(stderr, "Error initializing espeak: %d\n", espeak_error);
+            fprintf(stderr, "%s: Error initializing espeak: %d\n", options.progname, espeak_error);
             return 3;
         }
         if ((espeak_error = espeak_SetVoiceByProperties(&espeak_voice)) != EE_OK) {
-            fprintf(stderr, "Error setting espeak voice: %d\n", espeak_error);
+            fprintf(stderr, "%s: Error setting espeak voice: %d\n", options.progname, espeak_error);
             return 4;
         }
         if ((espeak_error = espeak_SetParameter(espeakRATE, ESPEAK_RATE, 0)) != EE_OK) {
-            fprintf(stderr, "Error setting espeak rate: %d\n", espeak_error);
+            fprintf(stderr, "%s: Error setting espeak rate: %d\n", options.progname, espeak_error);
             return 5;
         }
 
@@ -173,7 +174,7 @@ int main(int argc, char **argv) {
         /* Search for card in field */
         status = detect_card(&nxp_params, bcard_uid, &card_uid_len);
         if (status != 0) {
-            fprintf(stderr, "Error detecting card: %d\n", status);
+            fprintf(stderr, "%s: Error detecting card: %d\n", options.progname, status);
         }
         else if (card_uid_len > 0) {
 
@@ -181,12 +182,12 @@ int main(int argc, char **argv) {
             bin_to_hex(bcard_uid, card_uid_len, card_uid);
 
             if (options.verbose) {
-                fprintf(stderr, "Found card with UID: %s\n", card_uid);
+                fprintf(stderr, "%s: Found card with UID: %s\n", options.progname, card_uid);
             }
 
             /* Check ndef presence */
             if (options.verbose) {
-                printf("disc loop: %d\n", do_discovery_loop(&nxp_params));
+                fprintf(stderr, "%s: Disc loop exited with: %d\n", options.progname, do_discovery_loop(&nxp_params));
             }
 
             if (options.no_booking) {
@@ -196,7 +197,7 @@ int main(int argc, char **argv) {
 
             /* Connect to mysql DB */
             if (! mysql_real_connect(&mysql, options.db_host, options.db_user, options.db_password, options.db_name, options.db_port, NULL, 0)) {
-                fprintf(stderr, "Error connecting to mysql: %s\n", mysql_error(&mysql));
+                fprintf(stderr, "%s: Error connecting to mysql: %s\n", options.progname, mysql_error(&mysql));
                 mysql_close(&mysql);
                 usleep(SLEEPUSECONDS);
                 continue;
@@ -207,7 +208,7 @@ int main(int argc, char **argv) {
             status = get_user_by_card_uid(&mysql, card_uid, &user);
             if (status != 0) {
                 if (options.verbose) {
-                    fprintf(stderr, "Can not find user, status: %d\n", status);
+                    fprintf(stderr, "%s: Can not find user, status: %d\n", options.progname, status);
                 }
                 mysql_close(&mysql);
                 usleep(SLEEPUSECONDS);
@@ -228,7 +229,7 @@ int main(int argc, char **argv) {
             /* Do booking */
             status = do_booking(&mysql, user.pk);
             if (status != 0) {
-                fprintf(stderr, "Error during booking: ");
+                fprintf(stderr, "%s: Error during booking: ", options.progname);
                 if (status == -1) {
                     fprintf(stderr, "booking time intervall below limit\n");
                 }
@@ -238,7 +239,7 @@ int main(int argc, char **argv) {
                 mysql_close(&mysql);
             }
             else if (options.verbose) {
-                fprintf(stderr, "INFO: Successfully performed booking\n");
+                fprintf(stderr, "%s: Successfully performed booking\n", options.progname);
             }
 
             mysql_close(&mysql);
@@ -246,7 +247,7 @@ int main(int argc, char **argv) {
         }
         else {
             if (options.verbose) {
-                fprintf(stderr, "Nothing found...\n");
+                fprintf(stderr, "%s: Nothing found...\n", options.progname);
             }
         }
 
