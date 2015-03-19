@@ -1,0 +1,58 @@
+<resources>
+    <string name="app_name">rpntts-android</string>
+    <string name="action_sync">Synchronisieren</string>
+    <string name="title_activity_entry">Eintrag</string>
+    <string name="action_settings">Settings</string>
+    <string name="entry">Eintrag</string>
+    <string name="entries">Einträge</string>
+    <string name="id">Kennung</string>
+    <string name="password">Passwort</string>
+    <string name="date">Datum</string>
+    <string name="time">Zeit</string>
+    <string name="ok">Ok</string>
+    <string name="delete">Löschen</string>
+    <string name="add_entry">Eintrag hinzufügen</string>
+    <string name="info_add_id_and_pw">Bitte Kennung und Passwort in den Einstellungen speichern!</string>
+    <string name="info_set_id_and_pw">Bitte Kennung und Passwort eingeben!</string>
+    <string name="info_save_id_and_pw">Kennung und Passwort wurden gespeichert!</string>
+    <string name="info_fill_all">Bitte alle Felder ausfüllen!</string>
+    <string name="info_enty_changed">Eintrag wurde geändert!</string>
+    <string name="info_nothing_changed">Es wurden keine Änderungen vorgenommen!</string>
+    <string name="info_entry_deleted">Eintrag gelöscht!</string>
+    <string name="info_no_nfc_adapter">NFC wird nicht unterstützt!</string>
+    <string name="info_ok_nfg">NFC synchronisation erfolgreich!</string>
+    <string name="info_empty_entry">Keine Einträge verfügbar!</string>
+    <string name="title_activity_base">BaseActivity</string>
+    <string name="menu_home">Home</string>
+    <string name="menu_setting">Einstellungen</string>
+    <string name="title_activity_setting">Einstellungen</string>h
+    <string name="save">Speichern</string>
+    <string name="info_delete_entry">Eintrag wurde gelöscht!</string>
+    <string name="info_no_change_id_and_pw">Es wurde nichts geändert!</string>
+    <string name="not_delete_after_transmission">Einträge nicht löschen</string>
+    <string name="info_entry_sent">Eintrag wurde bereits übertragen!</string>
+
+
+    <!-- Nav Drawer Menu Items -->
+    <string-array name="nav_drawer_items">
+        <item>Home</item>
+        <item>Einstellungen</item>
+    </string-array>
+
+    <!-- Nav Drawer List Item Icons -->
+    <!-- Keep them in order as the titles are in -->
+    <array name="nav_drawer_icons">
+        <item>@drawable/ic_action_dock</item>
+        <item>@drawable/ic_action_settings</item>
+    </array>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="service_name">EntryNFC</string>
+    <string name="info_not_nfc">Es gab Probleme bei der NFC übertragung!</string>
+    <string name="sync">Synchronisiert?</string>
+    <string name="no">Nein</string>
+    <string name="yes">Ja</string>
+    <string name="sync_ok">Synchronisation erfolgreich?</string>
+    <string name="sync_title">Synchronisation</string>
+</resources>

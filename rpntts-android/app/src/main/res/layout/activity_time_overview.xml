@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/add_entry"
+                android:id="@+id/button_addEntry"
+                android:padding="5dip"
+                />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/sync"
+        android:id="@+id/button_sync"
+        android:padding="5dip" />
+
+
+    <Space
+                android:layout_width="30px"
+                android:layout_height="30px"
+                android:layout_below="@+id/editTextPassword"
+                android:id="@+id/space" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="@string/entries"
+                android:id="@+id/textView2"
+                android:padding="5dip"
+                />
+
+            <ListView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/listView"
+                android:padding="5dip"/>
+        </LinearLayout>
