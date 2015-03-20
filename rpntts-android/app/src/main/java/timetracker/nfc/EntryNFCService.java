@@ -36,7 +36,7 @@ public class EntryNFCService extends HostApduService {
     private final static byte[] CC_FILE = new byte[]{
             0x00, 0x0f, // CCLEN
             0x20, // Mapping Version
-            0x00, 0x3b, // Maximum R-APDU data size
+            0x00, 0x3a, // Maximum R-APDU data size
             0x00, 0x34, // Maximum C-APDU data size
             0x04, 0x06, // Tag & Length
             (byte) 0xe1, 0x04, // NDEF File Identifier
