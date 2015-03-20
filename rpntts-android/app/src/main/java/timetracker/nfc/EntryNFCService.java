@@ -33,10 +33,11 @@ public class EntryNFCService extends HostApduService {
             (byte) 0x02, (byte) 0xe1, (byte) 0x04, // NDEF File Identifier last 2 byte equale File ID
     };
 
+	// Protokollaufbau
     private final static byte[] CC_FILE = new byte[]{
             0x00, 0x0f, // CCLEN
             0x20, // Mapping Version
-            0x00, 0x3a, // Maximum R-APDU data size
+            0x00, 0x3b, // Maximum R-APDU data size
             0x00, 0x34, // Maximum C-APDU data size
             0x04, 0x06, // Tag & Length
             (byte) 0xe1, 0x04, // NDEF File Identifier
@@ -63,8 +64,7 @@ public class EntryNFCService extends HostApduService {
     @Override
     public void onCreate() {
         super.onCreate();
-        // Get the String
-        NdefRecord record = createEntryRecord(getSentString(), Locale.GERMAN, true);
+        NdefRecord record = createEntryRecord("Test123", Locale.GERMAN, true);
 
         NdefMessage ndefMessage = new NdefMessage(record);
 
@@ -78,7 +78,7 @@ public class EntryNFCService extends HostApduService {
     }
 
     enum State {
-        NothingSelected, AppSelected, ContainerCapabilitySelected, NdefSelected;
+        NothingSelected, AppSelected, ContainerCapabilitySelected, NdefSelected
     }
 
     // this method transforms a text into a nfc record. found in web
@@ -100,7 +100,7 @@ public class EntryNFCService extends HostApduService {
 
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-
+        Log.i(TAG, "processCommandApdu");
         if (Arrays.equals(SELECT_APP, commandApdu)) {
             Log.d(TAG, "SELECT APP");
             mState = State.AppSelected;
@@ -131,6 +131,7 @@ public class EntryNFCService extends HostApduService {
                     System.arraycopy(mNdefRecordFile, offset, responseApdu, 0, le);
                     System.arraycopy(SUCCESS_SW, 0, responseApdu, le, SUCCESS_SW.length);
                     Log.d(TAG, "READ NDEF OK");
+
                     return responseApdu;
                 }
                 Log.d(TAG, "READ NDEF NOK");
