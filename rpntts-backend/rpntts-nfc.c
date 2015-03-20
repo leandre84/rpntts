@@ -362,29 +362,34 @@ uint8_t do_discovery_loop(nxprdlibParams *params) {
     status = phacDiscLoop_Start(pdiscLoop);
     phhalHw_FieldReset(phalReader);
 
-    if ((status & PH_ERR_MASK) == PH_ERR_SUCCESS) {
-        phacDiscLoop_GetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TAGS_DETECTED, &config_value);
-        if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE1)) {
-            fprintf(stderr, "detected type 1 tag\n");
-        }
-        else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE2)) {
-            fprintf(stderr, "detected type 2 tag\n");
-            status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
-            if (status != PH_ERR_SUCCESS) {
-                return RPNTTS_NFC_DISCLOOP_ACTIVATECARD;
+    if (status == PH_ERR_SUCCESS) {
+        status = phacDiscLoop_GetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TAGS_DETECTED, &config_value);
+        if (status == PH_ERR_SUCCESS) {
+            if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE1)) {
+                fprintf(stderr, "detected type 1 tag\n");
             }
-            fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T2T_TAG));
-        }
-        else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE4A)) {
-            fprintf(stderr, "detected type 4a tag\n");
-            status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
-            if (status != PH_ERR_SUCCESS) {
-                return RPNTTS_NFC_DISCLOOP_ACTIVATECARD;
+            else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE2)) {
+                fprintf(stderr, "detected type 2 tag\n");
+                status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
+                if (status != PH_ERR_SUCCESS) {
+                    return RPNTTS_NFC_DISCLOOP_ACTIVATECARD;
+                }
+                fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T2T_TAG));
             }
-            fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T4T_TAG));
+            else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE4A)) {
+                fprintf(stderr, "detected type 4a tag\n");
+                status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
+                if (status != PH_ERR_SUCCESS) {
+                    return RPNTTS_NFC_DISCLOOP_ACTIVATECARD;
+                }
+                fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T4T_TAG));
+            }
+            else {
+                return RPNTTS_NFC_DISCLOOP_UNKNOWNTYPE;
+            }
         }
         else {
-            return RPNTTS_NFC_DISCLOOP_UNKNOWNTYPE;
+            return RPNTTS_NFC_DISCLOOP_GETCONFIG;
         }
     }
     else {
