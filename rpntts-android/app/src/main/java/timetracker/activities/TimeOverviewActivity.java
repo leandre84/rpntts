@@ -29,7 +29,7 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
     private ListView entryListView;
     private Button addEntryButton;
     private Button syncButton;
-    private NfcAdapter mNfcAdapter;
+    // private NfcAdapter mNfcAdapter;
     private DatabaseHandler db;
 
     private SwipeDetector swipeDetector;
@@ -41,14 +41,12 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
         LayoutInflater inflater = getLayoutInflater();
         inflater.inflate(R.layout.activity_time_overview, (ViewGroup) findViewById(R.id.content_frame));
 
-        // getExtras --> Über getIntent kann man nur so auf die Werte der Activities kommen.
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             Toast.makeText(getApplicationContext(), extras.getString("info"), Toast.LENGTH_SHORT).show();
         }
         db = new DatabaseHandler(this);
 
-        // To check that action is a "swipe" and not click
         swipeDetector = new SwipeDetector();
 
         //link objects to object form activity_time_overview.xml layout file
@@ -66,7 +64,7 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
         checkNFCHostCardFeature();
 
     }
-    // Check if HCE is supported by this device where the app is currently running
+
     private void checkNFCHostCardFeature() {
         boolean isHceSupported = getPackageManager().hasSystemFeature("android.hardware.nfc.hce");
         Toast.makeText(this, "HCE Supported: " + getPackageManager().hasSystemFeature("android.hardware.nfc.hce"), Toast.LENGTH_LONG).show();
@@ -80,10 +78,8 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
         // Build adapter with entries
         List<Entry> entryList = db.getAllEntries();
 
-        // If Entry is empty
         if (entryList.isEmpty())
             entryList.add(new Entry(getString(R.string.info_empty_entry)));
-
 
         EntryListAdapter adapter = new EntryListAdapter(getApplicationContext(), R.layout.enty_list_item, entryList);
         entryListView.setAdapter(adapter);
@@ -91,6 +87,7 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
     }
 
     // this method transforms a text into a nfc record. found in web
+    // only for android beam, can be deleted
     private NdefRecord createEntryRecord(String text, Locale locale, boolean encodeInUtf8) {
         byte[] langBytes = locale.getLanguage().getBytes(Charset.forName("US-ASCII"));
 
@@ -132,6 +129,7 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
         }
     }
 
+    // Dialog for synchronisation
     public void clickButtonSync() {
         AlertDialog dialog = new AlertDialog.Builder(this).create();
         dialog.setTitle(getString(R.string.sync_title));
@@ -144,17 +142,12 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
                 } else {
                     db.deleteAllEntries();
                 }
+                // Green sync symbol
                 populateEntryList();
             }
         });
         dialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.no), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int buttonId) {
-                if (db.getSetting("notDeleteAfterTransmission").getValue().equals("t")) {
-                    db.setSentAllEntries(true);
-                } else {
-                    db.deleteAllEntries();
-                }
-                populateEntryList();
             }
         });
         dialog.show();
@@ -181,7 +174,6 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
                 intent.putExtra("entryPosition", entry.getId());
                 //start the window
                 startActivity(intent);
-                // If it is not wipeing, then it is clicking
             } else {
                 Toast.makeText(getApplicationContext(), getString(R.string.info_entry_sent), Toast.LENGTH_SHORT).show();
             }
@@ -199,6 +191,7 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
         startActivity(intent);
     }
 }
+
 
 
 
