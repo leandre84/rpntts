@@ -30,4 +30,5 @@ return array(
              'rpntts' => __DIR__ . '/../view',
          ),
      ),
- )
+ );
+ 

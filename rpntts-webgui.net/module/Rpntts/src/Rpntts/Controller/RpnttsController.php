@@ -49,6 +49,9 @@ class RpnttsController extends AbstractActionController
     
     public function indexAction()
     {
+        return new ViewModel(array(
+             'bookings' => $this->getBookingTable()->fetchAll(),
+         ));
     }
 
     public function addAction()

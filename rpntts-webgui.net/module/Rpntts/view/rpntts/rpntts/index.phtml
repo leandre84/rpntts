@@ -1,2 +1,34 @@
-<h1>Welcome to rpntts - Raspberry Pi Time Tracking Service'</h1>
-<h1><?php echo sprintf('Welcome to %srpntts - Raspberry Pi Time Tracking Service%s', '<strong>', '</strong>')?></h1>
+<?php
+$title = 'My bookings';
+$this->headTitle($title);
+?>
+<h1><?php echo $this->escapeHtml($title);?></h1>
+<p>
+    <a href="<?php echo $this->url('booking', array('action'=>'add'));?>">Add new booking</a>
+</p>
+
+<table class="table">
+<tr>
+    <th>Booking ID</th>
+    <th>Time stamp</th>
+    <th>Type</th>
+    <th>Text</th>
+    <th>User ID</th>
+    <th>&nbsp;</th>
+</tr>
+<?php foreach ($bookings as $booking) : ?>
+<tr>
+    <td><?php echo $this->escapeHtml($booking->primaryKey);?></td>
+    <td><?php echo $this->escapeHtml($booking->timeStamp);?></td>
+    <td><?php echo $this->escapeHtml($booking->type);?></td>
+    <td><?php echo $this->escapeHtml($booking->text);?></td>
+    <td><?php echo $this->escapeHtml($booking->userForeignKey);?></td>
+    <td>
+        <a href="<?php echo $this->url('booking',
+            array('action'=>'edit', 'pk' => $booking->id));?>">Edit</a>
+        <a href="<?php echo $this->url('booking',
+            array('action'=>'delete', 'pk' => $booking->id));?>">Delete</a>
+    </td>
+</tr>
+<?php endforeach; ?>
+</table>

@@ -39,7 +39,7 @@ namespace Rpntts;
                     $resultSetPrototype = new ResultSet();
                     $resultSetPrototype->setArrayObjectPrototype(new Booking());
                     return new TableGateway('booking', $dbAdapter, NULL, $resultSetPrototype);
-                }
+                },
                 'Rpntts\Model\CardTable' => function($sm) {
                     $tableGateway = $sm->get('CardTableGateway');
                     $table = new CardTable($tableGateway);
@@ -60,14 +60,14 @@ namespace Rpntts;
                     $dbAdapter = $sm->get('Zend\Db\Adapter\Adapter');
                     $resultSetPrototype = new ResultSet();
                     $resultSetPrototype->setArrayObjectPrototype(new TimeModel());
-                    return new TableGateway('timeModel', $dbAdapter, NULL, $resultSetPrototype);
+                    return new TableGateway('timemodel', $dbAdapter, NULL, $resultSetPrototype);
                 },
-                'Rpntts\Model\UserModelTable' => function($sm) {
-                    $tableGateway = $sm->get('UserModelTableGateway');
+                'Rpntts\Model\UserTable' => function($sm) {
+                    $tableGateway = $sm->get('UserTableGateway');
                     $table = new UserModelTable($tableGateway);
                     return $table;
                 },
-                'UserModelTableGateway' => function($sm) {
+                'UserTableGateway' => function($sm) {
                     $dbAdapter = $sm->get('Zend\Db\Adapter\Adapter');
                     $resultSetPrototype = new ResultSet();
                     $resultSetPrototype->setArrayObjectPrototype(new User());
