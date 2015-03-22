@@ -22,7 +22,7 @@ class UserTable
     public function getUser($id)
     {
         $id  = (int) $id;
-        $rowset = $this->tableGateway->select(array('primaryKey' => $id));
+        $rowset = $this->tableGateway->select(array('pk' => $id));
         $row = $rowset->current();
         if (!$row) {
             throw new \Exception("Could not find row "  . $id);
@@ -34,15 +34,15 @@ class UserTable
     public function saveUser(User $user)
     {
         $data = array(
-            'primaryKey' => $user->primaryKey,
-            'userName' => $user->userName,
-            'passWord' => $user->passWord,
-            'staffNumber' => $user->staffNumber,
-            'firstName' => $user->firstName,
-            'lastName' => $user->lastName,
+            'pk' => $user->primaryKey,
+            'username' => $user->userName,
+            'password' => $user->passWord,
+            'persno' => $user->staffNumber,
+            'firstname' => $user->firstName,
+            'lastname' => $user->lastName,
             'active' => $user->active,
-            'timeBalance' => $user->timeBalance,
-            'timeModelForeignKey' => $user->timeModelForeignKey,
+            'timebalance' => $user->timeBalance,
+            'timemodel_fk' => $user->timeModelForeignKey,
         );
 
         $id = (int) $user->primaryKey;
@@ -50,7 +50,7 @@ class UserTable
             $this->tableGateway->insert($data);
         } else {
             if ($this->getUser($id)) {
-                $this->tableGateway->update($data, array('primaryKey' => $id));
+                $this->tableGateway->update($data, array('pk' => $id));
             } else {
                 throw new \Exception("User id " . $id . " does not exist");
             }
@@ -59,7 +59,7 @@ class UserTable
 
     public function deleteUser($id)
     {
-        $this->tableGateway->delete(array('primaryKey' => (int) $id));
+        $this->tableGateway->delete(array('pk' => (int) $id));
     }
  }
  

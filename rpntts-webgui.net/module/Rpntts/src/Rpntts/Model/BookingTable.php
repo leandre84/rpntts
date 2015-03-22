@@ -34,11 +34,11 @@ class BookingTable
     public function saveBooking(Booking $booking)
     {
         $data = array(
-            'primaryKey' => $booking->primaryKey,
-            'timeStamp' => $booking->timeStamp,
+            'pk' => $booking->primaryKey,
+            'timestamp' => $booking->timeStamp,
             'type' => $booking->type,
             'text' => $booking->text,
-            'userForeignKey' => $booking->userForeignKey,
+            'user_fk' => $booking->userForeignKey,
         );
 
         $id = (int) $booking->primaryKey;
@@ -46,7 +46,7 @@ class BookingTable
             $this->tableGateway->insert($data);
         } else {
             if ($this->getBooking($id)) {
-                $this->tableGateway->update($data, array('primaryKey' => $id));
+                $this->tableGateway->update($data, array('pk' => $id));
             } else {
                 throw new \Exception("Booking id " . $id . " does not exist");
             }
@@ -55,7 +55,7 @@ class BookingTable
 
     public function deleteBooking($id)
     {
-        $this->tableGateway->delete(array('primaryKey' => (int) $id));
+        $this->tableGateway->delete(array('pk' => (int) $id));
     }
  }
  
