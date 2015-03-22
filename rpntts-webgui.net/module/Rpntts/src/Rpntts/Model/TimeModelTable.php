@@ -22,7 +22,7 @@ class TimeModelTable
     public function getTimeModel($id)
     {
         $id  = (int) $id;
-        $rowset = $this->tableGateway->select(array('primaryKey' => $id));
+        $rowset = $this->tableGateway->select(array('pk' => $id));
         $row = $rowset->current();
         if (!$row) {
             throw new \Exception("Could not find row "  . $id);
@@ -34,8 +34,8 @@ class TimeModelTable
     public function saveTimeModel(TimeModel $timeModel)
     {
         $data = array(
-            'primaryKey' => $timeModel->primaryKey,
-            'modelName' => $timeModel->modelName,
+            'pk' => $timeModel->primaryKey,
+            'modelname' => $timeModel->modelName,
             'monday' => $timeModel->monday,
             'tuesday' => $timeModel->tuesday,
             'wednesday' => $timeModel->wednesday,
@@ -50,7 +50,7 @@ class TimeModelTable
             $this->tableGateway->insert($data);
         } else {
             if ($this->getTimeModel($id)) {
-                $this->tableGateway->update($data, array('primaryKey' => $id));
+                $this->tableGateway->update($data, array('pk' => $id));
             } else {
                 throw new \Exception("Time model id " . $id . " does not exist");
             }
@@ -59,7 +59,7 @@ class TimeModelTable
 
     public function deleteTimeModel($id)
     {
-        $this->tableGateway->delete(array('primaryKey' => (int) $id));
+        $this->tableGateway->delete(array('pk' => (int) $id));
     }
  }
  
