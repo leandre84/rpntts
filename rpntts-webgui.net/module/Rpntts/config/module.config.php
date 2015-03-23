@@ -1,4 +1,5 @@
 <?php
+
 return array(
     'controllers' => array(
         'invokables' => array(
@@ -8,7 +9,7 @@ return array(
     
     'router' => array(
         'routes' => array(
-            'rpntts' => array(
+            'booking' => array(
                 'type'    => 'segment',
                 'options' => array(
                     'route'    => '/rpntts[/:action][/:id]',
@@ -27,7 +28,7 @@ return array(
     
     'view_manager' => array(
         'template_path_stack' => array(
-            'rpntts' => __DIR__ . '/../view/rpntts/rpntts',
+            'rpntts' => __DIR__ . '/../view',
         ),
     ),
 );

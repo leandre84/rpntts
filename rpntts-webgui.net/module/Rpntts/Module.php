@@ -1,6 +1,16 @@
 <?php
 namespace Rpntts;
 
+ use Rpntts\Model\Booking;
+ use Rpntts\Model\BookingTable;
+ use Rpntts\Model\Card;
+ use Rpntts\Model\CardTable;
+ use Rpntts\Model\TimeModel;
+ use Rpntts\Model\TimeModelTable;
+ use Rpntts\Model\User;
+ use Rpntts\Model\UserTable;
+ use Zend\Db\ResultSet\ResultSet;
+ use Zend\Db\TableGateway\TableGateway;
  use Zend\ModuleManager\Feature\AutoloaderProviderInterface;
  use Zend\ModuleManager\Feature\ConfigProviderInterface;
 
