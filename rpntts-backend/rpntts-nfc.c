@@ -60,6 +60,8 @@ uint8_t init_nxprdlib(nxprdlibParams *params) {
     phStatus_t status;
     int i = 0;
 
+    memset(params, '\0', sizeof(nxprdlibParams));
+
     phOsal_GLib_Init_GLib(posal, pHalMainContext);
 
     /* Init Raspberry Pi SPI BAL */
