@@ -23,11 +23,11 @@
 #define ESPEAK_RATE 180
 #define ESPEAK_TEXT_LENGTH 256
 
+rpnttsOptions options;
 
 void usage(char *progname);
 
 int main(int argc, char **argv) {
-    rpnttsOptions options;
     int optopt = 0;
     char *strtolep = NULL;
     nxprdlibParams nxp_params;

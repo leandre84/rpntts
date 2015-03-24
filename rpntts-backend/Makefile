@@ -31,4 +31,4 @@ rpntts-test: rpntts-common.o rpntts-nfc.o rpntts-test.o
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LINKPATHS) $(LINKLIBS)
 
 clean:
-	rm -f *.o rpntts
+	rm -f *.o rpntts rpntts-test

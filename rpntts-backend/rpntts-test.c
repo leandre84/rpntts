@@ -23,9 +23,9 @@
 #define ESPEAK_RATE 180
 #define ESPEAK_TEXT_LENGTH 256
 
+rpnttsOptions options;
 
 int main(int argc, char **argv) {
-    rpnttsOptions options;
     nxprdlibParams nxp_params;
     uint8_t bcard_uid[MAXUIDLEN];
     uint8_t card_uid_len = 0;
@@ -52,10 +52,12 @@ int main(int argc, char **argv) {
         if (status == RPNTTS_NFC_DISCLOOP_NOTHING_FOUND) {
             printf("Nothing found...\n");
             sleep(1);
-            continue;
+            break;
         }
 
         fprintf(stderr, "%s: Disc loop exited with: %d\n", options.progname, status);
+
+        break;
 
         sleep(1);
 

@@ -57,6 +57,12 @@ uint8_t init_nxprdlib(nxprdlibParams *params) {
     phOsal_GLib_DataParams_t *posal = &(params->osal);
     GMainContext *pHalMainContext = params->pHalMainContext;
 
+    const uint8_t aSensRes[2] = { 0x04, 0x00 }; /* ATQ bytes - needed for anti-collision */
+    const uint8_t aNfcId1[3] = { 0xA1, 0xA2, 0xA3 }; /* user defined bytes of the UID (one is hardcoded) - needed for anti-collision */
+    const uint8_t bSelRes = 0x40; /* SAK (ISO18092mT) - needed for anti-collision */
+    const uint8_t bNfcId3 = 0xFA;
+    const uint8_t aPollRes[18] = { 0x01, 0xFE, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0x23, 0x45 }; /* felica - needed for anti-collision *//* NFC3 byte - required for anti-collision */
+
     phStatus_t status;
     int i = 0;
 
@@ -230,7 +236,12 @@ uint8_t init_nxprdlib(nxprdlibParams *params) {
     pdiscLoop->pPal18092mTDataParams = ppalI18092mT;
     pdiscLoop->pPalFelicaDataParams = ppalFelica;
     pdiscLoop->pHalDataParams = phalReader; 
-    pdiscLoop->pOsal = posal; 
+    pdiscLoop->pOsal = posal;
+
+    status = phhalHw_SetListenParameters(phalReader, aSensRes, aNfcId1, bSelRes, aPollRes, bNfcId3);
+    if (status != PH_ERR_SUCCESS) {
+        return 26;
+    }
 
     phhalHw_FieldReset(phalReader);
 
@@ -303,6 +314,7 @@ uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     uint8_t ndef_record[1024] = { 0 };
     uint16_t ndef_record_length = 0;
     char ndef_text[(1024*2)+1] = { 0 };
+    uint16_t config_value = 0;
 
     status = phalTop_Reset(ptagop);
     if (status != PH_ERR_SUCCESS) {
@@ -319,15 +331,29 @@ uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
        return RPNTTS_NFC_DETECTNDEF_CHECKNDEF; 
     }
 
+    if (options.verbose) {
+        status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_TAG_FORMATTABLE, &config_value);
+        if (status != PH_ERR_SUCCESS) return 123;
+        printf("Tag formattable: %d\n", config_value);
+
+        printf("ndef formatted: %d\n", params->t4tparam.bNdefFormatted);
+        printf("ndef supported: %d\n", params->t4tparam.bNdefSupport);
+        printf("Tag formattable: %d\n", params->t4tparam.bNdefPresence);
+        printf("read access: %d\n", params->t4tparam.bRa);
+        printf("write access: %d\n", params->t4tparam.bWa);
+    }
+
     if (ndef_presence) {
         status = phalTop_ReadNdef(ptagop, ndef_record, &ndef_record_length);
         if (status != PH_ERR_SUCCESS) {
             return RPNTTS_NFC_DETECTNDEF_READNDEF;
         }
         else {
-            fprintf(stderr, "Got NDEF record with length: %d\n", ndef_record_length);
-            bin_to_hex(ndef_record, ndef_record_length, ndef_text);
-            fprintf(stdout, "NDEF Record: %s\n", ndef_text);
+            if (options.verbose) {
+                fprintf(stderr, "Got NDEF record with length: %d\n", ndef_record_length);
+                bin_to_hex(ndef_record, ndef_record_length, ndef_text);
+                fprintf(stdout, "NDEF Record: %s\n", ndef_text);
+            }
             return RPNTTS_NFC_DETECTNDEF_NDEFPRESENT;
         }
     }
@@ -362,30 +388,33 @@ uint8_t do_discovery_loop(nxprdlibParams *params) {
 
     phhalHw_FieldOff(phalReader);
     status = phacDiscLoop_Start(pdiscLoop);
-    phhalHw_FieldReset(phalReader);
 
     if (status == PH_ERR_SUCCESS) {
         status = phacDiscLoop_GetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TAGS_DETECTED, &config_value);
         if (status == PH_ERR_SUCCESS) {
             if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED)) {
+                phhalHw_FieldReset(phalReader);
+                status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
+                if (status != PH_ERR_SUCCESS) {
+                    phhalHw_FieldReset(phalReader);
+                    return RPNTTS_NFC_DISCLOOP_ACTIVATECARD;
+                }
                 if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE1)) {
-                    fprintf(stderr, "detected type 1 tag\n");
+                    if (options.verbose) {
+                        fprintf(stderr, "detected type 1 tag\n");
+                    }
                 }
                 else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE2)) {
-                    fprintf(stderr, "detected type 2 tag\n");
-                    status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
-                    if (status != PH_ERR_SUCCESS) {
-                        return RPNTTS_NFC_DISCLOOP_ACTIVATECARD;
+                    if (options.verbose) {
+                        fprintf(stderr, "detected type 2 tag\n");
+                        fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T2T_TAG));
                     }
-                    fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T2T_TAG));
                 }
                 else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE4A)) {
-                    fprintf(stderr, "detected type 4a tag\n");
-                    status = phacDiscLoop_Sw_ActivateCard(pdiscLoop, PHAC_DISCLOOP_TYPEA_ACTIVATE, 0);
-                    if (status != PH_ERR_SUCCESS) {
-                        return RPNTTS_NFC_DISCLOOP_ACTIVATECARD;
+                    if (options.verbose) {
+                        fprintf(stderr, "detected type 4a tag\n");
+                        fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T4T_TAG));
                     }
-                    fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T4T_TAG));
                 }
                 else {
                     return RPNTTS_NFC_DISCLOOP_UNKNOWNTYPE;
