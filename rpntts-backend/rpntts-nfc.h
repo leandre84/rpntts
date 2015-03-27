@@ -21,6 +21,7 @@
 #include <phOsal_GLib.h>
 #include <phKeyStore.h>
 #include <phacDiscLoop_Sw.h>
+#include <phlnLlcp.h>
 
 #include <glib.h>
 
@@ -49,6 +50,7 @@
 #define RPNTTS_NFC_INIT_ERR_CM_OSAL 22
 #define RPNTTS_NFC_INIT_ERR_CM_OSAL_TIMER 23
 #define RPNTTS_NFC_INIT_ERR_CM_DISCLOOP 24
+#define RPNTTS_NFC_INIT_ERR_LLCP_OVRHAL 25
 
 #define RPNTTS_NFC_DETECTCARD_ERR_SOFTRESET 1
 #define RPNTTS_NFC_DETECTCARD_ERR_APPLYPROTOCOL 2

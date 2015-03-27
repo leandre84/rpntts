@@ -136,9 +136,13 @@ uint8_t init_nxprdlib(nxprdlibParams *params) {
         return RPNTTS_NFC_INIT_ERR_PAL_I18092MT;
     }
 
-    /* Initialize the OvrHal component (???)
-    phlnLlcp_Fri_OvrHal_Init();
-    */
+    /* Initialize the OvrHal component 
+     * this seems to be particularly usefull for NDEF detection
+     * but unfortunately undocumented in nxprdlib */
+    status = phlnLlcp_Fri_OvrHal_Init();
+    if (status != PH_ERR_SUCCESS) {
+        return RPNTTS_NFC_INIT_ERR_LLCP_OVRHAL;
+    }
 
     /* Initialize the Mifare PAL component */
     status = phpalMifare_Sw_Init(ppalMifare, sizeof(phpalMifare_Sw_DataParams_t), phalReader, ppalI14443p4);
