@@ -199,7 +199,8 @@ int32_t DetectMifare(void *halReader, uint8_t *bUid, uint8_t *pbLength) {
     }
 
     /* Initialize the Mifare PAL component */
-    status = phpalMifare_Sw_Init(&palMifare, sizeof(phpalMifare_Sw_DataParams_t), halReader, &I14443p3a);
+    //status = phpalMifare_Sw_Init(&palMifare, sizeof(phpalMifare_Sw_DataParams_t), halReader, &I14443p3a);
+    status = phpalMifare_Sw_Init(&palMifare, sizeof(phpalMifare_Sw_DataParams_t), halReader, &I14443p4);
     if (status != PH_ERR_SUCCESS) {
         fprintf(stderr, "Error initializing the Mifare PAL\n");
         return -3;

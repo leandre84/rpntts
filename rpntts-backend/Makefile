@@ -27,8 +27,8 @@ all:	rpntts
 rpntts:	rpntts-common.o rpntts-nfc.o rpntts-mysql.o rpntts.o
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LINKPATHS) $(LINKLIBS)
 
-rpntts-test: rpntts-common.o rpntts-nfc.o rpntts-test.o
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LINKPATHS) $(LINKLIBS)
+#rpntts-test: rpntts-common.o rpntts-nfc.o rpntts-test.o
+#	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LINKPATHS) $(LINKLIBS)
 
 clean:
 	rm -f *.o rpntts rpntts-test
