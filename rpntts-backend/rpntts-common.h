@@ -17,6 +17,6 @@ typedef struct {
 
 extern rpnttsOptions options;
 
-void bin_to_hex(uint8_t *in, uint8_t in_length, char *out);
+void bin_to_hex(uint8_t *in, uint16_t in_length, char *out);
 
 #endif /* RPNTTS_COMMON_H */

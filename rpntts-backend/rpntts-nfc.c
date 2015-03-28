@@ -299,9 +299,10 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     phStatus_t status;
     uint8_t ndef_presence = 0;
-    uint8_t ndef_record[1024] = { 0 };
+    uint8_t ndef_record[MAX_NDEF_SIZE] = { 0 };
     uint16_t ndef_record_length = 0;
-    char ndef_text[(1024*2)+1] = { 0 };
+    char ndef_text[(MAX_NDEF_SIZE*2)+1] = { 0 };
+    uint16_t config_name = 0;
     uint16_t config_value = 0;
 
     status = phalTop_Reset(ptagop);
@@ -319,17 +320,30 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
        return RPNTTS_NFC_DETECTNDEF_ERR_CHECKNDEF; 
     }
 
-    if (options.verbose) {
-        status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_T4T_NLEN, &config_value);
-        if (status == PH_ERR_SUCCESS) {
-            printf("T4T NDEF length: %d\n", config_value);
-        }
-    }
-
     if (ndef_presence) {
+        switch (tag_type) {
+            case PHAL_TOP_TAG_TYPE_T1T_TAG:
+                config_name = PHAL_TOP_CONFIG_T1T_MAX_NDEF_LENGTH;
+                break;
+            case PHAL_TOP_TAG_TYPE_T2T_TAG:
+                config_name = PHAL_TOP_CONFIG_T2T_MAX_NDEF_LENGTH;
+                break;
+            case PHAL_TOP_TAG_TYPE_T4T_TAG:
+                config_name = PHAL_TOP_CONFIG_T4T_NLEN;
+                break;
+        }
+        status = phalTop_GetConfig(ptagop, config_name, &config_value);
+        if (status != PH_ERR_SUCCESS) {
+            return RPNTTS_NFC_DETECTNDEF_ERR_GETCONFIG;
+        }
+        if (config_value > MAX_NDEF_SIZE) {
+            return RPNTTS_NFC_DETECTNDEF_ERR_NDEF_EXCEEDS_BUFFER;
+        }
         status = phalTop_ReadNdef(ptagop, ndef_record, &ndef_record_length);
         if (status != PH_ERR_SUCCESS) {
-            return status;
+            if (status & (PH_COMP_AL_MFDF | PH_ERR_SUCCESS_CHAINING)) {
+                return RPNTTS_NFC_DETECTNDEF_ERR_READNDEF_CHAINING;
+            }
             return RPNTTS_NFC_DETECTNDEF_ERR_READNDEF;
         }
         else {
