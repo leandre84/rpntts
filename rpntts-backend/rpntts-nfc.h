@@ -21,7 +21,6 @@
 #include <phOsal_GLib.h>
 #include <phKeyStore.h>
 #include <phacDiscLoop_Sw.h>
-#include <phlnLlcp.h>
 
 #include <glib.h>
 
@@ -111,10 +110,10 @@ typedef struct {
 } nxprdlibParams;
 
 
-uint8_t init_nxprdlib(nxprdlibParams *params);
-uint8_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid_len);
-uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type);
-uint8_t do_discovery_loop(nxprdlibParams *params);
+uint16_t init_nxprdlib(nxprdlibParams *params);
+uint16_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid_len);
+uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type);
+uint16_t do_discovery_loop(nxprdlibParams *params);
 
 
 #endif /* RPNTTS_NFC_H */

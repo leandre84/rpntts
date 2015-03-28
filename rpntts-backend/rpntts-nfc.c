@@ -24,7 +24,7 @@ void rdlib_set_interrupt_cb(uint8_t en) {
     en=en;
 }
 
-uint8_t init_nxprdlib(nxprdlibParams *params) {
+uint16_t init_nxprdlib(nxprdlibParams *params) {
 
     phKeyStore_Sw_KeyEntry_t KeyEntries[NUMBER_OF_KEYENTRIES];
     phKeyStore_Sw_KeyVersionPair_t KeyVersionPairs[NUMBER_OF_KEYVERSIONPAIRS * NUMBER_OF_KEYENTRIES];
@@ -138,11 +138,12 @@ uint8_t init_nxprdlib(nxprdlibParams *params) {
 
     /* Initialize the OvrHal component 
      * this seems to be particularly usefull for NDEF detection
-     * but unfortunately undocumented in nxprdlib */
+     * but unfortunately undocumented in nxprdlib
     status = phlnLlcp_Fri_OvrHal_Init();
     if (status != PH_ERR_SUCCESS) {
         return RPNTTS_NFC_INIT_ERR_LLCP_OVRHAL;
     }
+    */
 
     /* Initialize the Mifare PAL component */
     status = phpalMifare_Sw_Init(ppalMifare, sizeof(phpalMifare_Sw_DataParams_t), phalReader, ppalI14443p4);
@@ -236,7 +237,7 @@ uint8_t init_nxprdlib(nxprdlibParams *params) {
 
 }
 
-uint8_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid_len) {
+uint16_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid_len) {
 
     phhalHw_Rc523_DataParams_t *phalReader = &(params->halReader);
     phpalI14443p3a_Sw_DataParams_t *ppalI14443p3a = &(params->palI14443p3a);
@@ -294,13 +295,14 @@ uint8_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid
     return 0;
 }
 
-uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
+uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     phStatus_t status;
     uint8_t ndef_presence = 0;
     uint8_t ndef_record[1024] = { 0 };
     uint16_t ndef_record_length = 0;
     char ndef_text[(1024*2)+1] = { 0 };
+    uint16_t config_value = 0;
 
     status = phalTop_Reset(ptagop);
     if (status != PH_ERR_SUCCESS) {
@@ -317,9 +319,17 @@ uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
        return RPNTTS_NFC_DETECTNDEF_ERR_CHECKNDEF; 
     }
 
+    if (options.verbose) {
+        status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_T4T_NLEN, &config_value);
+        if (status == PH_ERR_SUCCESS) {
+            printf("T4T NDEF length: %d\n", config_value);
+        }
+    }
+
     if (ndef_presence) {
         status = phalTop_ReadNdef(ptagop, ndef_record, &ndef_record_length);
         if (status != PH_ERR_SUCCESS) {
+            return status;
             return RPNTTS_NFC_DETECTNDEF_ERR_READNDEF;
         }
         else {
@@ -336,7 +346,7 @@ uint8_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
 
 }
 
-uint8_t do_discovery_loop(nxprdlibParams *params) {
+uint16_t do_discovery_loop(nxprdlibParams *params) {
     phhalHw_Rc523_DataParams_t *phalReader = &(params->halReader);
     phpalI14443p4_Sw_DataParams_t *ppalI14443p4 = &(params->palI14443p4);
     phpalI18092mPI_Sw_DataParams_t *ppalI18092mPI = &(params->palI18092mPI);
