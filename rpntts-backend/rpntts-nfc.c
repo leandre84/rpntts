@@ -299,11 +299,9 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     phStatus_t status;
     uint8_t ndef_presence = 0;
-    uint8_t ndef_record[MAX_NDEF_SIZE] = { 0 };
-    uint16_t ndef_record_length = 0;
-    char ndef_text[(MAX_NDEF_SIZE*2)+1] = { 0 };
-    uint16_t config_name = 0;
-    uint16_t config_value = 0;
+
+    char *ndef_text = NULL;
+    uint16_t ndef_text_length = 0;
 
     status = phalTop_Reset(ptagop);
     if (status != PH_ERR_SUCCESS) {
@@ -321,39 +319,130 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     }
 
     if (ndef_presence) {
-        switch (tag_type) {
-            case PHAL_TOP_TAG_TYPE_T1T_TAG:
-                config_name = PHAL_TOP_CONFIG_T1T_MAX_NDEF_LENGTH;
-                break;
-            case PHAL_TOP_TAG_TYPE_T2T_TAG:
-                config_name = PHAL_TOP_CONFIG_T2T_MAX_NDEF_LENGTH;
-                break;
-            case PHAL_TOP_TAG_TYPE_T4T_TAG:
-                config_name = PHAL_TOP_CONFIG_T4T_NLEN;
-                break;
+        read_ndef(params, tag_type, &ndef_text, &ndef_text_length);
+        printf("NDEF Text: %s\n", ndef_text);
+        if (ndef_text != NULL) {
+            free(ndef_text);
+            ndef_text = NULL;
+            ndef_text_length = 0;
         }
-        status = phalTop_GetConfig(ptagop, config_name, &config_value);
-        if (status != PH_ERR_SUCCESS) {
-            return RPNTTS_NFC_DETECTNDEF_ERR_GETCONFIG;
+        return RPNTTS_NFC_DETECTNDEF_NDEFPRESENT;
+    }
+
+    return 0;
+
+}
+
+uint16_t read_ndef(nxprdlibParams *params, uint8_t tag_type, char **ndef_text, uint16_t *ndef_text_length) {
+    phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
+    phStatus_t status;
+    uint16_t config_name = 0;
+    uint16_t config_value = 0;
+    uint8_t ndef_record[MAX_NDEF_SIZE] = { 0 };
+    uint16_t ndef_record_length = 0;
+    /*
+    uint8_t ndef_mb = 0;
+    uint8_t ndef_me = 0;
+    uint8_t ndef_cf = 0;
+    */
+    uint8_t ndef_sr = 0;
+    uint8_t ndef_il = 0;
+    uint8_t ndef_tnf = 0;
+    uint8_t ndef_type_length = 0;
+    uint32_t ndef_payload_length = 0;
+    uint8_t ndef_id_length = 0;
+    uint8_t ndef_type = 0;
+    uint8_t *ndef_payload = ndef_record;
+    uint8_t *pndef_text = NULL;
+    uint8_t ndef_record_index = 0;
+
+    switch (tag_type) {
+        case PHAL_TOP_TAG_TYPE_T1T_TAG:
+            config_name = PHAL_TOP_CONFIG_T1T_MAX_NDEF_LENGTH;
+            break;
+        case PHAL_TOP_TAG_TYPE_T2T_TAG:
+            config_name = PHAL_TOP_CONFIG_T2T_MAX_NDEF_LENGTH;
+            break;
+        case PHAL_TOP_TAG_TYPE_T4T_TAG:
+            config_name = PHAL_TOP_CONFIG_T4T_NLEN;
+            break;
+    }
+
+    status = phalTop_GetConfig(ptagop, config_name, &config_value);
+    if (status != PH_ERR_SUCCESS) {
+        return RPNTTS_NFC_READNDEF_ERR_GETCONFIG;
+    }
+    if (config_value > MAX_NDEF_SIZE) {
+        return RPNTTS_NFC_READNDEF_ERR_NDEF_EXCEEDS_BUFFER;
+    }
+    status = phalTop_ReadNdef(ptagop, ndef_record, &ndef_record_length);
+    if (status != PH_ERR_SUCCESS) {
+        if (status & (PH_COMP_AL_MFDF | PH_ERR_SUCCESS_CHAINING)) {
+            return RPNTTS_NFC_READNDEF_ERR_READNDEF_CHAINING;
         }
-        if (config_value > MAX_NDEF_SIZE) {
-            return RPNTTS_NFC_DETECTNDEF_ERR_NDEF_EXCEEDS_BUFFER;
+        return RPNTTS_NFC_READNDEF_ERR_READNDEF;
+    }
+
+    /* Dump record in its entirety 
+    printf("NDEF Record dump: ");
+    for (i = 0; i<ndef_record_length; i++) {
+        printf("%02X ", ndef_record[i]);
+    }
+    printf("\n");
+    */
+
+    /*
+    ndef_mb = (ndef_record[0] & 128) >> 7;
+    ndef_me = (ndef_record[0] & 64) >> 6;
+    ndef_cf = (ndef_record[0] & 32) >> 5;
+    */
+    ndef_sr = (ndef_record[0] & 16) >> 4;
+    ndef_il = (ndef_record[0] & 8) >> 3;
+    ndef_tnf = ndef_record[0] & 7;
+
+    ndef_type_length = ndef_record[1];
+
+    if (ndef_sr) {
+        ndef_payload_length = ndef_record[2];
+        ndef_record_index = 3;
+    }
+    else {
+        ndef_payload_length = (ndef_record[2] << 24) |
+            ndef_record[3] << 16 |
+            ndef_record[4] << 8 |
+            ndef_record[5];
+        ndef_record_index = 6;
+    }
+
+    if (ndef_il) {
+        ndef_id_length = ndef_record[ndef_record_index];
+        ndef_record_index += ndef_id_length;
+    }
+
+    if (ndef_type_length) {
+        ndef_type = ndef_record[ndef_record_index];
+        ndef_record_index += ndef_type_length;
+    }
+
+    if (ndef_id_length) {
+        ndef_record_index += ndef_id_length;
+    }
+
+    ndef_payload = &ndef_record[ndef_record_index];
+
+
+    if (ndef_payload_length > 0 && ndef_tnf == 1 && ndef_type == 0x54) {
+        /* NFC RTD Text */
+        *ndef_text_length = ndef_payload_length - (1 + (ndef_payload[0] & 63));
+        pndef_text = ndef_payload + 1 + (ndef_payload[0] & 63);
+        *ndef_text = malloc(*ndef_text_length * sizeof(char) + 1);
+        if (*ndef_text == NULL) {
+            return RPNTTS_NFC_READNDEF_ERR_MALLOC;
         }
-        status = phalTop_ReadNdef(ptagop, ndef_record, &ndef_record_length);
-        if (status != PH_ERR_SUCCESS) {
-            if (status & (PH_COMP_AL_MFDF | PH_ERR_SUCCESS_CHAINING)) {
-                return RPNTTS_NFC_DETECTNDEF_ERR_READNDEF_CHAINING;
-            }
-            return RPNTTS_NFC_DETECTNDEF_ERR_READNDEF;
-        }
-        else {
-            if (options.verbose) {
-                fprintf(stderr, "Got NDEF record with length: %d\n", ndef_record_length);
-                bin_to_hex(ndef_record, ndef_record_length, ndef_text);
-                fprintf(stdout, "NDEF Record: %s\n", ndef_text);
-            }
-            return RPNTTS_NFC_DETECTNDEF_NDEFPRESENT;
-        }
+        strcpy(*ndef_text, (char *) pndef_text);
+    }
+    else {
+        return RPNTTS_NFC_READNDEF_ERR_NO_TEXT_RECORD;
     }
 
     return 0;

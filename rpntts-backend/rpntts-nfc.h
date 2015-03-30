@@ -61,10 +61,13 @@
 #define RPNTTS_NFC_DETECTNDEF_ERR_RESETCONFIG 2
 #define RPNTTS_NFC_DETECTNDEF_ERR_SETCONFIG 3
 #define RPNTTS_NFC_DETECTNDEF_ERR_CHECKNDEF 4
-#define RPNTTS_NFC_DETECTNDEF_ERR_READNDEF 5
-#define RPNTTS_NFC_DETECTNDEF_ERR_READNDEF_CHAINING 6
-#define RPNTTS_NFC_DETECTNDEF_ERR_GETCONFIG 7 
-#define RPNTTS_NFC_DETECTNDEF_ERR_NDEF_EXCEEDS_BUFFER 8
+
+#define RPNTTS_NFC_READNDEF_ERR_READNDEF 1
+#define RPNTTS_NFC_READNDEF_ERR_READNDEF_CHAINING 2
+#define RPNTTS_NFC_READNDEF_ERR_GETCONFIG 3
+#define RPNTTS_NFC_READNDEF_ERR_NDEF_EXCEEDS_BUFFER 4
+#define RPNTTS_NFC_READNDEF_ERR_NO_TEXT_RECORD 5
+#define RPNTTS_NFC_READNDEF_ERR_MALLOC 6
 
 #define RPNTTS_NFC_DISCLOOP_ERR_SETCONFIG 1
 #define RPNTTS_NFC_DISCLOOP_ERR_DISCLOOPSTART 2
@@ -118,6 +121,7 @@ typedef struct {
 uint16_t init_nxprdlib(nxprdlibParams *params);
 uint16_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid_len);
 uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type);
+uint16_t read_ndef(nxprdlibParams *params, uint8_t tag_type, char **ndef_text, uint16_t *ndef_text_length);
 uint16_t do_discovery_loop(nxprdlibParams *params);
 
 
