@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <alloca.h>
+#include <signal.h>
 
 #include <speak_lib.h>
 
@@ -24,10 +25,13 @@
 #define ESPEAK_TEXT_LENGTH 256
 
 rpnttsOptions options;
+volatile int exit_while = 0;
 
 void usage(char *progname);
+void int_handler(int sig);
 
 int main(int argc, char **argv) {
+    struct sigaction sa;
     int optopt = 0;
     char *strtolep = NULL;
     nxprdlibParams nxp_params;
@@ -130,6 +134,10 @@ int main(int argc, char **argv) {
         strcpy(options.db_password, RPNTTS_DEFAULT_DB_PASSWORD);
     }
 
+    sa.sa_handler = int_handler;
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
     /* Initialize GLib main context (needed for OSAL) */
     nxp_params.pHalMainContext = g_main_context_new();
     nxp_params.pHalMainLoop = g_main_loop_new(nxp_params.pHalMainContext, FALSE);
@@ -172,7 +180,7 @@ int main(int argc, char **argv) {
         espeak_Synchronize();
     }
 
-    while (1) {
+    while (exit_while == 0) {
 
         /* Search for card in field */
         status = detect_card(&nxp_params, bcard_uid, &card_uid_len);
@@ -261,6 +269,8 @@ int main(int argc, char **argv) {
 
     }
 
+    printf("Cought signal, exiting...\n");
+
     mysql_close(&mysql);
 
     return EXIT_SUCCESS;
@@ -277,4 +287,10 @@ void usage(char *progname) {
     fprintf(stderr, "   -d [db name] mysql db name to connect to, default rpntts\n");
     fprintf(stderr, "   -u [db user] mysql db user, default rpntts\n");
     fprintf(stderr, "   -p [db password] mysql db password, default rpntts\n");
+}
+
+void int_handler(int sig) {
+    if (sig == SIGINT || sig == SIGTERM) {
+        exit_while = 1;
+    }
 }
