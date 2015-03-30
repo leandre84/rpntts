@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     options.progname = argv[0];
     options.db_port = RPNTTS_DEFAULT_DB_PORT;
 
-    while ((optopt = getopt(argc, argv, "vh:d:u:p:s:xq")) != -1) {
+    while ((optopt = getopt(argc, argv, "vh:d:u:p:s:xq1")) != -1) {
        switch (optopt) {
            case 'v':
             options.verbose = 1;
@@ -91,6 +91,9 @@ int main(int argc, char **argv) {
             break;
            case 'q':
             options.quiet = 1;
+            break;
+           case '1':
+            options.single_run = 1;
             break;
            default:
             usage(argv[0]);
@@ -192,6 +195,9 @@ int main(int argc, char **argv) {
 
             if (options.no_booking) {
                 usleep(SLEEPUSECONDS);
+                if (options.single_run) {
+                    break;
+                }
                 continue;
             }
 

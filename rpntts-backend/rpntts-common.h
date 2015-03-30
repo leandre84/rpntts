@@ -13,6 +13,7 @@ typedef struct {
     char *db_user;
     char *db_password;
     uint16_t db_port;
+    int single_run;
 } rpnttsOptions;
 
 extern rpnttsOptions options;
