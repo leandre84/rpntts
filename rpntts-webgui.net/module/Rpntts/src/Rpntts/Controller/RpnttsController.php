@@ -1,6 +1,8 @@
 <?php
 namespace Rpntts\Controller;
 
+use Rpntts\Model\Booking;
+use Rpntts\Form\BookingForm;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 
@@ -56,13 +58,72 @@ class RpnttsController extends AbstractActionController
 
     public function addAction()
     {
+        $form = new BookingForm();
+        $form->get('submit')->setValue('Hinzufügen');
+
+        $request = $this->getRequest();
+        if ($request->isPost()) {
+            $booking = new Booking();
+            $form->setInputFilter($booking->getInputFilter());
+            $form->setData($request->getPost());
+
+            if ($form->isValid()) {
+                $booking->exchangeArray($form->getData());
+                $this->getBookingTable()->saveBooking($booking);
+
+                // Redirect to list of bookings
+                return $this->redirect()->toRoute('booking');
+            }
+        }
+        return array('form' => $form);
+
     }
 
     public function editAction()
     {
-    }
+        $id = (int) $this->params()->fromRoute('id', 0);
+        if (!$id) {
+            return $this->redirect()->toRoute('booking', array(
+                'action' => 'add'
+            ));
+        }
 
-    public function deleteAction()
-    {
+        // Get the Booking with the specified id. An exception is thrown
+        // if it cannot be found, in which case go to the index page.
+        try {
+            $booking = $this->getBookingTable()->getBooking($id);
+        }
+        catch (\Exception $ex) {
+            return $this->redirect()->toRoute('booking', array(
+                'action' => 'index'
+            ));
+        }
+
+        $form  = new BookingForm();
+        $form->bind($booking);
+        $form->get('submit')->setAttribute('value', 'Edit');
+
+        $request = $this->getRequest();
+        if ($request->isPost()) {
+            $form->setInputFilter($booking->getInputFilter());
+            $form->setData($request->getPost());
+
+            if ($form->isValid()) {
+                $this->getBookingTable()->saveBooking($booking);
+
+                // Redirect to list of bookings
+                return $this->redirect()->toRoute('booking');
+            }
+        }
+
+        return array(
+            'id' => $id,
+            'form' => $form,
+        );
     }
+    
+   public function deleteAction()
+   {
+   }
 }
+
