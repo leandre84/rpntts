@@ -11,10 +11,10 @@ class Booking
 
     public function exchangeArray($data)
     {
-        $this->primaryKey = (!empty($data['primaryKey'])) ? $data['primaryKey'] : NULL;
-        $this->timeStamp = (!empty($data['timeStamp'])) ? $data['timeStamp'] : NULL;
+        $this->primaryKey = (!empty($data['pk'])) ? $data['pk'] : NULL;
+        $this->timeStamp = (!empty($data['timestamp'])) ? $data['timestamp'] : NULL;
         $this->type = (!empty($data['type'])) ? $data['type'] : NULL;
         $this->text = (!empty($data['text'])) ? $data['text'] : NULL;
-        $this->userForeignKey = (!empty($data['userForeignKey'])) ? $data['userForeignKey'] : NULL;
+        $this->userForeignKey = (!empty($data['user_fk'])) ? $data['user_fk'] : NULL;
     }
 }
