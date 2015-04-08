@@ -300,9 +300,6 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     phStatus_t status;
     uint8_t ndef_presence = 0;
 
-    char *ndef_text = NULL;
-    uint16_t ndef_text_length = 0;
-
     status = phalTop_Reset(ptagop);
     if (status != PH_ERR_SUCCESS) {
         return RPNTTS_NFC_DETECTNDEF_ERR_RESETCONFIG;
@@ -319,13 +316,6 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     }
 
     if (ndef_presence) {
-        read_ndef(params, tag_type, &ndef_text, &ndef_text_length);
-        printf("NDEF Text: %s\n", ndef_text);
-        if (ndef_text != NULL) {
-            free(ndef_text);
-            ndef_text = NULL;
-            ndef_text_length = 0;
-        }
         return RPNTTS_NFC_DETECTNDEF_NDEFPRESENT;
     }
 
@@ -333,7 +323,7 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
 
 }
 
-uint16_t read_ndef(nxprdlibParams *params, uint8_t tag_type, char **ndef_text, uint16_t *ndef_text_length) {
+uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text) {
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     phStatus_t status;
     uint16_t config_name = 0;
@@ -370,17 +360,17 @@ uint16_t read_ndef(nxprdlibParams *params, uint8_t tag_type, char **ndef_text, u
 
     status = phalTop_GetConfig(ptagop, config_name, &config_value);
     if (status != PH_ERR_SUCCESS) {
-        return RPNTTS_NFC_READNDEF_ERR_GETCONFIG;
+        return RPNTTS_NFC_GETNDEFTEXT_ERR_GETCONFIG;
     }
     if (config_value > MAX_NDEF_SIZE) {
-        return RPNTTS_NFC_READNDEF_ERR_NDEF_EXCEEDS_BUFFER;
+        return RPNTTS_NFC_GETNDEFTEXT_ERR_NDEF_EXCEEDS_BUFFER;
     }
     status = phalTop_ReadNdef(ptagop, ndef_record, &ndef_record_length);
     if (status != PH_ERR_SUCCESS) {
         if (status & (PH_COMP_AL_MFDF | PH_ERR_SUCCESS_CHAINING)) {
-            return RPNTTS_NFC_READNDEF_ERR_READNDEF_CHAINING;
+            return RPNTTS_NFC_GETNDEFTEXT_ERR_READNDEF_CHAINING;
         }
-        return RPNTTS_NFC_READNDEF_ERR_READNDEF;
+        return RPNTTS_NFC_GETNDEFTEXT_ERR_READNDEF;
     }
 
     /* Dump record in its entirety 
@@ -433,16 +423,11 @@ uint16_t read_ndef(nxprdlibParams *params, uint8_t tag_type, char **ndef_text, u
 
     if (ndef_payload_length > 0 && ndef_tnf == 1 && ndef_type == 0x54) {
         /* NFC RTD Text */
-        *ndef_text_length = ndef_payload_length - (1 + (ndef_payload[0] & 63));
         pndef_text = ndef_payload + 1 + (ndef_payload[0] & 63);
-        *ndef_text = malloc(*ndef_text_length * sizeof(char) + 1);
-        if (*ndef_text == NULL) {
-            return RPNTTS_NFC_READNDEF_ERR_MALLOC;
-        }
-        strcpy(*ndef_text, (char *) pndef_text);
+        strncpy(ndef_text, (char *) pndef_text, MAX_NDEF_TEXT-1);
     }
     else {
-        return RPNTTS_NFC_READNDEF_ERR_NO_TEXT_RECORD;
+        return RPNTTS_NFC_GETNDEFTEXT_ERR_NO_TEXT_RECORD;
     }
 
     return 0;
@@ -458,16 +443,6 @@ uint16_t do_discovery_loop(nxprdlibParams *params) {
     uint16_t config_value = 0;
     phStatus_t status;
 
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_MODE, PHAC_DISCLOOP_SET_POLL_MODE | PHAC_DISCLOOP_SET_PAUSE_MODE);
-    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_DISCLOOP_ERR_SETCONFIG; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_DETECT_TAGS, PHAC_DISCLOOP_CON_POLL_A);
-    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_DISCLOOP_ERR_SETCONFIG; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_PAUSE_PERIOD_MS, 500);
-    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_DISCLOOP_ERR_SETCONFIG; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_NUM_POLL_LOOPS, 1);
-    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_DISCLOOP_ERR_SETCONFIG; };
-    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEA_DEVICE_LIMIT, 3);
-    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_DISCLOOP_ERR_SETCONFIG; };
 
     phpalI14443p4_ResetProtocol(ppalI14443p4);
     phpalI18092mPI_ResetProtocol(ppalI18092mPI);
@@ -488,20 +463,21 @@ uint16_t do_discovery_loop(nxprdlibParams *params) {
                 }
                 if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE1)) {
                     if (options.verbose) {
-                        fprintf(stderr, "detected type 1 tag\n");
+                        fprintf(stderr, "%s: detected type 1 tag\n", options.progname);
                     }
+                    return RPNTTS_NFC_DISCLOOP_DETECTED_T1T;
                 }
                 else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE2)) {
                     if (options.verbose) {
-                        fprintf(stderr, "detected type 2 tag\n");
-                        fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T2T_TAG));
+                        fprintf(stderr, "%s: detected type 2 tag\n", options.progname);
                     }
+                    return RPNTTS_NFC_DISCLOOP_DETECTED_T2T;
                 }
                 else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE4A)) {
                     if (options.verbose) {
-                        fprintf(stderr, "detected type 4a tag\n");
-                        fprintf(stderr, "Detect ndef: %d\n", detect_ndef(params, PHAL_TOP_TAG_TYPE_T4T_TAG));
+                        fprintf(stderr, "%s: detected type 4 tag\n", options.progname);
                     }
+                    return RPNTTS_NFC_DISCLOOP_DETECTED_T4T;
                 }
                 else {
                     return RPNTTS_NFC_DISCLOOP_UNKNOWNTYPE;
@@ -518,6 +494,25 @@ uint16_t do_discovery_loop(nxprdlibParams *params) {
     else {
         return RPNTTS_NFC_DISCLOOP_ERR_DISCLOOPSTART;
     }
+
+    /* never reached */
+    return 0;
+}
+
+uint16_t configure_dicovery_loop(nxprdlibParams *params) {
+    phacDiscLoop_Sw_DataParams_t *pdiscLoop = &(params->discLoop);
+    phStatus_t status;
+
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_MODE, PHAC_DISCLOOP_SET_POLL_MODE | PHAC_DISCLOOP_SET_PAUSE_MODE);
+    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_CONFIG_DISCLOOP_ERR_SETCONFIG; };
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_DETECT_TAGS, PHAC_DISCLOOP_CON_POLL_A);
+    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_CONFIG_DISCLOOP_ERR_SETCONFIG; };
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_PAUSE_PERIOD_MS, 500);
+    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_CONFIG_DISCLOOP_ERR_SETCONFIG; };
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_NUM_POLL_LOOPS, 1);
+    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_CONFIG_DISCLOOP_ERR_SETCONFIG; };
+    status = phacDiscLoop_SetConfig(pdiscLoop, PHAC_DISCLOOP_CONFIG_TYPEA_DEVICE_LIMIT, 3);
+    if (status != PH_ERR_SUCCESS) { return RPNTTS_NFC_CONFIG_DISCLOOP_ERR_SETCONFIG; };
 
     return 0;
 }

@@ -62,19 +62,22 @@
 #define RPNTTS_NFC_DETECTNDEF_ERR_SETCONFIG 3
 #define RPNTTS_NFC_DETECTNDEF_ERR_CHECKNDEF 4
 
-#define RPNTTS_NFC_READNDEF_ERR_READNDEF 1
-#define RPNTTS_NFC_READNDEF_ERR_READNDEF_CHAINING 2
-#define RPNTTS_NFC_READNDEF_ERR_GETCONFIG 3
-#define RPNTTS_NFC_READNDEF_ERR_NDEF_EXCEEDS_BUFFER 4
-#define RPNTTS_NFC_READNDEF_ERR_NO_TEXT_RECORD 5
-#define RPNTTS_NFC_READNDEF_ERR_MALLOC 6
+#define RPNTTS_NFC_GETNDEFTEXT_ERR_READNDEF 1
+#define RPNTTS_NFC_GETNDEFTEXT_ERR_READNDEF_CHAINING 2
+#define RPNTTS_NFC_GETNDEFTEXT_ERR_GETCONFIG 3
+#define RPNTTS_NFC_GETNDEFTEXT_ERR_NDEF_EXCEEDS_BUFFER 4
+#define RPNTTS_NFC_GETNDEFTEXT_ERR_NO_TEXT_RECORD 5
 
-#define RPNTTS_NFC_DISCLOOP_ERR_SETCONFIG 1
-#define RPNTTS_NFC_DISCLOOP_ERR_DISCLOOPSTART 2
-#define RPNTTS_NFC_DISCLOOP_ERR_GETCONFIG 3
-#define RPNTTS_NFC_DISCLOOP_ERR_ACTIVATECARD 5 
-#define RPNTTS_NFC_DISCLOOP_UNKNOWNTYPE 32
-#define RPNTTS_NFC_DISCLOOP_NOTHING_FOUND 33
+#define RPNTTS_NFC_DISCLOOP_ERR_DISCLOOPSTART 1
+#define RPNTTS_NFC_DISCLOOP_ERR_GETCONFIG 2
+#define RPNTTS_NFC_DISCLOOP_ERR_ACTIVATECARD 3
+#define RPNTTS_NFC_DISCLOOP_UNKNOWNTYPE 4
+#define RPNTTS_NFC_DISCLOOP_NOTHING_FOUND 5
+#define RPNTTS_NFC_DISCLOOP_DETECTED_T1T 6
+#define RPNTTS_NFC_DISCLOOP_DETECTED_T2T 7
+#define RPNTTS_NFC_DISCLOOP_DETECTED_T4T 8
+
+#define RPNTTS_NFC_CONFIG_DISCLOOP_ERR_SETCONFIG 1
 
 /* Keystore constants */
 #define MFC_DEFAULT_KEYS 9
@@ -85,7 +88,8 @@
 #define HALBUFSIZE 1024 
 #define MAXUIDLEN 10
 
-#define MAX_NDEF_SIZE 1024
+#define MAX_NDEF_SIZE HALBUFSIZE
+#define MAX_NDEF_TEXT MAX_NDEF_SIZE
 
 typedef struct {
     phbalReg_RpiSpi_DataParams_t balReader;
@@ -121,8 +125,8 @@ typedef struct {
 uint16_t init_nxprdlib(nxprdlibParams *params);
 uint16_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_uid_len);
 uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type);
-uint16_t read_ndef(nxprdlibParams *params, uint8_t tag_type, char **ndef_text, uint16_t *ndef_text_length);
+uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text);
 uint16_t do_discovery_loop(nxprdlibParams *params);
-
+uint16_t configure_dicovery_loop(nxprdlibParams *params);
 
 #endif /* RPNTTS_NFC_H */

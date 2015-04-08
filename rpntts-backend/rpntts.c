@@ -46,6 +46,9 @@ int main(int argc, char **argv) {
     char espeak_text[ESPEAK_TEXT_LENGTH] = { 0 };
     int status = 0;
 
+    uint8_t tag_type = 0;
+    char ndef_text[MAX_NDEF_TEXT];
+
     memset(&options, '\0', sizeof(rpnttsOptions));
     options.progname = argv[0];
     options.db_port = RPNTTS_DEFAULT_DB_PORT;
@@ -149,10 +152,17 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    /* Configure discovery loop */
+    status = configure_dicovery_loop(&nxp_params);
+    if (status != 0) {
+        fprintf(stderr, "%s: Error configuring discovery loop: %d\n", options.progname, status);
+        return 2;
+    }
+
     /* Init mysql structure */
     if (mysql_init(&mysql) == NULL) {
         fprintf(stderr, "%s: Error initializing mysql structure: %d\n", options.progname, status);
-        return 2;
+        return 3;
     }
 
     /* Init espeak */
@@ -164,15 +174,15 @@ int main(int argc, char **argv) {
         espeak_voice.variant = 1;
         if ((espeak_error = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, ESPEAK_BUFFER, NULL, 0)) == EE_INTERNAL_ERROR) {
             fprintf(stderr, "%s: Error initializing espeak: %d\n", options.progname, espeak_error);
-            return 3;
+            return 4;
         }
         if ((espeak_error = espeak_SetVoiceByProperties(&espeak_voice)) != EE_OK) {
             fprintf(stderr, "%s: Error setting espeak voice: %d\n", options.progname, espeak_error);
-            return 4;
+            return 5;
         }
         if ((espeak_error = espeak_SetParameter(espeakRATE, ESPEAK_RATE, 0)) != EE_OK) {
             fprintf(stderr, "%s: Error setting espeak rate: %d\n", options.progname, espeak_error);
-            return 5;
+            return 6;
         }
 
         strncpy(espeak_text, "rpntts initialisiert, akzeptiere Buchungen", ESPEAK_TEXT_LENGTH-1);
@@ -197,8 +207,30 @@ int main(int argc, char **argv) {
             }
 
             /* Check ndef presence */
-            if (options.verbose) {
-                fprintf(stderr, "%s: Disc loop exited with: %d\n", options.progname, do_discovery_loop(&nxp_params));
+            status = do_discovery_loop(&nxp_params);
+            if (status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T ||
+                    status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T ||
+                    status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) {
+
+                if (status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T) tag_type = PHAL_TOP_TAG_TYPE_T1T_TAG;
+                if (status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T) tag_type = PHAL_TOP_TAG_TYPE_T2T_TAG;
+                if (status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) tag_type = PHAL_TOP_TAG_TYPE_T4T_TAG;
+
+                if (detect_ndef(&nxp_params, tag_type) == RPNTTS_NFC_DETECTNDEF_NDEFPRESENT) {
+                    memset(ndef_text, '\0', MAX_NDEF_TEXT);
+                    if (get_ndef_text(&nxp_params, tag_type, ndef_text) == 0 ) {
+                        if (options.verbose) {
+                            fprintf(stderr, "%s: NDEF Text: %s\n", options.progname, ndef_text);
+                        }
+                    }
+                }
+                else {
+                    printf("No NDEF\n");
+                }
+
+            }
+            else {
+                printf("Loop: %d\n", status);
             }
 
             if (options.no_booking) {
@@ -269,7 +301,6 @@ int main(int argc, char **argv) {
 
     }
 
-    printf("Cought signal, exiting...\n");
 
     mysql_close(&mysql);
 
@@ -290,7 +321,7 @@ void usage(char *progname) {
 }
 
 void int_handler(int sig) {
-    if (sig == SIGINT || sig == SIGTERM) {
-        exit_while = 1;
-    }
+    sig = sig;
+    fprintf(stderr, "%s: Cought signal, exiting...\n", options.progname);
+    exit_while = 1;
 }
