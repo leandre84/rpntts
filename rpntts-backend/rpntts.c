@@ -18,7 +18,8 @@
 #define RPNTTS_DEFAULT_DB_PORT 3306 
 
 
-#define SLEEPUSECONDS 200000
+/* #define SLEEPUSECONDS 200000 */
+#define SLEEPUSECONDS 1
 
 #define ESPEAK_BUFFER 500
 #define ESPEAK_RATE 180
@@ -46,6 +47,7 @@ int main(int argc, char **argv) {
     char espeak_text[ESPEAK_TEXT_LENGTH] = { 0 };
     int status = 0;
 
+    int disc_loop_status = 0;
     uint8_t tag_type = 0;
     char ndef_text[MAX_NDEF_TEXT];
 
@@ -192,6 +194,17 @@ int main(int argc, char **argv) {
 
     while (exit_while == 0) {
 
+        usleep(SLEEPUSECONDS);
+
+        while ((disc_loop_status = do_discovery_loop(&nxp_params)) == RPNTTS_NFC_DISCLOOP_NOTHING_FOUND) {
+            if (exit_while) {
+                break;
+            }
+        }
+        if (exit_while) {
+            break;
+        }
+
         /* Search for card in field */
         status = detect_card(&nxp_params, bcard_uid, &card_uid_len);
         if (status != 0) {
@@ -224,20 +237,9 @@ int main(int argc, char **argv) {
                         }
                     }
                 }
-                else {
-                    printf("No NDEF\n");
-                }
-
-            }
-            else {
-                printf("Loop: %d\n", status);
             }
 
             if (options.no_booking) {
-                usleep(SLEEPUSECONDS);
-                if (options.single_run) {
-                    break;
-                }
                 continue;
             }
 
@@ -245,7 +247,6 @@ int main(int argc, char **argv) {
             if (! mysql_real_connect(&mysql, options.db_host, options.db_user, options.db_password, options.db_name, options.db_port, NULL, 0)) {
                 fprintf(stderr, "%s: Error connecting to mysql: %s\n", options.progname, mysql_error(&mysql));
                 mysql_close(&mysql);
-                usleep(SLEEPUSECONDS);
                 continue;
             }
 
@@ -257,7 +258,6 @@ int main(int argc, char **argv) {
                     fprintf(stderr, "%s: Can not find user, status: %d\n", options.progname, status);
                 }
                 mysql_close(&mysql);
-                usleep(SLEEPUSECONDS);
                 continue;
             }
 
@@ -297,10 +297,11 @@ int main(int argc, char **argv) {
             }
         }
 
-        usleep(SLEEPUSECONDS);
+        if (options.single_run) {
+            break;
+        }
 
     }
-
 
     mysql_close(&mysql);
 
