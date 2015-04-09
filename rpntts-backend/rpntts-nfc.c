@@ -346,6 +346,8 @@ uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text
     uint8_t *pndef_text = NULL;
     uint8_t ndef_record_index = 0;
 
+    volatile unsigned int i;
+
     switch (tag_type) {
         case PHAL_TOP_TAG_TYPE_T1T_TAG:
             config_name = PHAL_TOP_CONFIG_T1T_MAX_NDEF_LENGTH;
@@ -373,13 +375,13 @@ uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text
         return RPNTTS_NFC_GETNDEFTEXT_ERR_READNDEF;
     }
 
-    /* Dump record in its entirety 
-    printf("NDEF Record dump: ");
-    for (i = 0; i<ndef_record_length; i++) {
-        printf("%02X ", ndef_record[i]);
+    if (options.verbose) {
+        fprintf(stderr, "%s: NDEF Record dump: ", options.progname);
+        for (i = 0; i<ndef_record_length; i++) {
+            fprintf(stderr, "%02X ", ndef_record[i]);
+        }
+        fprintf(stderr, "\n");
     }
-    printf("\n");
-    */
 
     /*
     ndef_mb = (ndef_record[0] & 128) >> 7;

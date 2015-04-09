@@ -26,7 +26,7 @@
 #define ESPEAK_TEXT_LENGTH 256
 
 rpnttsOptions options;
-volatile int exit_while = 0;
+volatile unsigned int exit_while = 0;
 
 void usage(char *progname);
 void int_handler(int sig);
@@ -220,14 +220,14 @@ int main(int argc, char **argv) {
             }
 
             /* Check ndef presence */
-            status = do_discovery_loop(&nxp_params);
-            if (status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T ||
-                    status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T ||
-                    status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) {
+            disc_loop_status = do_discovery_loop(&nxp_params);
+            if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T ||
+                    disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T ||
+                    disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) {
 
-                if (status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T) tag_type = PHAL_TOP_TAG_TYPE_T1T_TAG;
-                if (status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T) tag_type = PHAL_TOP_TAG_TYPE_T2T_TAG;
-                if (status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) tag_type = PHAL_TOP_TAG_TYPE_T4T_TAG;
+                if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T) tag_type = PHAL_TOP_TAG_TYPE_T1T_TAG;
+                if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T) tag_type = PHAL_TOP_TAG_TYPE_T2T_TAG;
+                if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) tag_type = PHAL_TOP_TAG_TYPE_T4T_TAG;
 
                 if (detect_ndef(&nxp_params, tag_type) == RPNTTS_NFC_DETECTNDEF_NDEFPRESENT) {
                     memset(ndef_text, '\0', MAX_NDEF_TEXT);
@@ -235,11 +235,20 @@ int main(int argc, char **argv) {
                         if (options.verbose) {
                             fprintf(stderr, "%s: NDEF Text: %s\n", options.progname, ndef_text);
                         }
+                    } else if (options.verbose) {
+                        fprintf(stderr, "%s: NDEF record detected, but there is no text record\n", options.progname);
                     }
+                } else if (options.verbose) {
+                    fprintf(stderr, "%s: No NDEF record detected\n", options.progname);
                 }
+            } else if (options.verbose) {
+                fprintf(stderr, "%s: No tag detected\n", options.progname);
             }
 
             if (options.no_booking) {
+                if (options.single_run) {
+                    break;
+                }
                 continue;
             }
 
