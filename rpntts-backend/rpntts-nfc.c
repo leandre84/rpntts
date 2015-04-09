@@ -345,6 +345,7 @@ uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text
     uint8_t *ndef_payload = ndef_record;
     uint8_t *pndef_text = NULL;
     uint8_t ndef_record_index = 0;
+    uint16_t ndef_text_length = 0;
 
     unsigned int i;
 
@@ -425,8 +426,10 @@ uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text
 
     if (ndef_payload_length > 0 && ndef_tnf == 1 && ndef_type == 0x54) {
         /* NFC RTD Text */
+        ndef_text_length = ndef_payload_length - (1 + (ndef_payload[0] & 63));
         pndef_text = ndef_payload + 1 + (ndef_payload[0] & 63);
-        strncpy(ndef_text, (char *) pndef_text, MAX_NDEF_TEXT-1);
+        /* strncpy(ndef_text, (char *) pndef_text, MAX_NDEF_TEXT-1); */
+        strncpy(ndef_text, (char *) pndef_text, ndef_text_length);
     }
     else {
         return RPNTTS_NFC_GETNDEFTEXT_ERR_NO_TEXT_RECORD;
