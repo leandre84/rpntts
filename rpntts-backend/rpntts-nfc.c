@@ -346,7 +346,7 @@ uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text
     uint8_t *pndef_text = NULL;
     uint8_t ndef_record_index = 0;
 
-    volatile unsigned int i;
+    unsigned int i;
 
     switch (tag_type) {
         case PHAL_TOP_TAG_TYPE_T1T_TAG:
@@ -377,7 +377,7 @@ uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text
 
     if (options.verbose) {
         fprintf(stderr, "%s: NDEF Record dump: ", options.progname);
-        for (i = 0; i<ndef_record_length; i++) {
+        for (i = 0; i < ndef_record_length; i++) {
             fprintf(stderr, "%02X ", ndef_record[i]);
         }
         fprintf(stderr, "\n");
