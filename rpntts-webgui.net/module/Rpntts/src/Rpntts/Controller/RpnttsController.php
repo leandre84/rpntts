@@ -3,6 +3,7 @@ namespace Rpntts\Controller;
 
 use Rpntts\Model\Booking;
 use Rpntts\Form\BookingForm;
+use Rpntts\Form\LoginForm;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 
