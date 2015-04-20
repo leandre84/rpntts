@@ -51,10 +51,19 @@ class RpnttsController extends AbstractActionController
     
     public function indexAction()
     {
-        return new ViewModel(array(
-             'bookings' => $this->getBookingTable()->fetchAll(),
-         ));
+        $form = new LoginForm();
+        $request = $this->getRequest();
+        if ($request->isPost()) {
+            if ($form->isValid($request->getPost())) {
+                // do something here to log in
+            }
+        }
+        $this->view->form = $form;
     }
+        
+        /* return new ViewModel(array(
+             'bookings' => $this->getBookingTable()->fetchAll(),
+         )); */
 
     public function addAction()
     {
