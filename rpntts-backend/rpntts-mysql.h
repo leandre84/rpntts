@@ -23,7 +23,9 @@ typedef struct {
 } rpntts_user;
 
 int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user);
+int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpntts_user *user);
 int do_booking(MYSQL *mysql, char *user_pk);
+int do_nfc_text_mass_booking(MYSQL *mysql, char *nfc_text, char *user_pk);
 int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk);
 
 #endif /* RPNTTS_MYSQL_H */

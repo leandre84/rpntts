@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     espeak_VOICE espeak_voice;
     espeak_POSITION_TYPE espeak_position_type;
     espeak_ERROR espeak_error;
-    char espeak_text[ESPEAK_TEXT_LENGTH] = { 0 };
+    char espeak_text[ESPEAK_TEXT_LENGTH+1] = { 0 };
     int status = 0;
 
     int disc_loop_status = 0;
@@ -61,28 +61,28 @@ int main(int argc, char **argv) {
             options.verbose = 1;
             break;
            case 'h':
-            if ((options.db_host = alloca(strlen(optarg)+1)) == NULL) {
+            if ((options.db_host = alloca(strlen(optarg) * sizeof(char) + 1)) == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for argument \"%c\"\n", options.progname, 'h');
                 return -2;
             }
             strcpy(options.db_host, optarg);
             break;
            case 'd':
-            if ((options.db_name = alloca(strlen(optarg)+1)) == NULL) {
+            if ((options.db_name = alloca(strlen(optarg) * sizeof(char) + 1)) == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for argument \"%c\"\n", options.progname, 'd');
                 return -2;
             }
             strcpy(options.db_name, optarg);
             break;
            case 'u':
-            if ((options.db_user = alloca(strlen(optarg)+1)) == NULL) {
+            if ((options.db_user = alloca(strlen(optarg) * sizeof(char) + 1)) == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for argument \"%c\"\n", options.progname, 'u');
                 return -2;
             }
             strcpy(options.db_user, optarg);
             break;
            case 'p':
-            if ((options.db_password = alloca(strlen(optarg)+1)) == NULL) {
+            if ((options.db_password = alloca(strlen(optarg) * sizeof(char) + 1)) == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for argument \"%c\"\n", options.progname, 'p');
                 return -2;
             }
@@ -111,34 +111,35 @@ int main(int argc, char **argv) {
     }
 
     if (options.db_host == NULL) {
-        if ((options.db_host = alloca(strlen(RPNTTS_DEFAULT_DB_HOST+1))) == NULL) {
+        if ((options.db_host = alloca(strlen(RPNTTS_DEFAULT_DB_HOST) * sizeof(char) + 1)) == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for default db host\n", options.progname);
                 return -2;
         }
         strcpy(options.db_host, RPNTTS_DEFAULT_DB_HOST);
     }
     if (options.db_name == NULL) {
-        if ((options.db_name = alloca(strlen(RPNTTS_DEFAULT_DB_NAME+1))) == NULL) {
+        if ((options.db_name = alloca(strlen(RPNTTS_DEFAULT_DB_NAME) * sizeof(char) + 1)) == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for default db name\n", options.progname);
                 return -2;
         }
         strcpy(options.db_name, RPNTTS_DEFAULT_DB_NAME);
     }
     if (options.db_user == NULL) {
-        if ((options.db_user = alloca(strlen(RPNTTS_DEFAULT_DB_USER+1))) == NULL) {
+        if ((options.db_user = alloca(strlen(RPNTTS_DEFAULT_DB_USER) * sizeof(char) + 1)) == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for default db user\n", options.progname);
                 return -2;
         }
         strcpy(options.db_user, RPNTTS_DEFAULT_DB_USER);
     }
     if (options.db_password == NULL) {
-        if ((options.db_password = alloca(strlen(RPNTTS_DEFAULT_DB_PASSWORD+1))) == NULL) {
+        if ((options.db_password = alloca(strlen(RPNTTS_DEFAULT_DB_PASSWORD) * sizeof(char) + 1)) == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for default db password\n", options.progname);
                 return -2;
         }
         strcpy(options.db_password, RPNTTS_DEFAULT_DB_PASSWORD);
     }
 
+    /* Configure signal handler */
     sa.sa_handler = int_handler;
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
@@ -187,7 +188,7 @@ int main(int argc, char **argv) {
             return 6;
         }
 
-        strncpy(espeak_text, "rpntts initialisiert, akzeptiere Buchungen", ESPEAK_TEXT_LENGTH-1);
+        strncpy(espeak_text, "rpntts initialisiert, akzeptiere Buchungen", ESPEAK_TEXT_LENGTH);
         espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
         espeak_Synchronize();
     }
@@ -195,15 +196,6 @@ int main(int argc, char **argv) {
     while (exit_while == 0) {
 
         usleep(SLEEPUSECONDS);
-
-        while ((disc_loop_status = do_discovery_loop(&nxp_params)) == RPNTTS_NFC_DISCLOOP_NOTHING_FOUND) {
-            if (exit_while) {
-                break;
-            }
-        }
-        if (exit_while) {
-            break;
-        }
 
         /* Search for card in field */
         status = detect_card(&nxp_params, bcard_uid, &card_uid_len);
@@ -219,38 +211,6 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "%s: Found card with UID: %s\n", options.progname, card_uid);
             }
 
-            /* Check ndef presence */
-            disc_loop_status = do_discovery_loop(&nxp_params);
-            if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T ||
-                    disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T ||
-                    disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) {
-
-                if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T) tag_type = PHAL_TOP_TAG_TYPE_T1T_TAG;
-                if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T) tag_type = PHAL_TOP_TAG_TYPE_T2T_TAG;
-                if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) tag_type = PHAL_TOP_TAG_TYPE_T4T_TAG;
-
-                if (detect_ndef(&nxp_params, tag_type) == RPNTTS_NFC_DETECTNDEF_NDEFPRESENT) {
-                    memset(ndef_text, '\0', MAX_NDEF_TEXT);
-                    if (get_ndef_text(&nxp_params, tag_type, ndef_text) == 0 ) {
-                        if (options.verbose) {
-                            fprintf(stderr, "%s: NDEF Text: %s\n", options.progname, ndef_text);
-                        }
-                    } else if (options.verbose) {
-                        fprintf(stderr, "%s: NDEF record detected, but there is no text record\n", options.progname);
-                    }
-                } else if (options.verbose) {
-                    fprintf(stderr, "%s: No NDEF record detected\n", options.progname);
-                }
-            } else if (options.verbose) {
-                fprintf(stderr, "%s: No tag detected\n", options.progname);
-            }
-
-            if (options.no_booking) {
-                if (options.single_run) {
-                    break;
-                }
-                continue;
-            }
 
             /* Connect to mysql DB */
             if (! mysql_real_connect(&mysql, options.db_host, options.db_user, options.db_password, options.db_name, options.db_port, NULL, 0)) {
@@ -264,10 +224,49 @@ int main(int argc, char **argv) {
             status = get_user_by_card_uid(&mysql, card_uid, &user);
             if (status != 0) {
                 if (options.verbose) {
-                    fprintf(stderr, "%s: Can not find user, status: %d\n", options.progname, status);
+                    fprintf(stderr, "%s: Can not find user for card uid \"%s\", status: %d\n", options.progname, card_uid, status);
                 }
-                mysql_close(&mysql);
-                continue;
+                /* Check ndef presence */
+                disc_loop_status = do_discovery_loop(&nxp_params);
+                if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T ||
+                        disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T ||
+                        disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) {
+
+                    if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T1T) tag_type = PHAL_TOP_TAG_TYPE_T1T_TAG;
+                    if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T2T) tag_type = PHAL_TOP_TAG_TYPE_T2T_TAG;
+                    if (disc_loop_status == RPNTTS_NFC_DISCLOOP_DETECTED_T4T) tag_type = PHAL_TOP_TAG_TYPE_T4T_TAG;
+
+                    if (detect_ndef(&nxp_params, tag_type) == RPNTTS_NFC_DETECTNDEF_NDEFPRESENT) {
+                        memset(ndef_text, '\0', MAX_NDEF_TEXT);
+                        if (get_ndef_text(&nxp_params, tag_type, ndef_text) == 0 ) {
+                            if (options.verbose) {
+                                fprintf(stderr, "%s: NDEF Text: %s\n", options.progname, ndef_text);
+                            }
+                            /* Parse text record here */
+                        }
+                        else { 
+                            if (options.verbose) {
+                                fprintf(stderr, "%s: NDEF record detected, but there is no text record\n", options.progname);
+                            }
+                            mysql_close(&mysql);
+                            if (options.single_run) break; else continue; 
+                        }
+                    }
+                    else {
+                        if (options.verbose) {
+                            fprintf(stderr, "%s: No NDEF record detected\n", options.progname);
+                        }
+                        mysql_close(&mysql);
+                            if (options.single_run) break; else continue; 
+                    }
+                }
+                else {
+                    if (options.verbose) {
+                        fprintf(stderr, "%s: No tag detected\n", options.progname);
+                    }
+                    mysql_close(&mysql);
+                    if (options.single_run) break; else continue; 
+                }
             }
 
             /* Greet user */
@@ -279,6 +278,10 @@ int main(int argc, char **argv) {
                 strcat(espeak_text, user.lastname);
                 espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
                 espeak_Synchronize();
+            }
+
+            if (options.no_booking) {
+                if (options.single_run) break; else continue; 
             }
 
             /* Do booking */
@@ -320,6 +323,7 @@ int main(int argc, char **argv) {
 
 void usage(char *progname) {
     fprintf(stderr, "%s: usage: \n", progname);
+    fprintf(stderr, "   -1 exit after one run\n");
     fprintf(stderr, "   -v verbose output\n");
     fprintf(stderr, "   -x just try to detect card, no mysql interaction\n");
     fprintf(stderr, "   -q be quiet - no espeak output\n");

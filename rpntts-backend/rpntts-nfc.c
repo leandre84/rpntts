@@ -241,7 +241,7 @@ uint16_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_ui
 
     phhalHw_Rc523_DataParams_t *phalReader = &(params->halReader);
     phpalI14443p3a_Sw_DataParams_t *ppalI14443p3a = &(params->palI14443p3a);
-    uint8_t atqa[2] = { 0, 0 };
+    uint8_t atqa[2] = { 0 };
     uint8_t sak[1] = { 0 };
     uint8_t morecards = 0;
     phStatus_t status;
@@ -288,6 +288,10 @@ uint16_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_ui
     if (status != PH_ERR_SUCCESS) {
         (void) phpalI14443p3a_HaltA(ppalI14443p3a);
         return RPNTTS_NFC_DETECTCARD_ERR_ACTIVATECARD;
+    }
+
+    if (options.verbose) {
+        fprintf(stderr, "%s: Found card: SAK: 0x%02X, ATQA: 0x%02X%02X\n", options.progname, sak[0], atqa[1], atqa[0]);
     }
 
     (void) phpalI14443p3a_HaltA(ppalI14443p3a);
