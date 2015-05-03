@@ -50,12 +50,41 @@ class RpnttsController extends AbstractActionController
         return $this->bookingTable;
     }
     
-    public function loginAction()
+    /* public function loginAction()
     {
         return new ViewModel(array(
         'user' => $this->getUserTable()->fetchAll(),
         ));
+    } */
+	
+	public function loginAction()
+    {
+        $allUsers = $this->getUserTable()->fetchAll();
+		foreach ($allUsers as $user) {
+			var_dump($user);
+		}
+		
+		$form = new LoginForm();
+        $form->get('submit')->setValue('Anmelden');
+
+        $request = $this->getRequest();
+        if ($request->isPost()) {
+			#$form->setInputFilter($user->getInputFilter());
+            $form->setData($request->getPost());
+			
+			if ($form->isValid()) {
+				#$user->exchangeArray($form->getData());
+				var_dump($form->getData());
+				$allUsers = $this->getUserTable()->fetchAll();
+				var_dump($allUsers);
+
+				// Redirect to list of bookings
+				return $this->redirect()->toRoute('booking');
+			}
+        }
+        return array('form' => $form);
     }
+
         
     public function indexAction()
     {
@@ -146,7 +175,7 @@ class RpnttsController extends AbstractActionController
             }
 
             // Redirect to list of bookings
-            return $this->redirect()->toRoute('album');
+            return $this->redirect()->toRoute('booking');
         }
 
         return array(
