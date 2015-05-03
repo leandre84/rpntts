@@ -50,21 +50,19 @@ class RpnttsController extends AbstractActionController
         return $this->bookingTable;
     }
     
-    public function indexAction()
+    public function loginAction()
     {
-        $form = new LoginForm();
-        $request = $this->getRequest();
-        if ($request->isPost()) {
-            if ($form->isValid($request->getPost())) {
-                // do something here to log in
-            }
-        }
-        $this->view->form = $form;
+        return new ViewModel(array(
+        'user' => $this->getUserTable()->fetchAll(),
+        ));
     }
         
-        /* return new ViewModel(array(
-             'bookings' => $this->getBookingTable()->fetchAll(),
-         )); */
+    public function indexAction()
+    {
+        return new ViewModel(array(
+        'bookings' => $this->getBookingTable()->fetchAll(),
+        ));
+    }
 
     public function addAction()
     {
@@ -86,7 +84,6 @@ class RpnttsController extends AbstractActionController
             }
         }
         return array('form' => $form);
-
     }
 
     public function editAction()

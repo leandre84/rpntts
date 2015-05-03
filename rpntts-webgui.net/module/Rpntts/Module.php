@@ -74,7 +74,7 @@ namespace Rpntts;
                 },
                 'Rpntts\Model\UserTable' => function($sm) {
                     $tableGateway = $sm->get('UserTableGateway');
-                    $table = new UserModelTable($tableGateway);
+                    $table = new UserTable($tableGateway);
                     return $table;
                 },
                 'UserTableGateway' => function($sm) {

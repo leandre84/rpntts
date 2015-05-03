@@ -9,6 +9,20 @@ return array(
     
     'router' => array(
         'routes' => array(
+			'login' => array(
+					'type'    => 'segment',
+					'options' => array(
+						'route'    => '/rpntts[/:action][/:id]',
+						'constraints' => array(
+							'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+							'id'     => '[0-9]+',
+						),
+						'defaults' => array(
+							'controller' => 'Rpntts\Controller\Rpntts',
+							'action'     => 'login',
+						),
+					),
+			),
             'booking' => array(
                 'type'    => 'segment',
                 'options' => array(

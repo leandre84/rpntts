@@ -16,7 +16,7 @@ return array(
                     'route'    => '/',
                     'defaults' => array(
                         'controller' => 'Rpntts\Controller\Rpntts',
-                        'action'     => 'index',
+                        'action'     => 'login',
                     ),
                 ),
             ),
