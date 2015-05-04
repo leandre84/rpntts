@@ -43,6 +43,7 @@ CREATE TABLE booking(
     type VARCHAR(2) NOT NULL,
     text VARCHAR(64) NOT NULL,
     user_fk INTEGER NOT NULL,
+    computed BOOLEAN NOT NULL,
     FOREIGN KEY(user_fk) REFERENCES user(pk)
 );
 
