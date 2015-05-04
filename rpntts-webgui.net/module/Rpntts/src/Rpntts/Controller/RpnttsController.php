@@ -13,6 +13,7 @@ class RpnttsController extends AbstractActionController
     protected $userTable;
     protected $cardTable;
     protected $bookingTable;
+    private $primaryKey;
     
     public function getTimeModelTable()
     {
@@ -49,14 +50,7 @@ class RpnttsController extends AbstractActionController
         }
         return $this->bookingTable;
     }
-    
-    /* public function loginAction()
-    {
-        return new ViewModel(array(
-        'user' => $this->getUserTable()->fetchAll(),
-        ));
-    } */
-	
+
 	public function loginAction()
     {
 		$form = new LoginForm();
@@ -66,17 +60,27 @@ class RpnttsController extends AbstractActionController
         if ($request->isPost()) {
 			#$form->setInputFilter($this->getInputFilter());
             $form->setData($request->getPost());
-            
+
+            // TODO: user auf active prüfen
 			if ($form->isValid()) {
 				#$user->exchangeArray($form->getData());
 				$formContent = $form->getData();
                 $clearTextPass = $formContent['passWord'];
+-               $userNameFromForm = $formContent['userName'];
                 $hashPass = hash('sha256', $clearTextPass);
 				$allUsers = $this->getUserTable()->fetchAll();
                 foreach ($allUsers as $user) {
                     $userVars = get_object_vars($user);
                     foreach ($userVars as $userVar) {
                         if ($hashPass === $userVar) {
+                            $userPrimaryKey = $userVars['primaryKey'];
+                            $userName = $userVars['userName'];
+                            if ($userName === $userNameFromForm) {
+                                var_dump($userPrimaryKey);
+                                $this->setPrimaryKey($userPrimaryKey);
+                                var_dump($userVar);
+                                var_dump($userName);
+                            }
                             var_dump($hashPass);
                             var_dump($userVar);
                         }
@@ -84,7 +88,7 @@ class RpnttsController extends AbstractActionController
                 }
                 
 				// Redirect to list of bookings
-				#return $this->redirect()->toRoute('booking');
+				return $this->redirect()->toRoute('booking');
 			}
         }
         return array('form' => $form);
@@ -93,8 +97,20 @@ class RpnttsController extends AbstractActionController
         
     public function indexAction()
     {
+        $allBookings = $this->getBookingTable()->fetchAll();
+        $userBookings = [];
+        
+        foreach ($allBookings as $booking) {
+            $bookingVars = get_object_vars($booking);
+            foreach ($bookingVars as $bookingVar) {
+                if ($bookingVar === $this->getprimaryKey()) {
+                    $userBookings[] = $booking;
+                }
+            }
+        }
+        
         return new ViewModel(array(
-        'bookings' => $this->getBookingTable()->fetchAll(),
+        'bookings' => $userBookings,
         ));
     }
 
@@ -187,6 +203,16 @@ class RpnttsController extends AbstractActionController
             'id'    => $id,
             'booking' => $this->getBookingTable()->getBooking($id)
         );
+    }
+    
+    public function getPrimaryKey()
+    {
+        return $this->primaryKey;
+    }
+    
+    public function setPrimaryKey()
+    {
+        $this->primaryKey = $primaryKey;
     }
 }
 
