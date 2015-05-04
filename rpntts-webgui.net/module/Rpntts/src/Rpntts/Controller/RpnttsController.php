@@ -70,12 +70,16 @@ class RpnttsController extends AbstractActionController
 			if ($form->isValid()) {
 				#$user->exchangeArray($form->getData());
 				$formContent = $form->getData();
-                var_dump($formContent['passWord']);
+                $clearTextPass = $formContent['passWord'];
+                $hashPass = hash('sha256', $clearTextPass);
 				$allUsers = $this->getUserTable()->fetchAll();
                 foreach ($allUsers as $user) {
                     $userVars = get_object_vars($user);
                     foreach ($userVars as $userVar) {
-                        var_dump($userVar);
+                        if ($hashPass === $userVar) {
+                            var_dump($hashPass);
+                            var_dump($userVar);
+                        }
                     }
                 }
                 
