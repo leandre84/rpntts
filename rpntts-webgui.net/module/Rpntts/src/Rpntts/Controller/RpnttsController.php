@@ -67,18 +67,26 @@ class RpnttsController extends AbstractActionController
 			#$form->setInputFilter($this->getInputFilter());
             $form->setData($request->getPost());
             
+            // TODO: user auf active prüfen
 			if ($form->isValid()) {
 				#$user->exchangeArray($form->getData());
 				$formContent = $form->getData();
                 $clearTextPass = $formContent['passWord'];
+                $userNameFromForm = $formContent['userName'];
                 $hashPass = hash('sha256', $clearTextPass);
 				$allUsers = $this->getUserTable()->fetchAll();
                 foreach ($allUsers as $user) {
                     $userVars = get_object_vars($user);
+                    #var_dump($userVars);
                     foreach ($userVars as $userVar) {
                         if ($hashPass === $userVar) {
-                            var_dump($hashPass);
-                            var_dump($userVar);
+                            $userPrimaryKey = $userVars['primaryKey'];
+                            $userName = $userVars['userName'];
+                            if ($userName === $userNameFromForm) {
+                                var_dump($userPrimaryKey);
+                                var_dump($userVar);
+                                var_dump($userName);
+                            }
                         }
                     }
                 }
