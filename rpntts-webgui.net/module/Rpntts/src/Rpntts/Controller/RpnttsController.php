@@ -210,7 +210,7 @@ class RpnttsController extends AbstractActionController
         return $this->primaryKey;
     }
     
-    public function setPrimaryKey()
+    public function setPrimaryKey(primaryKey)
     {
         $this->primaryKey = $primaryKey;
     }
