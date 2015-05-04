@@ -51,4 +51,5 @@ ALTER TABLE timemodel ADD CONSTRAINT timemodel_modelname_ux UNIQUE (modelname);
 ALTER TABLE timemodel ADD CONSTRAINT timemodel_weekdays_ux UNIQUE (monday, tuesday, wednesday, thursday, friday, saturday, sunday);
 ALTER TABLE user ADD CONSTRAINT user_username_ux UNIQUE (username);
 ALTER TABLE user ADD CONSTRAINT user_persno_ux UNIQUE (persno);
+ALTER TABLE booking ADD CONSTRAINT booking_user_time_ux UNIQUE(user_fk, timestamp);
 
