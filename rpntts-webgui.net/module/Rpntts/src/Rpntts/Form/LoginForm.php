@@ -8,6 +8,8 @@ use Zend\InputFilter\InputFilterInterface;
 
 class LoginForm extends Form implements InputFilterAwareInterface
 {
+    protected $inputFilter;
+    
     public function __construct($name = NULL)
     {
         // ignore the name passed
