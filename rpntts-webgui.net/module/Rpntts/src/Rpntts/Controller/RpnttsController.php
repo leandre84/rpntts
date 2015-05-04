@@ -59,10 +59,10 @@ class RpnttsController extends AbstractActionController
 	
 	public function loginAction()
     {
-        $allUsers = $this->getUserTable()->fetchAll();
+        /* $allUsers = $this->getUserTable()->fetchAll();
 		foreach ($allUsers as $user) {
 			var_dump($user);
-		}
+		} */
 		
 		$form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
@@ -70,16 +70,16 @@ class RpnttsController extends AbstractActionController
         $request = $this->getRequest();
         if ($request->isPost()) {
 			#$form->setInputFilter($user->getInputFilter());
-            $form->setData($request->getPost());
-			
+            var_dump(get_object_vars($form->setData($request->getPost())));
+            
 			if ($form->isValid()) {
 				#$user->exchangeArray($form->getData());
 				var_dump($form->getData());
 				$allUsers = $this->getUserTable()->fetchAll();
-				var_dump($allUsers);
+				#var_dump($allUsers);
 
 				// Redirect to list of bookings
-				return $this->redirect()->toRoute('booking');
+				#return $this->redirect()->toRoute('booking');
 			}
         }
         return array('form' => $form);
