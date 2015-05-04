@@ -243,6 +243,7 @@ int main(int argc, char **argv) {
                                 fprintf(stderr, "%s: NDEF Text: %s\n", options.progname, ndef_text);
                             }
                             /* Parse text record here */
+                            mysql_close(&mysql);
                         }
                         else { 
                             if (options.verbose) {

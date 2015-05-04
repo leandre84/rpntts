@@ -12,9 +12,9 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
     int status = 0;
     unsigned int i = 0;
 
-    strcat(sql, "SELECT user.pk, username, persno, firstname, lastname FROM user, card WHERE card.user_fk = user.pk AND carduid = '");
+    strcat(sql, "SELECT user.pk, username, persno, firstname, lastname FROM user, card WHERE card.user_fk=user.pk AND carduid='");
     strcat(sql, card_uid);
-    strcat(sql, "'");
+    strcat(sql, "' AND user.active='1' AND card.active='1'");
 
     if ((status = mysql_query(mysql, sql)) != 0) {
         return 1;
@@ -99,11 +99,11 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpntts_user *user) {
         i++;
     }
 
-    strcat(sql, "SELECT user.pk, username, persno, firstname, lastname FROM user WHERE username = '");
+    strcat(sql, "SELECT user.pk, username, persno, firstname, lastname FROM user WHERE username='");
     strcat(sql, username);
     strcat(sql, "' AND password='");
     strcat(sql, password);
-    strcat(sql, "'");
+    strcat(sql, "' AND active='1'");
 
     if ((status = mysql_query(mysql, sql)) != 0) {
         return 1;
