@@ -59,27 +59,32 @@ class RpnttsController extends AbstractActionController
 	
 	public function loginAction()
     {
-        $allUsers = $this->getUserTable()->fetchAll();
-		foreach ($allUsers as $user) {
-			var_dump($user);
-		}
-		
 		$form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
 
         $request = $this->getRequest();
         if ($request->isPost()) {
-			#$form->setInputFilter($user->getInputFilter());
+			#$form->setInputFilter($this->getInputFilter());
             $form->setData($request->getPost());
-			
+            
 			if ($form->isValid()) {
 				#$user->exchangeArray($form->getData());
-				var_dump($form->getData());
+				$formContent = $form->getData();
+                $clearTextPass = $formContent['passWord'];
+                $hashPass = hash('sha256', $clearTextPass);
 				$allUsers = $this->getUserTable()->fetchAll();
-				var_dump($allUsers);
-
+                foreach ($allUsers as $user) {
+                    $userVars = get_object_vars($user);
+                    foreach ($userVars as $userVar) {
+                        if ($hashPass === $userVar) {
+                            var_dump($hashPass);
+                            var_dump($userVar);
+                        }
+                    }
+                }
+                
 				// Redirect to list of bookings
-				return $this->redirect()->toRoute('booking');
+				#return $this->redirect()->toRoute('booking');
 			}
         }
         return array('form' => $form);
