@@ -18,8 +18,7 @@
 #define RPNTTS_DEFAULT_DB_PORT 3306 
 
 
-/* #define SLEEPUSECONDS 200000 */
-#define SLEEPUSECONDS 1
+#define SLEEPUSECONDS 200000
 
 #define ESPEAK_BUFFER 500
 #define ESPEAK_RATE 180
@@ -50,6 +49,8 @@ int main(int argc, char **argv) {
     int disc_loop_status = 0;
     uint8_t tag_type = 0;
     char ndef_text[MAX_NDEF_TEXT];
+
+    uint8_t ndef_mass_booking = 0;
 
     memset(&options, '\0', sizeof(rpnttsOptions));
     options.progname = argv[0];
@@ -197,6 +198,9 @@ int main(int argc, char **argv) {
 
         usleep(SLEEPUSECONDS);
 
+        ndef_mass_booking = 0;
+
+
         /* Search for card in field */
         status = detect_card(&nxp_params, bcard_uid, &card_uid_len);
         if (status != 0) {
@@ -243,7 +247,15 @@ int main(int argc, char **argv) {
                                 fprintf(stderr, "%s: NDEF Text: %s\n", options.progname, ndef_text);
                             }
                             /* Parse text record here */
-                            mysql_close(&mysql);
+                            status = get_user_by_nfc_text(&mysql, ndef_text, &user);
+                            if (status == 0) {
+                                printf("%s: Found user via NDEF text record, PK: %s\n", options.progname, user.pk);
+                                ndef_mass_booking = 1;
+                            } else {
+                                mysql_close(&mysql);
+                                fprintf(stderr, "%s: Unable to look up user according to NFC text record: %d\n", options.progname, status);
+                                if (options.single_run) break; else continue; 
+                            }
                         }
                         else { 
                             if (options.verbose) {
@@ -258,7 +270,7 @@ int main(int argc, char **argv) {
                             fprintf(stderr, "%s: No NDEF record detected\n", options.progname);
                         }
                         mysql_close(&mysql);
-                            if (options.single_run) break; else continue; 
+                        if (options.single_run) break; else continue; 
                     }
                 }
                 else {
@@ -282,26 +294,36 @@ int main(int argc, char **argv) {
             }
 
             if (options.no_booking) {
+                mysql_close(&mysql);
                 if (options.single_run) break; else continue; 
             }
 
             /* Do booking */
-            status = do_booking(&mysql, user.pk);
-            if (status != 0) {
-                fprintf(stderr, "%s: Error during booking: ", options.progname);
-                if (status == -1) {
-                    fprintf(stderr, "booking time intervall below limit\n");
+            if (ndef_mass_booking == 0) {
+                status = do_booking(&mysql, user.pk);
+                if (status != 0) {
+                    fprintf(stderr, "%s: Error during booking: ", options.progname);
+                    if (status == -1) {
+                        fprintf(stderr, "booking time intervall below limit\n");
+                    }
+                    else {
+                        fprintf(stderr, "%s\n", mysql_error(&mysql));
+                    }
+                    mysql_close(&mysql);
                 }
-                else {
-                    fprintf(stderr, "%s\n", mysql_error(&mysql));
+                else if (options.verbose) {
+                    fprintf(stderr, "%s: Successfully performed booking\n", options.progname);
                 }
                 mysql_close(&mysql);
             }
-            else if (options.verbose) {
-                fprintf(stderr, "%s: Successfully performed booking\n", options.progname);
+            else {
+                /* Do mass booking */
+                status = do_nfc_text_mass_booking(&mysql, ndef_text, user.pk);
+                if (status != 0) {
+                    fprintf(stderr, "%s: Error during mass booking: %s\n", options.progname, mysql_error(&mysql));
+                }
+                mysql_close(&mysql);
             }
-
-            mysql_close(&mysql);
 
         }
         else {

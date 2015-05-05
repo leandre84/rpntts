@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "rpntts-common.h"
 #include "rpntts-mysql.h"
 
 int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
@@ -16,6 +17,10 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
     strcat(sql, card_uid);
     strcat(sql, "' AND user.active='1' AND card.active='1'");
 
+    if (options.verbose) {
+        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+    }
+
     if ((status = mysql_query(mysql, sql)) != 0) {
         return 1;
     }
@@ -28,6 +33,7 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
     while ((row = mysql_fetch_row(result))) {
         if (i != 0) {
             /* just one result expected */
+            mysql_free_result(result);
             return 3;
         }
         if (strlen(row[0]) > USER_PK_LEN ||
@@ -37,7 +43,8 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
                 strlen(row[4]) > USER_LASTNAME_LEN 
            ) {
             /* Values unexepectedly larger than data structure */
-            return 3;
+            mysql_free_result(result);
+            return 4;
         }
 
         strcpy(user->pk, row[0]);
@@ -49,6 +56,7 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
         i++;
     }
 
+    mysql_free_result(result);
     return (i == 1 ? 0 : 4);
 
 }
@@ -105,6 +113,10 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpntts_user *user) {
     strcat(sql, password);
     strcat(sql, "' AND active='1'");
 
+    if (options.verbose) {
+        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+    }
+
     if ((status = mysql_query(mysql, sql)) != 0) {
         return 1;
     }
@@ -118,6 +130,7 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpntts_user *user) {
     while ((row = mysql_fetch_row(result))) {
         if (i != 0) {
             /* just one result expected */
+            mysql_free_result(result);
             return 3;
         }
         if (strlen(row[0]) > USER_PK_LEN ||
@@ -127,7 +140,8 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpntts_user *user) {
                 strlen(row[4]) > USER_LASTNAME_LEN 
            ) {
             /* Values unexepectedly larger than data structure */
-            return 3;
+            mysql_free_result(result);
+            return 4;
         }
 
         strcpy(user->pk, row[0]);
@@ -139,6 +153,7 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpntts_user *user) {
         i++;
     }
 
+    mysql_free_result(result);
     return (i == 1 ? 0 : 4);
 
 }
@@ -155,10 +170,61 @@ int do_booking(MYSQL *mysql, char *user_pk) {
         return -1;
     }
 
+    if (options.verbose) {
+        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+    }
+
     return mysql_query(mysql, sql);
 }
 
 int do_nfc_text_mass_booking(MYSQL *mysql, char *nfc_text, char *user_pk) {
+    char sql[SQLBUF] = { 0 };
+    unsigned int i = 0;
+    char *nfc_text_copy = NULL;
+    char *token = NULL;
+
+    nfc_text_copy = alloca(strlen(nfc_text) * sizeof(char) + 1);
+    if (nfc_text_copy == NULL) {
+        return 1;
+    }
+    strcpy(nfc_text_copy, nfc_text);
+
+    if (mysql_autocommit(mysql, 0) != 0) {
+        return 2;
+    }
+
+    token = strtok(nfc_text_copy, "|");
+    while (token != NULL) {
+        if (i > 2) {
+            memset(sql, '\0', SQLBUF*sizeof(char));
+            strcat(sql, "INSERT INTO booking (timestamp, text, user_fk) VALUES (str_to_date('");
+            strcat(sql, token);
+            strcat(sql, "', '%Y%m%d%H%i%s'), 'NDEF derived booking', '");
+            strcat(sql, user_pk);
+            strcat(sql, "')");
+            if (options.verbose) {
+                fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+            }
+            if (mysql_query(mysql, sql) != 0) {
+                if (mysql_rollback(mysql) != 0) {
+                    return 4;
+                }
+                return 3;
+            }
+        }
+        token = strtok(NULL, "|");
+        i++;
+    }
+
+    if (mysql_commit(mysql) != 0) {
+        (void) mysql_autocommit(mysql, 1);
+        return 5;
+    }
+
+    (void) mysql_autocommit(mysql, 1);
+
+    return 0;
+
 }
 
 int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
@@ -171,6 +237,10 @@ int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
     strcat(sql, "select min(timestampdiff(second, timestamp, now())) from booking where user_fk='");
     strcat(sql, user_pk);
     strcat(sql, "'");
+
+    if (options.verbose) {
+        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+    }
 
     if ((status = mysql_query(mysql, sql)) != 0) {
         return 1;
@@ -190,7 +260,8 @@ int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
     else {
         retval = strtol(row[0], NULL, 10);
     }
-
+    
+    mysql_free_result(result); 
     return retval;
 }
 

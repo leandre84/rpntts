@@ -25,14 +25,14 @@ DROP TABLE IF EXISTS `booking`;
 CREATE TABLE `booking` (
   `pk` int(11) NOT NULL AUTO_INCREMENT,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `type` varchar(2) NOT NULL,
+  `type` varchar(2) NOT NULL DEFAULT 'A',
   `text` varchar(64) NOT NULL,
   `user_fk` int(11) NOT NULL,
-  `computed` tinyint(1) NOT NULL,
+  `computed` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`pk`),
   UNIQUE KEY `booking_user_time_ux` (`user_fk`,`timestamp`),
   CONSTRAINT `booking_ibfk_1` FOREIGN KEY (`user_fk`) REFERENCES `user` (`pk`)
-) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,7 +41,7 @@ CREATE TABLE `booking` (
 
 LOCK TABLES `booking` WRITE;
 /*!40000 ALTER TABLE `booking` DISABLE KEYS */;
-INSERT INTO `booking` VALUES (75,'2015-05-04 18:14:58','','Automatic booking from rpntts-backend',1,0),(76,'2015-05-04 18:15:28','','Automatic booking from rpntts-backend',2,0),(77,'2015-05-04 18:15:59','','Automatic booking from rpntts-backend',1,0),(78,'2015-05-04 18:16:36','','Automatic booking from rpntts-backend',2,0);
+INSERT INTO `booking` VALUES (3,'2015-05-05 21:28:19','A','Automatic booking from rpntts-backend',1,0),(4,'2015-05-05 21:28:37','A','Automatic booking from rpntts-backend',2,0),(5,'2015-05-05 21:29:44','A','Automatic booking from rpntts-backend',2,0),(6,'2015-05-05 21:29:50','A','Automatic booking from rpntts-backend',1,0),(15,'2015-05-04 15:50:21','A','NDEF derived booking',1,0),(16,'2015-05-04 16:21:13','A','NDEF derived booking',1,0);
 /*!40000 ALTER TABLE `booking` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -102,7 +102,7 @@ CREATE TABLE `timemodel` (
 
 LOCK TABLES `timemodel` WRITE;
 /*!40000 ALTER TABLE `timemodel` DISABLE KEYS */;
-INSERT INTO `timemodel` VALUES (1,'Mo-Fr 8h',8,8,8,8,8,0,0);
+INSERT INTO `timemodel` VALUES (1,'Montag bis Freitag 8h',8,8,8,8,8,8,8);
 /*!40000 ALTER TABLE `timemodel` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -116,7 +116,7 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   `pk` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(32) NOT NULL,
-  `password` char(64) DEFAULT NULL,
+  `password` varchar(64) DEFAULT NULL,
   `persno` varchar(32) DEFAULT NULL,
   `firstname` varchar(64) NOT NULL,
   `lastname` varchar(64) NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,'leandros','9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08','1234A','Leandros','Athanasiadis',1,0,1),(2,'tessi','9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08','234','Theresa','Förster-Streffleur',1,0,1);
+INSERT INTO `user` VALUES (1,'leandros','9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08','1234A','Leandros','Athanasiadis',1,0,1),(2,'tessi','9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08','2134','Theresa','Förster-Streffleur',1,0,1);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -150,4 +150,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-05-04 20:16:44
+-- Dump completed on 2015-05-05 23:33:03
