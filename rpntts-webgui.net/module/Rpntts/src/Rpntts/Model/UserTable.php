@@ -11,6 +11,17 @@ class UserTable
     {
         $this->tableGateway = $tableGateway;
     }
+    
+    public function getUserMatchingNameAndPassword($userName, $passWord)
+    {
+		$rowset = $this->tableGateway->select(array('username' => $userName, 'password' => $passWord));
+        $row = $rowset->current();
+        if (!$row) {
+            throw new \Exception("Could not find row for user name " . $userName);
+        }
+        
+        return $row;
+    }
 
     public function fetchAll()
     {

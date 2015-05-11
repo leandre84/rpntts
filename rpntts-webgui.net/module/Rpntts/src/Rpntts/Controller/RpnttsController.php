@@ -13,7 +13,7 @@ class RpnttsController extends AbstractActionController
     protected $userTable;
     protected $cardTable;
     protected $bookingTable;
-    private $primaryKey;
+    private $currentUserId;
     
     public function getTimeModelTable()
     {
@@ -51,45 +51,26 @@ class RpnttsController extends AbstractActionController
         return $this->bookingTable;
     }
 
-	public function loginAction()
+    public function loginAction()
     {
-		$form = new LoginForm();
+        $form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
 
         $request = $this->getRequest();
         if ($request->isPost()) {
-			#$form->setInputFilter($this->getInputFilter());
             $form->setData($request->getPost());
 
             // TODO: user auf active prüfen
-			if ($form->isValid()) {
-				#$user->exchangeArray($form->getData());
-				$formContent = $form->getData();
+            if ($form->isValid()) {
+                $formContent = $form->getData();
                 $clearTextPass = $formContent['passWord'];
--               $userNameFromForm = $formContent['userName'];
+                $userNameFromForm = $formContent['userName'];
                 $hashPass = hash('sha256', $clearTextPass);
-				$allUsers = $this->getUserTable()->fetchAll();
-                foreach ($allUsers as $user) {
-                    $userVars = get_object_vars($user);
-                    foreach ($userVars as $userVar) {
-                        if ($hashPass === $userVar) {
-                            $userPrimaryKey = $userVars['primaryKey'];
-                            $userName = $userVars['userName'];
-                            if ($userName === $userNameFromForm) {
-                                var_dump($userPrimaryKey);
-                                $this->setPrimaryKey($userPrimaryKey);
-                                var_dump($userVar);
-                                var_dump($userName);
-                            }
-                            var_dump($hashPass);
-                            var_dump($userVar);
-                        }
-                    }
-                }
+                $user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
+				$this->setCurrentUserId($user->timeModelForeignKey);
                 
-				// Redirect to list of bookings
-				return $this->redirect()->toRoute('booking');
-			}
+                return $this->redirect()->toRoute('booking');
+            }
         }
         return array('form' => $form);
     }
@@ -99,11 +80,13 @@ class RpnttsController extends AbstractActionController
     {
         $allBookings = $this->getBookingTable()->fetchAll();
         $userBookings = [];
+        $currentUserId = $this->getcurrentUserId();
+        #var_dump($currentUserId);
         
         foreach ($allBookings as $booking) {
             $bookingVars = get_object_vars($booking);
             foreach ($bookingVars as $bookingVar) {
-                if ($bookingVar === $this->getprimaryKey()) {
+                if ($bookingVar === $currentUserId) {
                     $userBookings[] = $booking;
                 }
             }
@@ -205,14 +188,14 @@ class RpnttsController extends AbstractActionController
         );
     }
     
-    public function getPrimaryKey()
+    public function getCurrentUserId()
     {
-        return $this->primaryKey;
+        return $this->currentUserId;
     }
     
-    public function setPrimaryKey($primaryKey)
+    public function setCurrentUserId($currentUserId)
     {
-        $this->primaryKey = $primaryKey;
+        $this->currentUserId = $currentUserId;
     }
 }
 

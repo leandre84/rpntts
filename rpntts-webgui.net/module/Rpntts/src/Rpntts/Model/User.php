@@ -23,6 +23,6 @@ class User
         $this->lastName = (!empty($data['lastname'])) ? $data['lastname'] : NULL;
         $this->active = (!empty($data['active'])) ? $data['active'] : NULL;
         $this->timeBalance = (!empty($data['timebalance'])) ? $data['timebalance'] : NULL;
-        $this->timeModelForeignKey = (!empty($data['timeModel_fk'])) ? $data['timeModel_fk'] : NULL;
+        $this->timeModelForeignKey = (!empty($data['timemodel_fk'])) ? $data['timemodel_fk'] : NULL;
     }
 }
