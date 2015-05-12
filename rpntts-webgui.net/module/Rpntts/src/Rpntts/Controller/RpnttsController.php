@@ -68,8 +68,9 @@ class RpnttsController extends AbstractActionController
                 $hashPass = hash('sha256', $clearTextPass);
                 $user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
 				$this->setCurrentUserId($user->timeModelForeignKey);
+				$this->indexAction();
                 
-                return $this->redirect()->toRoute('booking');
+                #return $this->redirect()->toRoute('booking');
             }
         }
         return array('form' => $form);
@@ -78,22 +79,11 @@ class RpnttsController extends AbstractActionController
         
     public function indexAction()
     {
-        $allBookings = $this->getBookingTable()->fetchAll();
-        $userBookings = [];
         $currentUserId = $this->getcurrentUserId();
-        #var_dump($currentUserId);
-        
-        foreach ($allBookings as $booking) {
-            $bookingVars = get_object_vars($booking);
-            foreach ($bookingVars as $bookingVar) {
-                if ($bookingVar === $currentUserId) {
-                    $userBookings[] = $booking;
-                }
-            }
-        }
-        
+		#var_dump($this->getBookingTable()->getBookingsMatchingUserId($currentUserId));
+		
         return new ViewModel(array(
-        'bookings' => $userBookings,
+        'bookings' => $this->getBookingTable()->getBookingsMatchingUserId($currentUserId),
         ));
     }
 

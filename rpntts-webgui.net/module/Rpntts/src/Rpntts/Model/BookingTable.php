@@ -19,16 +19,19 @@ class BookingTable
         return $resultSet;
     }
 
-    public function getBooking($id)
+    public function getBookingsMatchingUserId($id)
     {
         $id  = (int) $id;
-        $rowset = $this->tableGateway->select(array('primaryKey' => $id));
-        $row = $rowset->current();
-        if (!$row) {
-            throw new \Exception("Could not find row "  . $id);
+        $resultSet = $this->tableGateway->select(array('user_fk' => $id));
+		#var_dump($resultSet);
+		foreach ($resultSet as $result) {
+			var_dump($result);
+		}
+        if (!$resultSet) {
+            throw new \Exception("Could not find booking for ID "  . $id);
         }
         
-        return $row;
+        return $resultSet;
     }
 
     public function saveBooking(Booking $booking)
