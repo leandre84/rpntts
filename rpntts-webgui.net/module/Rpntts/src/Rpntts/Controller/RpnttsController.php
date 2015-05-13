@@ -5,6 +5,7 @@ use Rpntts\Model\Booking;
 use Rpntts\Form\BookingForm;
 use Rpntts\Form\LoginForm;
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\Session\Container;
 use Zend\View\Model\ViewModel;
 
 class RpnttsController extends AbstractActionController
@@ -13,8 +14,7 @@ class RpnttsController extends AbstractActionController
     protected $userTable;
     protected $cardTable;
     protected $bookingTable;
-    private $currentUserId;
-    
+
     public function getTimeModelTable()
     {
         if (!$this->timeModelTable) {
@@ -67,10 +67,11 @@ class RpnttsController extends AbstractActionController
                 $userNameFromForm = $formContent['userName'];
                 $hashPass = hash('sha256', $clearTextPass);
                 $user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
-				$this->setCurrentUserId($user->timeModelForeignKey);
-				$this->indexAction();
+				$user_session = new Container('user');
+				$user_session->userName = $user->userName;
+				$user_session->userTimeModelForeignKey = $user->timeModelForeignKey;
                 
-                #return $this->redirect()->toRoute('booking');
+                return $this->redirect()->toRoute('booking');
             }
         }
         return array('form' => $form);
@@ -79,11 +80,11 @@ class RpnttsController extends AbstractActionController
         
     public function indexAction()
     {
-        $currentUserId = $this->getcurrentUserId();
-		#var_dump($this->getBookingTable()->getBookingsMatchingUserId($currentUserId));
+		$user_session = new Container('user');
+		#var_dump($this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey));
 		
         return new ViewModel(array(
-        'bookings' => $this->getBookingTable()->getBookingsMatchingUserId($currentUserId),
+        'bookings' => $this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey),
         ));
     }
 
@@ -176,16 +177,6 @@ class RpnttsController extends AbstractActionController
             'id'    => $id,
             'booking' => $this->getBookingTable()->getBooking($id)
         );
-    }
-    
-    public function getCurrentUserId()
-    {
-        return $this->currentUserId;
-    }
-    
-    public function setCurrentUserId($currentUserId)
-    {
-        $this->currentUserId = $currentUserId;
     }
 }
 

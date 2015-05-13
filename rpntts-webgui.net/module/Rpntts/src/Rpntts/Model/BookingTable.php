@@ -24,8 +24,9 @@ class BookingTable
         $id  = (int) $id;
         $resultSet = $this->tableGateway->select(array('user_fk' => $id));
 		#var_dump($resultSet);
-		foreach ($resultSet as $result) {
-			var_dump($result);
+		$allBookings = $this->fetchAll();
+		foreach ($allBookings as $booking) {
+			var_dump($booking);
 		}
         if (!$resultSet) {
             throw new \Exception("Could not find booking for ID "  . $id);
