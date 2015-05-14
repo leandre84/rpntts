@@ -75,11 +75,13 @@ class RpnttsController extends AbstractActionController
                 try {
 					$user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
 				} catch (\Exception $e) {
-					$this->setErrorMessage($e->getMessage());
+					return $this->redirect()->toRoute('loginerror');
 				}
 				$user_session = new Container('user');
 				$user_session->userName = $user->userName;
 				$user_session->userTimeModelForeignKey = $user->timeModelForeignKey;
+				$user_session->errorMessage = $this->getErrorMessage();
+				$user_session->successMessage = $this->getSuccessMessage();
                 
                 return $this->redirect()->toRoute('booking');
             }
@@ -91,11 +93,27 @@ class RpnttsController extends AbstractActionController
     public function bookingAction()
     {
 		$user_session = new Container('user');
-		#var_dump($this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey));
 		
         return new ViewModel(array(
-        'bookings' => $this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey), 'errorMessage' => $this->getErrorMessage(), 'userName' => $user_session->userName,
+        'bookings' => $this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey),
+		'errorMessage' => $user_session->errorMessage,
+		'userName' => $user_session->userName,
+		'successMessage' => $user_session->successMessage,
         ));
+    }
+	
+	public function logoutAction()
+    {
+		$user_session = new Container('user');
+		
+        return new ViewModel(array(
+		'userName' => $user_session->userName,
+        ));
+    }
+	
+	public function loginerrorAction()
+    {
+		
     }
 
     public function addAction()

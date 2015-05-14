@@ -1,23 +1,14 @@
 <?php
-$title = 'Login';
+$title = 'Fehler beim Login';
 $this->headTitle($title);
 ?>
 <h1><?php echo $this->escapeHtml($title);?></h1>
-<?php
- $form = $this->form;
- $form->setAttribute('action', $this->url(
-     'login',
-     array(
-         'action' => 'login',
-         'userName'     => $this->userName,
-         'passWord'     => $this->passWord,
-     )
- ));
- $form->prepare();
-
- echo $this->form()->openTag($form);
- echo $this->formRow($form->get('userName'));
- echo $this->formRow($form->get('passWord'));
- echo $this->formSubmit($form->get('submit'));
- echo $this->form()->closeTag();
+<p>
+    <?php echo '<strong>Login nicht erfolgreich. Bitte überprüfen Sie Benutzername und Passwort.</strong>';?>
+</p>
+<p>
+    <?php echo 'Erneut ';?>
+    <a href="<?php echo $this->url('login',
+            array('action'=>'login'));?>">einloggen</a>
+</p>
  
