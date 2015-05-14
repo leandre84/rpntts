@@ -1,19 +1,19 @@
 <?php
-$title = 'My bookings';
+$title = 'Ihre Buchungen';
 $this->headTitle($title);
 ?>
 <h1><?php echo $this->escapeHtml($title);?></h1>
 <p>
-    <a href="<?php echo $this->url('booking', array('action'=>'add'));?>">Add new booking</a>
+    <a href="<?php echo $this->url('booking', array('action'=>'add'));?>">Neue Buchung hinzufügen</a>
 </p>
 
 <table class="table">
 <tr>
-    <th>Booking ID</th>
-    <th>Time stamp</th>
-    <th>Type</th>
-    <th>Text</th>
-    <th>User ID</th>
+    <th>Buchungsnummer</th>
+    <th>zeit</th>
+    <th>Typ</th>
+    <th>Beschreibung</th>
+    <th>Benutzer ID</th>
     <th>&nbsp;</th>
 </tr>
 <?php foreach ($bookings as $booking) : ?>
@@ -25,9 +25,9 @@ $this->headTitle($title);
     <td><?php echo $this->escapeHtml($booking->userForeignKey);?></td>
     <td>
         <a href="<?php echo $this->url('booking',
-            array('action'=>'edit', 'pk' => $booking->primaryKey));?>">Edit</a>
+            array('action'=>'edit', 'pk' => $booking->primaryKey));?>">Bearbeiten</a>
         <a href="<?php echo $this->url('booking',
-            array('action'=>'delete', 'pk' => $booking->primaryKey));?>">Delete</a>
+            array('action'=>'delete', 'pk' => $booking->primaryKey));?>">Anzeigen</a>
     </td>
 </tr>
 <?php endforeach; ?>
