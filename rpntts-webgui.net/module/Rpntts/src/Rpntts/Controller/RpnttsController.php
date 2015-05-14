@@ -14,6 +14,8 @@ class RpnttsController extends AbstractActionController
     protected $userTable;
     protected $cardTable;
     protected $bookingTable;
+	private $errorMessage;
+	private $successMessage;
 	
 	/* Unset user session
 		$session = new Container('user');
@@ -70,7 +72,11 @@ class RpnttsController extends AbstractActionController
                 $clearTextPass = $formContent['passWord'];
                 $userNameFromForm = $formContent['userName'];
                 $hashPass = hash('sha256', $clearTextPass);
-                $user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
+                try {
+					$user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
+				} catch (\Exception $e) {
+					$this->setErrorMessage($e->getMessage());
+				}
 				$user_session = new Container('user');
 				$user_session->userName = $user->userName;
 				$user_session->userTimeModelForeignKey = $user->timeModelForeignKey;
@@ -182,5 +188,25 @@ class RpnttsController extends AbstractActionController
             'booking' => $this->getBookingTable()->getBooking($id)
         );
     }
+	
+	public function getErrorMessage()
+	{
+		return $this->errorMessage;
+	}
+	
+	public function setErrorMessage($errorMessage)
+	{
+		$this->errorMessage = $errorMessage;
+	}
+	
+	public function getSuccessMessage()
+	{
+		return $this->successMessage;
+	}
+	
+	public function setSuccessMessage($successMessage)
+	{
+		$this->successMessage = $successMessage;
+	}
 }
 

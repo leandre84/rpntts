@@ -22,17 +22,12 @@ class BookingTable
     public function getBookingsMatchingUserId($id)
     {
         $id  = (int) $id;
-        $resultSet = $this->tableGateway->select(array('user_fk' => $id));
-		#var_dump($resultSet);
-		$allBookings = $this->fetchAll();
-		foreach ($allBookings as $booking) {
-			var_dump($booking);
-		}
-        if (!$resultSet) {
-            throw new \Exception("Could not find booking for ID "  . $id);
+        $rowSet = $this->tableGateway->select(array('user_fk' => $id));
+        if (!$rowSet) {
+            throw new \Exception("Keine Buchungen für Benutzerkennung "  . $id);
         }
         
-        return $resultSet;
+        return $rowSet;
     }
 
     public function saveBooking(Booking $booking)
