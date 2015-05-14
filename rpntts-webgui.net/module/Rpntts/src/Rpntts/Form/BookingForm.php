@@ -5,7 +5,7 @@ use Zend\Form\Form;
 
 class BookingForm extends Form
 {
-    public function __construct($name = null)
+    public function __construct($name = NULL)
     {
         // ignore the name passed
         parent::__construct('booking');
@@ -18,21 +18,21 @@ class BookingForm extends Form
             'name' => 'timeStamp',
             'type' => 'Text',
             'options' => array(
-                'label' => 'Datum/Uhrzeit',
+                'label' => 'Datum/Uhrzeit: ',
             ),
         ));
         $this->add(array(
             'name' => 'type',
             'type' => 'Text',
             'options' => array(
-                'label' => 'Buchungstyp',
+                'label' => 'Buchungstyp: ',
             ),
         ));
         $this->add(array(
             'name' => 'text',
             'type' => 'Text',
             'options' => array(
-                'label' => 'Buchungstext',
+                'label' => 'Buchungstext: ',
             ),
         ));
         $this->add(array(

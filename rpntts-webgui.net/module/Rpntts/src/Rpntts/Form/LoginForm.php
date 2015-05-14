@@ -19,14 +19,14 @@ class LoginForm extends Form implements InputFilterAwareInterface
             'name' => 'userName',
             'type' => 'Text',
             'options' => array(
-                'label' => 'Benutzername',
+                'label' => 'Benutzername: ',
             ),
         ));
         $this->add(array(
             'name' => 'passWord',
             'type' => 'Text',
             'options' => array(
-                'label' => 'Passwort',
+                'label' => 'Passwort: ',
             ),
         ));
         $this->add(array(
