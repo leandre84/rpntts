@@ -23,10 +23,13 @@ class BookingTable
     {
         $id  = (int) $id;
         $rowSet = $this->tableGateway->select(array('user_fk' => $id));
-        if (!$rowSet) {
-            throw new \Exception("Keine Buchungen für Benutzerkennung "  . $id);
+		$row = $rowSet->current();
+        if (!$row) {
+            throw new \Exception('Keine Buchungen für Benutzerkennung '  . $id);
         }
         
+		$rowSet = $this->tableGateway->select(array('user_fk' => $id));
+		
         return $rowSet;
     }
 

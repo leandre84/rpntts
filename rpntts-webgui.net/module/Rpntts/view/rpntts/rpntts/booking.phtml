@@ -4,6 +4,13 @@ $this->headTitle($title);
 ?>
 <h1><?php echo $this->escapeHtml($title);?></h1>
 <p>
+    <?php echo '<strong>Eingeloggt als Benutzer: </strong>' . $this->escapeHtml($userName);?>
+	<a href="<?php echo $this->url('logout',
+            array('action'=>'logout'));?>">&nbsp;&nbsp;Logout</a>
+<p>
+    <?php echo $this->escapeHtml($errorMessage);?>
+</p>
+<p>
     <a href="<?php echo $this->url('booking', array('action'=>'add'));?>">Neue Buchung hinzufügen</a>
 </p>
 
@@ -13,7 +20,7 @@ $this->headTitle($title);
     <th>Zeit</th>
     <th>Typ</th>
     <th>Beschreibung</th>
-    <th>Benutzer ID</th>
+    <th>Benutzerkennung</th>
     <th>&nbsp;</th>
 </tr>
 <?php foreach ($bookings as $booking) : ?>

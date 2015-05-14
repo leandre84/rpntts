@@ -94,7 +94,7 @@ class RpnttsController extends AbstractActionController
 		#var_dump($this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey));
 		
         return new ViewModel(array(
-        'bookings' => $this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey),
+        'bookings' => $this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey), 'errorMessage' => $this->getErrorMessage(), 'userName' => $user_session->userName,
         ));
     }
 
