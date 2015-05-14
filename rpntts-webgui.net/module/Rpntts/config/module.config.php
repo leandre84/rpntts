@@ -19,6 +19,26 @@ return array(
 						),
 					),
 			),
+			'logout' => array(
+                'type'    => 'segment',
+                'options' => array(
+                    'route'    => '/rpntts/logout',
+                    'defaults' => array(
+                        'controller' => 'Rpntts\Controller\Rpntts',
+                        'action'     => 'logout',
+                    ),
+                ),
+            ),
+			'loginerror' => array(
+                'type'    => 'segment',
+                'options' => array(
+                    'route'    => '/rpntts/loginerror',
+                    'defaults' => array(
+                        'controller' => 'Rpntts\Controller\Rpntts',
+                        'action'     => 'loginerror',
+                    ),
+                ),
+            ),
             'booking' => array(
                 'type'    => 'segment',
                 'options' => array(
@@ -29,7 +49,7 @@ return array(
                     ),
                     'defaults' => array(
                         'controller' => 'Rpntts\Controller\Rpntts',
-                        'action'     => 'index',
+                        'action'     => 'booking',
                     ),
                 ),
             ),

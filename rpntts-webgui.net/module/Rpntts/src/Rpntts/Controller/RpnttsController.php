@@ -14,6 +14,10 @@ class RpnttsController extends AbstractActionController
     protected $userTable;
     protected $cardTable;
     protected $bookingTable;
+	
+	/* Unset user session
+		$session = new Container('user');
+        $session->getManager()->getStorage()->clear('user'); */
 
     public function getTimeModelTable()
     {
@@ -78,7 +82,7 @@ class RpnttsController extends AbstractActionController
     }
 
         
-    public function indexAction()
+    public function bookingAction()
     {
 		$user_session = new Container('user');
 		#var_dump($this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey));
