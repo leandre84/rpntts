@@ -17,7 +17,7 @@ class UserTable
 		$rowset = $this->tableGateway->select(array('username' => $userName, 'password' => $passWord));
         $row = $rowset->current();
         if (!$row) {
-            throw new \Exception("Could not find row for user name " . $userName);
+            throw new \Exception("Fehler beim Verarbeiten der Informationen für User Name: " . $userName);
         }
         
         return $row;

@@ -34,14 +34,6 @@ class Booking implements InputFilterAwareInterface
             $inputFilter = new InputFilter();
 
             $inputFilter->add(array(
-                'name'     => 'id',
-                'required' => true,
-                'filters'  => array(
-                    array('name' => 'Int'),
-                ),
-            ));
-
-            $inputFilter->add(array(
                 'name'     => 'timeStamp',
                 'required' => true,
                 'filters'  => array(

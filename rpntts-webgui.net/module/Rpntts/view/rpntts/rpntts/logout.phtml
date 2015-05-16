@@ -1,10 +1,11 @@
 <?php
 $title = 'Logout';
 $this->headTitle($title);
+$logoutMessage = 'Sie wurden erfolgreich ausgeloggt.'
 ?>
 <h1><?php echo $this->escapeHtml($title);?></h1>
 <p>
-    <?php echo '<strong>Bye bye </strong>' . $this->escapeHtml($userName);?>
+    <?php echo $this->escapeHtml($logoutMessage);?>
 </p>
 <p>
     <?php echo 'Erneut ';?>

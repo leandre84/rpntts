@@ -16,10 +16,6 @@ class RpnttsController extends AbstractActionController
     protected $bookingTable;
 	private $errorMessage;
 	private $successMessage;
-	
-	/* Unset user session
-		$session = new Container('user');
-        $session->getManager()->getStorage()->clear('user'); */
 
     public function getTimeModelTable()
     {
@@ -80,8 +76,6 @@ class RpnttsController extends AbstractActionController
 				$user_session = new Container('user');
 				$user_session->userName = $user->userName;
 				$user_session->userTimeModelForeignKey = $user->timeModelForeignKey;
-				$user_session->errorMessage = $this->getErrorMessage();
-				$user_session->successMessage = $this->getSuccessMessage();
                 
                 return $this->redirect()->toRoute('booking');
             }
@@ -94,21 +88,25 @@ class RpnttsController extends AbstractActionController
     {
 		$user_session = new Container('user');
 		
+		$bookings = [];
+		try {
+			$bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey);
+		} catch (\Exception $e) {
+			$user_session->errorMessage = $e->getMessage();
+		}
+		
         return new ViewModel(array(
-        'bookings' => $this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey),
+        'bookings' => $bookings,
 		'errorMessage' => $user_session->errorMessage,
 		'userName' => $user_session->userName,
-		'successMessage' => $user_session->successMessage,
         ));
     }
 	
 	public function logoutAction()
     {
-		$user_session = new Container('user');
-		
-        return new ViewModel(array(
-		'userName' => $user_session->userName,
-        ));
+		// Unset user session
+		$session = new Container('user');
+        $session->getManager()->getStorage()->clear('user');
     }
 	
 	public function loginerrorAction()
@@ -120,7 +118,7 @@ class RpnttsController extends AbstractActionController
     {
         $form = new BookingForm();
         $form->get('submit')->setValue('Hinzufügen');
-
+		
         $request = $this->getRequest();
         if ($request->isPost()) {
             $booking = new Booking();
@@ -129,12 +127,15 @@ class RpnttsController extends AbstractActionController
 
             if ($form->isValid()) {
                 $booking->exchangeArray($form->getData());
+				$user_session = new Container('user');
+				$booking->userForeignKey = $user_session->userTimeModelForeignKey;
                 $this->getBookingTable()->saveBooking($booking);
 
                 // Redirect to list of bookings
                 return $this->redirect()->toRoute('booking');
             }
         }
+		
         return array('form' => $form);
     }
 
@@ -207,24 +208,16 @@ class RpnttsController extends AbstractActionController
         );
     }
 	
-	public function getErrorMessage()
+	public function clearErrorMessage()
 	{
-		return $this->errorMessage;
+		$session = new Container('user');
+		$user_session->errorMessage = '';
 	}
 	
-	public function setErrorMessage($errorMessage)
+	public function clearSuccessMessage()
 	{
-		$this->errorMessage = $errorMessage;
-	}
-	
-	public function getSuccessMessage()
-	{
-		return $this->successMessage;
-	}
-	
-	public function setSuccessMessage($successMessage)
-	{
-		$this->successMessage = $successMessage;
+		$session = new Container('user');
+		$user_session->successMessage = '';
 	}
 }
 

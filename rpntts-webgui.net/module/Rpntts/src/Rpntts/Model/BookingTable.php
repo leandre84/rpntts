@@ -50,7 +50,7 @@ class BookingTable
             if ($this->getBooking($id)) {
                 $this->tableGateway->update($data, array('pk' => $id));
             } else {
-                throw new \Exception("Booking id " . $id . " does not exist");
+                throw new \Exception("Buchung mit der ID " . $id . " existiert nicht.");
             }
         }
     }
