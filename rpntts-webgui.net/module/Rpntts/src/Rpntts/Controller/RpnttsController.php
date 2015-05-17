@@ -55,7 +55,10 @@ class RpnttsController extends AbstractActionController
 
     public function loginAction()
     {
-        $form = new LoginForm();
+        $this->clearErrorMessage();
+		$this->clearSuccessMessage();
+		
+		$form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
 
         $request = $this->getRequest();
@@ -86,6 +89,9 @@ class RpnttsController extends AbstractActionController
         
     public function bookingAction()
     {
+		$this->clearErrorMessage();
+		$this->clearSuccessMessage();
+		
 		$user_session = new Container('user');
 		
 		$bookings = [];
@@ -105,8 +111,8 @@ class RpnttsController extends AbstractActionController
 	public function logoutAction()
     {
 		// Unset user session
-		$session = new Container('user');
-        $session->getManager()->getStorage()->clear('user');
+		$user_session = new Container('user');
+        $user_session->getManager()->getStorage()->clear('user');
     }
 	
 	public function loginerrorAction()
@@ -210,14 +216,20 @@ class RpnttsController extends AbstractActionController
 	
 	public function clearErrorMessage()
 	{
-		$session = new Container('user');
-		$user_session->errorMessage = '';
+		$user_session = new Container('user');
+		
+		if (isset($user_session->errorMessage)) {
+			$user_session->errorMessage = '';
+		}
 	}
 	
 	public function clearSuccessMessage()
 	{
-		$session = new Container('user');
-		$user_session->successMessage = '';
+		$user_session = new Container('user');
+		
+		if (isset($user_session->successMessage)) {
+			$user_session->successMessage = '';
+		}
 	}
 }
 
