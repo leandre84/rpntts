@@ -55,8 +55,8 @@ class RpnttsController extends AbstractActionController
 
     public function loginAction()
     {
-        $this->clearErrorMessage();
-		$this->clearSuccessMessage();
+        #$this->clearErrorMessage();
+		#$this->clearSuccessMessage();
 		
 		$form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
@@ -78,7 +78,7 @@ class RpnttsController extends AbstractActionController
 				}
 				$user_session = new Container('user');
 				$user_session->userName = $user->userName;
-				$user_session->userTimeModelForeignKey = $user->timeModelForeignKey;
+				$user_session->userPrimaryKey = $user->primaryKey;
                 
                 return $this->redirect()->toRoute('booking');
             }
@@ -89,14 +89,13 @@ class RpnttsController extends AbstractActionController
         
     public function bookingAction()
     {
-		$this->clearErrorMessage();
-		$this->clearSuccessMessage();
-		
-		$user_session = new Container('user');
-		
+		#$this->clearErrorMessage();
+		#$this->clearSuccessMessage();
+
 		$bookings = [];
 		try {
-			$bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userTimeModelForeignKey);
+			$user_session = new Container('user');
+			$bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
 		} catch (\Exception $e) {
 			$user_session->errorMessage = $e->getMessage();
 		}
@@ -134,7 +133,7 @@ class RpnttsController extends AbstractActionController
             if ($form->isValid()) {
                 $booking->exchangeArray($form->getData());
 				$user_session = new Container('user');
-				$booking->userForeignKey = $user_session->userTimeModelForeignKey;
+				$booking->primaryKey = $user_session->userPrimaryKey;
                 $this->getBookingTable()->saveBooking($booking);
 
                 // Redirect to list of bookings
@@ -148,6 +147,7 @@ class RpnttsController extends AbstractActionController
     public function editAction()
     {
         $id = (int) $this->params()->fromRoute('id', 0);
+		var_dump($id);
         if (!$id) {
             return $this->redirect()->toRoute('booking', array(
                 'action' => 'add'
@@ -155,13 +155,13 @@ class RpnttsController extends AbstractActionController
         }
 
         // Get the Booking with the specified id. An exception is thrown
-        // if it cannot be found, in which case go to the index page.
+        // if it cannot be found, in which case go to the booking page.
         try {
             $booking = $this->getBookingTable()->getBooking($id);
         }
         catch (\Exception $ex) {
             return $this->redirect()->toRoute('booking', array(
-                'action' => 'index'
+                'action' => 'booking'
             ));
         }
 
@@ -191,6 +191,7 @@ class RpnttsController extends AbstractActionController
    public function deleteAction()
    {
         $id = (int) $this->params()->fromRoute('id', 0);
+		var_dump($id);
         if (!$id) {
             return $this->redirect()->toRoute('booking');
         }
