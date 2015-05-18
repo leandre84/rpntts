@@ -55,8 +55,8 @@ class RpnttsController extends AbstractActionController
 
     public function loginAction()
     {
-        #$this->clearErrorMessage();
-		#$this->clearSuccessMessage();
+        $this->clearErrorMessage();
+		$this->clearSuccessMessage();
 		
 		$form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
@@ -89,20 +89,22 @@ class RpnttsController extends AbstractActionController
         
     public function bookingAction()
     {
-		#$this->clearErrorMessage();
+		$this->clearErrorMessage();
 		#$this->clearSuccessMessage();
-
+        
 		$bookings = [];
 		try {
 			$user_session = new Container('user');
 			$bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
 		} catch (\Exception $e) {
+            $this->clearSuccessMessage();
 			$user_session->errorMessage = $e->getMessage();
 		}
 		
         return new ViewModel(array(
         'bookings' => $bookings,
 		'errorMessage' => $user_session->errorMessage,
+        'successMessage' => $user_session->successMessage,
 		'userName' => $user_session->userName,
         ));
     }
@@ -121,6 +123,7 @@ class RpnttsController extends AbstractActionController
 
     public function addAction()
     {
+        $successMessage = 'Buchung erfolgreich gespeichert.';
         $form = new BookingForm();
         $form->get('submit')->setValue('Hinzufügen');
 		
@@ -133,9 +136,14 @@ class RpnttsController extends AbstractActionController
             if ($form->isValid()) {
                 $booking->exchangeArray($form->getData());
 				$user_session = new Container('user');
-				$booking->userForeignKey = $user_session->userPrimaryKey;
-                $this->getBookingTable()->saveBooking($booking);
-
+                try {
+                    $booking->userForeignKey = $user_session->userPrimaryKey;
+                    $this->getBookingTable()->saveBooking($booking);
+                    $user_session->successMessage = $successMessage;
+                } catch (\Exception $e) {
+                    $user_session->errorMessage = $e->getMessage();
+                }
+                
                 // Redirect to list of bookings
                 return $this->redirect()->toRoute('booking');
             }

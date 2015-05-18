@@ -13,6 +13,11 @@ $this->headTitle($title);
 		echo '<font color="red">Es ist ein Fehler aufgetreten: </font>' . $this->escapeHtml($errorMessage);
 	}?>
 </p>
+<p>
+    <?php if ($successMessage) {
+		echo '<font color="green">' . $this->escapeHtml($successMessage) . '</font>';
+	}?>
+</p>
 <h1><?php echo $this->escapeHtml($title);?></h1>
 
 <p>
