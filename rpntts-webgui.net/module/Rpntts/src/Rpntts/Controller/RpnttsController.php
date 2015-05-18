@@ -14,8 +14,8 @@ class RpnttsController extends AbstractActionController
     protected $userTable;
     protected $cardTable;
     protected $bookingTable;
-	private $errorMessage;
-	private $successMessage;
+    private $errorMessage;
+    private $successMessage;
 
     public function getTimeModelTable()
     {
@@ -56,9 +56,9 @@ class RpnttsController extends AbstractActionController
     public function loginAction()
     {
         $this->clearErrorMessage();
-		$this->clearSuccessMessage();
-		
-		$form = new LoginForm();
+        $this->clearSuccessMessage();
+        
+        $form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
 
         $request = $this->getRequest();
@@ -72,13 +72,13 @@ class RpnttsController extends AbstractActionController
                 $userNameFromForm = $formContent['userName'];
                 $hashPass = hash('sha256', $clearTextPass);
                 try {
-					$user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
-				} catch (\Exception $e) {
-					return $this->redirect()->toRoute('loginerror');
-				}
-				$user_session = new Container('user');
-				$user_session->userName = $user->userName;
-				$user_session->userPrimaryKey = $user->primaryKey;
+                    $user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
+                } catch (\Exception $e) {
+                    return $this->redirect()->toRoute('loginerror');
+                }
+                $user_session = new Container('user');
+                $user_session->userName = $user->userName;
+                $user_session->userPrimaryKey = $user->primaryKey;
                 
                 return $this->redirect()->toRoute('booking');
             }
@@ -89,36 +89,37 @@ class RpnttsController extends AbstractActionController
         
     public function bookingAction()
     {
-		$this->clearErrorMessage();
-		#$this->clearSuccessMessage();
+        $this->clearErrorMessage();
+        #$this->clearSuccessMessage();
         
-		$bookings = [];
-		try {
-			$user_session = new Container('user');
-			$bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
-		} catch (\Exception $e) {
+        $bookings = [];
+        try {
+            $user_session = new Container('user');
+            $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
+        } catch (\Exception $e) {
             $this->clearSuccessMessage();
-			$user_session->errorMessage = $e->getMessage();
-		}
-		
+            $user_session->errorMessage = $e->getMessage();
+        }
+        
         return new ViewModel(array(
         'bookings' => $bookings,
-		'errorMessage' => $user_session->errorMessage,
+        'errorMessage' => $user_session->errorMessage,
         'successMessage' => $user_session->successMessage,
-		'userName' => $user_session->userName,
+        'userName' => $user_session->userName,
+        'id' => $user_session->userPrimaryKey,
         ));
     }
-	
-	public function logoutAction()
+    
+    public function logoutAction()
     {
-		// Unset user session
-		$user_session = new Container('user');
+        // Unset user session
+        $user_session = new Container('user');
         $user_session->getManager()->getStorage()->clear('user');
     }
-	
-	public function loginerrorAction()
+    
+    public function loginerrorAction()
     {
-		
+        
     }
 
     public function addAction()
@@ -126,7 +127,7 @@ class RpnttsController extends AbstractActionController
         $successMessage = 'Buchung erfolgreich gespeichert.';
         $form = new BookingForm();
         $form->get('submit')->setValue('Hinzufügen');
-		
+        
         $request = $this->getRequest();
         if ($request->isPost()) {
             $booking = new Booking();
@@ -135,7 +136,7 @@ class RpnttsController extends AbstractActionController
 
             if ($form->isValid()) {
                 $booking->exchangeArray($form->getData());
-				$user_session = new Container('user');
+                $user_session = new Container('user');
                 try {
                     $booking->userForeignKey = $user_session->userPrimaryKey;
                     $this->getBookingTable()->saveBooking($booking);
@@ -148,14 +149,14 @@ class RpnttsController extends AbstractActionController
                 return $this->redirect()->toRoute('booking');
             }
         }
-		
+        
         return array('form' => $form);
     }
 
     public function editAction()
     {
         $id = (int) $this->params()->fromRoute('id', 0);
-		var_dump($id);
+        var_dump($id);
         if (!$id) {
             return $this->redirect()->toRoute('booking', array(
                 'action' => 'add'
@@ -199,7 +200,7 @@ class RpnttsController extends AbstractActionController
    public function deleteAction()
    {
         $id = (int) $this->params()->fromRoute('id', 0);
-		var_dump($id);
+        var_dump($id);
         if (!$id) {
             return $this->redirect()->toRoute('booking');
         }
@@ -222,23 +223,23 @@ class RpnttsController extends AbstractActionController
             'booking' => $this->getBookingTable()->getBooking($id)
         );
     }
-	
-	public function clearErrorMessage()
-	{
-		$user_session = new Container('user');
-		
-		if (isset($user_session->errorMessage)) {
-			$user_session->errorMessage = '';
-		}
-	}
-	
-	public function clearSuccessMessage()
-	{
-		$user_session = new Container('user');
-		
-		if (isset($user_session->successMessage)) {
-			$user_session->successMessage = '';
-		}
-	}
+    
+    public function clearErrorMessage()
+    {
+        $user_session = new Container('user');
+        
+        if (isset($user_session->errorMessage)) {
+            $user_session->errorMessage = '';
+        }
+    }
+    
+    public function clearSuccessMessage()
+    {
+        $user_session = new Container('user');
+        
+        if (isset($user_session->successMessage)) {
+            $user_session->successMessage = '';
+        }
+    }
 }
 
