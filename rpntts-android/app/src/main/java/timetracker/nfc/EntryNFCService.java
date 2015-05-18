@@ -1,4 +1,3 @@
-
 package timetracker.nfc;
 
 import android.annotation.TargetApi;
@@ -18,6 +17,8 @@ import java.util.Locale;
 import timetracker.database.DatabaseHandler;
 import timetracker.model.Entry;
 
+//http://apps4android.org/nfc-specifications/NFCForum-TS-Type-4-Tag_2.0.pdf
+//https://github.com/TechBooster/C85-Android-4.4-Sample/blob/master/chapter08/NdefCard/src/com/example/ndefcard/NdefHostApduService.java
 @TargetApi(Build.VERSION_CODES.KITKAT)
 public class EntryNFCService extends HostApduService {
 
@@ -64,6 +65,8 @@ public class EntryNFCService extends HostApduService {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "on Create");
+
         NdefRecord record = createEntryRecord(getSentString(), Locale.GERMAN, true);
 
         NdefMessage ndefMessage = new NdefMessage(record);
@@ -163,6 +166,7 @@ public class EntryNFCService extends HostApduService {
         mInitialized = false;
     }
 
+
     public String getSentString() {
         DatabaseHandler db = new DatabaseHandler(this);
         String sentString = "rpntts|" + db.getSetting("id").getValue() + "|" + db.getSetting("password").getValue();
@@ -171,10 +175,10 @@ public class EntryNFCService extends HostApduService {
         Collections.reverse(entries);
         for (Entry entry : entries) {
             if (!entry.isSent())
-                sentString += "|" + entry.toString();
+                sentString += "|" + entry.toSentString();
         }
         //CHANGE:pipe
-        sentString += "#";
+        sentString += "";
         //ENDCHANGE:pipe
         return sentString;
     }
