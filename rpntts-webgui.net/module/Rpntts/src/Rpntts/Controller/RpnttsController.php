@@ -133,7 +133,7 @@ class RpnttsController extends AbstractActionController
             if ($form->isValid()) {
                 $booking->exchangeArray($form->getData());
 				$user_session = new Container('user');
-				$booking->primaryKey = $user_session->userPrimaryKey;
+				$booking->userForeignKey = $user_session->userPrimaryKey;
                 $this->getBookingTable()->saveBooking($booking);
 
                 // Redirect to list of bookings
