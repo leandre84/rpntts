@@ -166,7 +166,7 @@ class RpnttsController extends AbstractActionController
         // Get the Booking with the specified id. An exception is thrown
         // if it cannot be found, in which case go to the booking page.
         try {
-            $booking = $this->getBookingTable()->getBooking($id);
+            $booking = $this->getBookingTable()->getBookingMatchingBookingId($id);
         }
         catch (\Exception $ex) {
             return $this->redirect()->toRoute('booking', array(

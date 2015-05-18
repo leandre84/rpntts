@@ -42,9 +42,9 @@ $this->headTitle($title);
     <td><?php echo $this->escapeHtml($booking->userForeignKey);?></td>
     <td>
         <a href="<?php echo $this->url('booking',
-            array('action'=>'edit', 'pk' => $booking->primaryKey));?>">Bearbeiten&nbsp;</a>
+            array('action'=>'edit', 'id' => $booking->primaryKey));?>">Bearbeiten&nbsp;</a>
         <a href="<?php echo $this->url('booking',
-            array('action'=>'delete', 'pk' => $booking->primaryKey));?>">Löschen</a>
+            array('action'=>'delete', 'id' => $booking->primaryKey));?>">Löschen</a>
     </td>
 </tr>
 <?php endforeach; ?>

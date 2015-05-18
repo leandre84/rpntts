@@ -32,6 +32,18 @@ class BookingTable
 		
         return $rowSet;
     }
+    
+    public function getBookingMatchingBookingId($id)
+    {
+        $id  = (int) $id;
+        $rowSet = $this->tableGateway->select(array('pk' => $id));
+		$row = $rowSet->current();
+        if (!$row) {
+            throw new \Exception('Keine Buchung für Buchungs-ID ' . $id);
+        }
+        
+        return $row;
+    }
 
     public function saveBooking(Booking $booking)
     {

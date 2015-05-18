@@ -23,6 +23,11 @@ class Booking implements InputFilterAwareInterface
         $this->userForeignKey = (!empty($data['user_fk'])) ? $data['user_fk'] : NULL;
     }
     
+    public function getArrayCopy()
+    {
+        return get_object_vars($this);
+    }
+    
     public function setInputFilter(InputFilterInterface $inputFilter)
     {
         throw new \Exception("Not used");
