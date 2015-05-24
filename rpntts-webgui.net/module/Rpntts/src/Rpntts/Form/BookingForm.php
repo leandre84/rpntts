@@ -9,7 +9,7 @@ class BookingForm extends Form
     {
         // ignore the name passed
         parent::__construct('booking');
-
+		
         $this->add(array(
             'name' => 'id',
             'type' => 'Hidden',

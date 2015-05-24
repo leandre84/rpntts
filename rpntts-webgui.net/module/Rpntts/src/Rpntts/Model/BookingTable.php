@@ -59,8 +59,8 @@ class BookingTable
         if ($id == 0) {
             $this->tableGateway->insert($data);
         } else {
-            if ($this->getBookingsMatchingUserId($id)) {
-                $this->tableGateway->update($data, array('user_fk' => $id));
+            if ($this->getBookingMatchingBookingId($id)) {
+                $this->tableGateway->update($data, array('pk' => $id));
             } else {
                 throw new \Exception("Buchung mit der ID " . $id . " existiert nicht.");
             }

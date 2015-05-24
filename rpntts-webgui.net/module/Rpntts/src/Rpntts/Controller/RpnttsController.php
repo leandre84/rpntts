@@ -88,13 +88,13 @@ class RpnttsController extends AbstractActionController
     {
 		$user_session = new Container('user');
 		$user_session->errorMessage = '';
-		$user_session->successMessage = '';
-	
+		
         $bookings = [];
         try {
             $user_session = new Container('user');
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
         } catch (\Exception $e) {
+			$user_session->successMessage = '';
             $user_session->errorMessage = $e->getMessage();
         }
         
@@ -125,7 +125,6 @@ class RpnttsController extends AbstractActionController
 		$user_session->errorMessage = '';
 		$user_session->successMessage = '';
 
-        $successMessage = 'Buchung erfolgreich gespeichert.';
         $form = new BookingForm();
         $form->get('submit')->setValue('Hinzufügen');
         
@@ -140,7 +139,7 @@ class RpnttsController extends AbstractActionController
                 try {
                     $booking->userForeignKey = $user_session->userPrimaryKey;
                     $this->getBookingTable()->saveBooking($booking);
-                    $user_session->successMessage = $successMessage;
+                    $user_session->successMessage = 'Buchung erfolgreich gespeichert.';
                 } catch (\Exception $e) {
                     $user_session->errorMessage = $e->getMessage();
                 }
@@ -155,42 +154,49 @@ class RpnttsController extends AbstractActionController
 
     public function editAction()
     {
+		$user_session = new Container('user');
+		$user_session->errorMessage = '';
+		$user_session->successMessage = '';
+		
         $id = (int) $this->params()->fromRoute('id', 0);
-        var_dump($id);
-        if (!$id) {
+        /* if (!$id) {
             return $this->redirect()->toRoute('booking', array(
                 'action' => 'add'
             ));
-        }
+        } */
 
         // Get the Booking with the specified id. An exception is thrown
         // if it cannot be found, in which case go to the booking page.
         try {
             $booking = $this->getBookingTable()->getBookingMatchingBookingId($id);
         }
-        catch (\Exception $ex) {
+        catch (\Exception $e) {
+			$user_session->errorMessage = $e->getMessage();
             return $this->redirect()->toRoute('booking', array(
-                'action' => 'booking'
+                'action' => 'booking',
+				'errorMessage' => $user_session->errorMessage,
+				'successMessage' => $user_session->successMessage
             ));
         }
-
+		
         $form  = new BookingForm();
         $form->bind($booking);
-        $form->get('submit')->setAttribute('value', 'Edit');
+        $form->get('submit')->setAttribute('value', 'Übernehmen');
 
         $request = $this->getRequest();
         if ($request->isPost()) {
+			
             $form->setInputFilter($booking->getInputFilter());
             $form->setData($request->getPost());
 
-            if ($form->isValid()) {
+			if ($form->isValid()) {
                 $this->getBookingTable()->saveBooking($booking);
 
                 // Redirect to list of bookings
                 return $this->redirect()->toRoute('booking');
             }
         }
-
+		
         return array(
             'id' => $id,
             'form' => $form,

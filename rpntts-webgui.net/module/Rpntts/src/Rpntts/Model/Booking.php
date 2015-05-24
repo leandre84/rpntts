@@ -16,11 +16,11 @@ class Booking implements InputFilterAwareInterface
 
     public function exchangeArray($data)
     {
-        $this->primaryKey = (!empty($data['pk'])) ? $data['pk'] : NULL;
-        $this->timeStamp = (!empty($data['timestamp'])) ? $data['timestamp'] : NULL;
-        $this->type = (!empty($data['type'])) ? $data['type'] : NULL;
-        $this->text = (!empty($data['text'])) ? $data['text'] : NULL;
-        $this->userForeignKey = (!empty($data['user_fk'])) ? $data['user_fk'] : NULL;
+        $this->primaryKey = (isset($data['pk'])) ? $data['pk'] : NULL;
+        $this->timeStamp = (isset($data['timestamp'])) ? $data['timestamp'] : NULL;
+        $this->type = (isset($data['type'])) ? $data['type'] : NULL;
+        $this->text = (isset($data['text'])) ? $data['text'] : NULL;
+        $this->userForeignKey = (isset($data['user_fk'])) ? $data['user_fk'] : NULL;
     }
     
     public function getArrayCopy()
