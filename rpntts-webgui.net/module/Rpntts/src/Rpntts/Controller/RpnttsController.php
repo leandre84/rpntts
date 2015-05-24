@@ -54,11 +54,8 @@ class RpnttsController extends AbstractActionController
     }
 
     public function loginAction()
-    {
-        $this->clearErrorMessage();
-        $this->clearSuccessMessage();
-        
-        $form = new LoginForm();
+    {     
+		$form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
 
         $request = $this->getRequest();
@@ -89,15 +86,15 @@ class RpnttsController extends AbstractActionController
         
     public function bookingAction()
     {
-        $this->clearErrorMessage();
-        #$this->clearSuccessMessage();
-        
+		$user_session = new Container('user');
+		$user_session->errorMessage = '';
+		$user_session->successMessage = '';
+	
         $bookings = [];
         try {
             $user_session = new Container('user');
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
         } catch (\Exception $e) {
-            $this->clearSuccessMessage();
             $user_session->errorMessage = $e->getMessage();
         }
         
@@ -124,6 +121,10 @@ class RpnttsController extends AbstractActionController
 
     public function addAction()
     {
+		$user_session = new Container('user');
+		$user_session->errorMessage = '';
+		$user_session->successMessage = '';
+
         $successMessage = 'Buchung erfolgreich gespeichert.';
         $form = new BookingForm();
         $form->get('submit')->setValue('Hinzufügen');
@@ -136,7 +137,6 @@ class RpnttsController extends AbstractActionController
 
             if ($form->isValid()) {
                 $booking->exchangeArray($form->getData());
-                $user_session = new Container('user');
                 try {
                     $booking->userForeignKey = $user_session->userPrimaryKey;
                     $this->getBookingTable()->saveBooking($booking);
@@ -150,7 +150,7 @@ class RpnttsController extends AbstractActionController
             }
         }
         
-        return array('form' => $form);
+        return array('form' => $form, 'errorMessage' => $user_session->errorMessage, 'successMessage' => $user_session->successMessage);
     }
 
     public function editAction()
@@ -223,23 +223,4 @@ class RpnttsController extends AbstractActionController
             'booking' => $this->getBookingTable()->getBooking($id)
         );
     }
-    
-    public function clearErrorMessage()
-    {
-        $user_session = new Container('user');
-        
-        if (isset($user_session->errorMessage)) {
-            $user_session->errorMessage = '';
-        }
-    }
-    
-    public function clearSuccessMessage()
-    {
-        $user_session = new Container('user');
-        
-        if (isset($user_session->successMessage)) {
-            $user_session->successMessage = '';
-        }
-    }
 }
-
