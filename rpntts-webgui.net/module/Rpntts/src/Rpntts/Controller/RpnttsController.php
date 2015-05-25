@@ -211,6 +211,10 @@ class RpnttsController extends AbstractActionController
     
    public function deleteAction()
    {
+		$user_session = new Container('user');
+		$user_session->errorMessage = '';
+		$user_session->successMessage = '';
+		
         $id = (int) $this->params()->fromRoute('id', 0);
         if (!$id) {
             return $this->redirect()->toRoute('booking');
@@ -224,6 +228,7 @@ class RpnttsController extends AbstractActionController
                 $id = (int) $request->getPost('id');
 				
                 $this->getBookingTable()->deleteBooking($id);
+				$user_session->successMessage = 'Buchung erfolgreich gelöscht.';
             }
 
             // Redirect to list of bookings
@@ -232,7 +237,9 @@ class RpnttsController extends AbstractActionController
 
         return array(
             'id'    => $id,
-            'booking' => $this->getBookingTable()->getBookingMatchingBookingId($id)
+            'booking' => $this->getBookingTable()->getBookingMatchingBookingId($id),
+			'errorMessage' => $user_session->errorMessage,
+			'successMessage' => $user_session->successMessage
         );
     }
 }
