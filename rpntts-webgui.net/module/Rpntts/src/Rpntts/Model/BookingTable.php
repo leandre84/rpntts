@@ -54,7 +54,7 @@ class BookingTable
             'text' => $booking->text,
             'user_fk' => $booking->userForeignKey,
         );
-
+		
         $id = (int) $booking->primaryKey;
         if ($id == 0) {
             $this->tableGateway->insert($data);
