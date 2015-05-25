@@ -191,6 +191,7 @@ class RpnttsController extends AbstractActionController
 
 			if ($form->isValid()) {
 				try {
+					$booking->primaryKey = $id;
 					$booking->userForeignKey = $user_session->userPrimaryKey;
 					$this->getBookingTable()->saveBooking($booking);
 					$user_session->successMessage = 'Buchung erfolgreich bearbeitet.';
