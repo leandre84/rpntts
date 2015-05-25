@@ -13,12 +13,12 @@
  <?php
  $url = $this->url('booking', array(
      'action' => 'delete',
-     'pk'     => $this->id,
+     'id'     => $this->id,
  ));
  ?>
  <form action="<?php echo $url; ?>" method="post">
  <div>
-     <input type="hidden" name="id" value="<?php echo (int) $booking->primaryKey; ?>" />
+     <input type="hidden" name="id" value="<?php echo (int) $this->id; ?>" />
      <input type="submit" name="del" value="Ja" />
      <input type="submit" name="del" value="Nein" />
  </div>
