@@ -44,7 +44,9 @@ CREATE TABLE booking(
     text VARCHAR(64) NOT NULL,
     user_fk INTEGER NOT NULL,
     computed BOOLEAN NOT NULL DEFAULT false,
-    FOREIGN KEY(user_fk) REFERENCES user(pk)
+    link_fk INTEGER, 
+    FOREIGN KEY(user_fk) REFERENCES user(pk),
+    FOREIGN KEY(link_fk) REFERENCES booking(pk)
 );
 
 ALTER TABLE timemodel ADD CONSTRAINT timemodel_modelname_ux UNIQUE (modelname);
