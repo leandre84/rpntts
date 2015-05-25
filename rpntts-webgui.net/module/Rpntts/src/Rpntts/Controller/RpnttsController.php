@@ -87,12 +87,12 @@ class RpnttsController extends AbstractActionController
     public function bookingAction()
     {
 		$user_session = new Container('user');
-		$user_session->errorMessage = '';
 		
         $bookings = [];
         try {
             $user_session = new Container('user');
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
+			$user_session->errorMessage = '';
         } catch (\Exception $e) {
 			$user_session->successMessage = '';
             $user_session->errorMessage = $e->getMessage();
@@ -159,11 +159,12 @@ class RpnttsController extends AbstractActionController
 		$user_session->successMessage = '';
 		
         $id = (int) $this->params()->fromRoute('id', 0);
-        /* if (!$id) {
+		
+        if (!$id) {
             return $this->redirect()->toRoute('booking', array(
                 'action' => 'add'
             ));
-        } */
+        }
 
         // Get the Booking with the specified id. An exception is thrown
         // if it cannot be found, in which case go to the booking page.
@@ -182,15 +183,18 @@ class RpnttsController extends AbstractActionController
         $form  = new BookingForm();
         $form->bind($booking);
         $form->get('submit')->setAttribute('value', 'Übernehmen');
-
-        $request = $this->getRequest();
-        if ($request->isPost()) {
-			
+		
+        $request = $this->getRequest();		
+        if ($request->isPost()) {			
             $form->setInputFilter($booking->getInputFilter());
-            $form->setData($request->getPost());
+            $form->setData($request->getPost());			
 
 			if ($form->isValid()) {
-                $this->getBookingTable()->saveBooking($booking);
+				try {
+					$this->getBookingTable()->saveBooking($booking);
+				} catch (\Exception $e) {
+					$user_session->errorMessage = $e->getMessage();
+				}
 
                 // Redirect to list of bookings
                 return $this->redirect()->toRoute('booking');
@@ -200,23 +204,25 @@ class RpnttsController extends AbstractActionController
         return array(
             'id' => $id,
             'form' => $form,
+			'errorMessage' => $user_session->errorMessage,
+			'successMessage' => $user_session->successMessage
         );
     }
     
    public function deleteAction()
    {
         $id = (int) $this->params()->fromRoute('id', 0);
-        var_dump($id);
         if (!$id) {
             return $this->redirect()->toRoute('booking');
         }
         
         $request = $this->getRequest();
         if ($request->isPost()) {
-            $del = $request->getPost('del', 'No');
+            $del = $request->getPost('del', 'Nein');
 
-            if ($del == 'Yes') {
+            if ($del == 'Ja') {
                 $id = (int) $request->getPost('id');
+				
                 $this->getBookingTable()->deleteBooking($id);
             }
 
@@ -226,7 +232,7 @@ class RpnttsController extends AbstractActionController
 
         return array(
             'id'    => $id,
-            'booking' => $this->getBookingTable()->getBooking($id)
+            'booking' => $this->getBookingTable()->getBookingMatchingBookingId($id)
         );
     }
 }

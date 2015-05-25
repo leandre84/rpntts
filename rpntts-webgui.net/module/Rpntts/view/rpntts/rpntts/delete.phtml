@@ -1,13 +1,14 @@
 <?php
 
- utf8_encode('Buchung löschen');
+ $title = utf8_encode('Buchung löschen');
  $this->headTitle($title);
  ?>
  <h1><?php echo $this->escapeHtml($title); ?></h1>
 
- <p>Wollen Sie diese Buchung löschen
-     '<?php echo $this->escapeHtml($booking->timeStamp); ?>' by
-     '<?php echo $this->escapeHtml($booking->text); ?>'?
+ <p>Bitte best&auml;tigen Sie das L&ouml;schen der Buchung:&ensp;
+     <?php echo '<strong>Datum/Uhrzeit: </strong>' . $this->escapeHtml($booking->timeStamp); ?>
+	 <?php echo '<strong>Typ: </strong>' . $this->escapeHtml($booking->type); ?>
+     <?php echo '<strong>Beschreibung: </strong>' . $this->escapeHtml($booking->text); ?>
  </p>
  <?php
  $url = $this->url('booking', array(
@@ -18,7 +19,7 @@
  <form action="<?php echo $url; ?>" method="post">
  <div>
      <input type="hidden" name="id" value="<?php echo (int) $booking->primaryKey; ?>" />
-     <input type="submit" name="del" value="Yes" />
-     <input type="submit" name="del" value="No" />
+     <input type="submit" name="del" value="Ja" />
+     <input type="submit" name="del" value="Nein" />
  </div>
  </form>

@@ -69,6 +69,7 @@ class BookingTable
 
     public function deleteBooking($id)
     {
+		var_dump($id);
         $this->tableGateway->delete(array('pk' => (int) $id));
     }
  }
