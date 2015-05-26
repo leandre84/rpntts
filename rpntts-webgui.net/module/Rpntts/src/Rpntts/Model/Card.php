@@ -10,9 +10,9 @@ class Card
 
     public function exchangeArray($data)
     {
-        $this->cardUid = (!empty($data['cardUid'])) ? $data['cardUid'] : NULL;
-        $this->text  = (!empty($data['text'])) ? $data['text'] : NULL;
-        $this->userForeignKey  = (!empty($data['userForeignKey'])) ? $data['userForeignKey'] : NULL;
-        $this->active  = (!empty($data['active'])) ? $data['active'] : NULL;
+        $this->cardUid = (isset($data['cardUid'])) ? $data['cardUid'] : NULL;
+        $this->text  = (isset($data['text'])) ? $data['text'] : NULL;
+        $this->userForeignKey  = (isset($data['userForeignKey'])) ? $data['userForeignKey'] : NULL;
+        $this->active  = (isset($data['active'])) ? $data['active'] : NULL;
     }
 }
