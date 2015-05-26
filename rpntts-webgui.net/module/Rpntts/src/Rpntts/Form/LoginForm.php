@@ -1,6 +1,7 @@
 <?php
 namespace Rpntts\Form;
 
+use Zend\Form\Element;
 use Zend\Form\Form;
 use Zend\InputFilter\InputFilter;
 use Zend\InputFilter\InputFilterAwareInterface;
@@ -24,7 +25,7 @@ class LoginForm extends Form implements InputFilterAwareInterface
         ));
         $this->add(array(
             'name' => 'passWord',
-            'type' => 'Text',
+            'type' => 'Password',
             'options' => array(
                 'label' => 'Passwort: ',
             ),
@@ -37,7 +38,7 @@ class LoginForm extends Form implements InputFilterAwareInterface
                 'id' => 'submitbutton',
             ),
         ));
-	}
+    }
     
     public function setInputFilter(InputFilterInterface $inputFilter)
     {
