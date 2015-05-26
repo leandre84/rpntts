@@ -94,3 +94,28 @@ BEGIN
 
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS rpntts_update_global_saldo;
+DELIMITER //
+CREATE PROCEDURE rpntts_update_global_saldo()
+
+BEGIN
+
+  DECLARE booking1 INT;
+  DECLARE booking2 INT;
+  DECLARE runloop INT;
+  SET runloop = 1;
+  
+  WHILE runloop != 0 DO
+    SET booking1 = NULL;
+    SET booking2 = NULL;
+    select b1.pk, b2.pk into booking1, booking2 from (select pk, user_fk, timestamp, type from booking where computed=FALSE order by timestamp) b1 join (select pk, user_fk, timestamp, type from booking where computed=FALSE order by timestamp) b2 where b1.user_fk=b2.user_fk and b1.type=b2.type and date(b1.timestamp)=date(b2.timestamp) and b1.timestamp < b2.timestamp limit 1;
+    IF booking1 IS NULL OR booking2 IS NULL THEN
+      SET runloop = 0;
+    ELSE
+      call rpntts_update_saldo(booking1,booking2);
+    END IF;
+  END WHILE;
+
+END //
+DELIMITER ;
