@@ -24,7 +24,7 @@ CREATE TABLE user (
     firstname VARCHAR(64) NOT NULL,
     lastname VARCHAR(64) NOT NULL,
     active INTEGER NOT NULL,
-    timebalance FLOAT NOT NULL,
+    timebalance DECIMAL(8,4) NOT NULL DEFAULT 0,
     timemodel_fk INTEGER NOT NULL,
     FOREIGN KEY(timemodel_fk) REFERENCES timemodel(pk)
 );

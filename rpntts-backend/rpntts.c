@@ -194,12 +194,18 @@ int main(int argc, char **argv) {
         espeak_Synchronize();
     }
 
+    /* Connect to mysql DB */
+    if (! mysql_real_connect(&mysql, options.db_host, options.db_user, options.db_password, options.db_name, options.db_port, NULL, 0)) {
+        fprintf(stderr, "%s: Error connecting to mysql: %s\n", options.progname, mysql_error(&mysql));
+        mysql_close(&mysql);
+        return 7;
+    }
+
     while (exit_while == 0) {
 
         usleep(SLEEPUSECONDS);
 
         ndef_mass_booking = 0;
-
 
         /* Search for card in field */
         status = detect_card(&nxp_params, bcard_uid, &card_uid_len);
@@ -215,13 +221,6 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "%s: Found card with UID: %s\n", options.progname, card_uid);
             }
 
-
-            /* Connect to mysql DB */
-            if (! mysql_real_connect(&mysql, options.db_host, options.db_user, options.db_password, options.db_name, options.db_port, NULL, 0)) {
-                fprintf(stderr, "%s: Error connecting to mysql: %s\n", options.progname, mysql_error(&mysql));
-                mysql_close(&mysql);
-                continue;
-            }
 
             /* Lookup user corresponding to card UID */
             memset(&user, '\0', sizeof(rpntts_user));
@@ -246,13 +245,13 @@ int main(int argc, char **argv) {
                             if (options.verbose) {
                                 fprintf(stderr, "%s: NDEF Text: %s\n", options.progname, ndef_text);
                             }
-                            /* Parse text record here */
+                            /* Try to look up user by NFC text record infos */
                             status = get_user_by_nfc_text(&mysql, ndef_text, &user);
                             if (status == 0) {
                                 printf("%s: Found user via NDEF text record, PK: %s\n", options.progname, user.pk);
                                 ndef_mass_booking = 1;
+                                /* Proceed with booking, we're not break/continuing the loop here */
                             } else {
-                                mysql_close(&mysql);
                                 fprintf(stderr, "%s: Unable to look up user according to NFC text record: %d\n", options.progname, status);
                                 if (options.single_run) break; else continue; 
                             }
@@ -261,7 +260,6 @@ int main(int argc, char **argv) {
                             if (options.verbose) {
                                 fprintf(stderr, "%s: NDEF record detected, but there is no text record\n", options.progname);
                             }
-                            mysql_close(&mysql);
                             if (options.single_run) break; else continue; 
                         }
                     }
@@ -269,7 +267,6 @@ int main(int argc, char **argv) {
                         if (options.verbose) {
                             fprintf(stderr, "%s: No NDEF record detected\n", options.progname);
                         }
-                        mysql_close(&mysql);
                         if (options.single_run) break; else continue; 
                     }
                 }
@@ -277,7 +274,6 @@ int main(int argc, char **argv) {
                     if (options.verbose) {
                         fprintf(stderr, "%s: No tag detected\n", options.progname);
                     }
-                    mysql_close(&mysql);
                     if (options.single_run) break; else continue; 
                 }
             }
@@ -294,7 +290,6 @@ int main(int argc, char **argv) {
             }
 
             if (options.no_booking) {
-                mysql_close(&mysql);
                 if (options.single_run) break; else continue; 
             }
 
@@ -309,12 +304,11 @@ int main(int argc, char **argv) {
                     else {
                         fprintf(stderr, "%s\n", mysql_error(&mysql));
                     }
-                    mysql_close(&mysql);
+                    if (options.single_run) break; else continue; 
                 }
                 else if (options.verbose) {
                     fprintf(stderr, "%s: Successfully performed booking\n", options.progname);
                 }
-                mysql_close(&mysql);
             }
             else {
                 /* Do mass booking */
@@ -322,8 +316,13 @@ int main(int argc, char **argv) {
                 if (status != 0) {
                     fprintf(stderr, "%s: Error during mass booking: %s\n", options.progname, mysql_error(&mysql));
                 }
-                mysql_close(&mysql);
+                else if (options.verbose) {
+                    fprintf(stderr, "%s: Successfully performed booking\n", options.progname);
+                }
+                if (options.single_run) break; else continue; 
             }
+
+            /* Get Saldo etc. */
 
         }
         else {
@@ -348,7 +347,7 @@ void usage(char *progname) {
     fprintf(stderr, "%s: usage: \n", progname);
     fprintf(stderr, "   -1 exit after one run\n");
     fprintf(stderr, "   -v verbose output\n");
-    fprintf(stderr, "   -x just try to detect card, no mysql interaction\n");
+    fprintf(stderr, "   -x do not insert booking - dry run\n");
     fprintf(stderr, "   -q be quiet - no espeak output\n");
     fprintf(stderr, "   -h [host] mysql host to connect to, default localhost\n");
     fprintf(stderr, "   -s [port] mysql tcp socket to connect to, default 3306\n");
