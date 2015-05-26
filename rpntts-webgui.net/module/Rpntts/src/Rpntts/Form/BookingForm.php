@@ -2,6 +2,7 @@
 namespace Rpntts\Form;
 
 use Zend\Form\Form;
+use Zend\Form\Element;
 
 class BookingForm extends Form
 {
@@ -23,9 +24,14 @@ class BookingForm extends Form
         ));
         $this->add(array(
             'name' => 'type',
-            'type' => 'Text',
+            'type' => 'Zend\Form\Element\Select',
             'options' => array(
                 'label' => 'Buchungstyp: ',
+                'options' => array(
+                             'AE' => 'AE',
+                             'BE' => 'BE',
+                             'CE' => 'CE'
+                )
             ),
         ));
         $this->add(array(

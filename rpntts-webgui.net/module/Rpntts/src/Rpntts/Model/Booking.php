@@ -77,8 +77,6 @@ class Booking implements InputFilterAwareInterface
                         'name'    => 'StringLength',
                         'options' => array(
                             'encoding' => 'UTF-8',
-                            'min'      => 2,
-                            'max'      => 2,
                         ),
                     ),
                 ),
