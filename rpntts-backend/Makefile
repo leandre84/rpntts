@@ -12,7 +12,7 @@ DOXYGEN=doxygen
 
 INCLUDES=-I/usr/local/nxprdlib/types -I/usr/local/nxprdlib/intfs -I /usr/local/nxprdlib/comps/phacDiscLoop/src/Sw -I/usr/include/mysql -I/usr/include/espeak -I/usr/include/glib-2.0 -I/usr/lib/arm-linux-gnueabihf/glib-2.0/include 
 LINKPATHS=-L/usr/local/lib -L/usr/local/nxprdlib 
-LINKLIBS=-lwiringPi -lnxprdlib -lmysqlclient -lz -lespeak -lglib-2.0
+LINKLIBS=-lwiringPi -lwiringPiDev -lnxprdlib -lmysqlclient -lz -lespeak -lglib-2.0
 
 ##
 ## ----------------------------------------------------------------- rules --
@@ -24,7 +24,7 @@ LINKLIBS=-lwiringPi -lnxprdlib -lmysqlclient -lz -lespeak -lglib-2.0
 ##
 all:	rpntts	
 
-rpntts:	rpntts-common.o rpntts-nfc.o rpntts-mysql.o rpntts.o
+rpntts:	rpntts-common.o rpntts-nfc.o rpntts-mysql.o rpntts-lcd.o rpntts.o
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LINKPATHS) $(LINKLIBS)
 
 #rpntts-test: rpntts-common.o rpntts-nfc.o rpntts-test.o

@@ -10,6 +10,7 @@
 #include "rpntts-common.h"
 #include "rpntts-nfc.h"
 #include "rpntts-mysql.h"
+#include "rpntts-lcd.h"
 
 #define RPNTTS_DEFAULT_DB_HOST "localhost"
 #define RPNTTS_DEFAULT_DB_NAME "rpntts"
@@ -45,6 +46,7 @@ int main(int argc, char **argv) {
     espeak_POSITION_TYPE espeak_position_type;
     espeak_ERROR espeak_error;
     char espeak_text[ESPEAK_TEXT_LENGTH+1] = { 0 };
+    int lcd_handle = -1;
     int status = 0;
 
     int disc_loop_status = 0;
@@ -195,14 +197,23 @@ int main(int argc, char **argv) {
         espeak_Synchronize();
     }
 
+    /* Initialize LCD */
+    lcd_handle = lcd_init();
+    if (lcd_handle < 0) {
+        fprintf(stderr, "%s: Error initializing LCD\n", options.progname);
+        return 7;
+    }
+
     /* Connect to mysql DB */
     if (! mysql_real_connect(&mysql, options.db_host, options.db_user, options.db_password, options.db_name, options.db_port, NULL, 0)) {
         fprintf(stderr, "%s: Error connecting to mysql: %s\n", options.progname, mysql_error(&mysql));
         mysql_close(&mysql);
-        return 7;
+        return 8;
     }
 
     while (exit_while == 0) {
+
+        lcd_print_idle(lcd_handle);
 
         usleep(SLEEPBETWEENDETECTIONS);
 
@@ -358,7 +369,10 @@ int main(int argc, char **argv) {
     if (options.verbose) {
         fprintf(stderr, "%s: Exiting cleanly\n", options.progname);
     }
+
     mysql_close(&mysql);
+    lcd_clear(lcd_handle);
+
 
     return EXIT_SUCCESS;
 
