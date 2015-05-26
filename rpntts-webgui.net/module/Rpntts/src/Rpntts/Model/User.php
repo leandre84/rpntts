@@ -15,14 +15,14 @@ class User
 
     public function exchangeArray($data)
     {
-        $this->primaryKey = (!empty($data['pk'])) ? $data['pk'] : NULL;
-        $this->userName = (!empty($data['username'])) ? $data['username'] : NULL;
-        $this->passWord = (!empty($data['password'])) ? $data['password'] : NULL;
-        $this->staffNumber = (!empty($data['persno'])) ? $data['persno'] : NULL;
-        $this->firstName = (!empty($data['firstname'])) ? $data['firstname'] : NULL;
-        $this->lastName = (!empty($data['lastname'])) ? $data['lastname'] : NULL;
-        $this->active = (!empty($data['active'])) ? $data['active'] : NULL;
-        $this->timeBalance = (!empty($data['timebalance'])) ? $data['timebalance'] : NULL;
-        $this->timeModelForeignKey = (!empty($data['timemodel_fk'])) ? $data['timemodel_fk'] : NULL;
+        $this->primaryKey = (isset($data['pk'])) ? $data['pk'] : NULL;
+        $this->userName = (isset($data['username'])) ? $data['username'] : NULL;
+        $this->passWord = (isset($data['password'])) ? $data['password'] : NULL;
+        $this->staffNumber = (isset($data['persno'])) ? $data['persno'] : NULL;
+        $this->firstName = (isset($data['firstname'])) ? $data['firstname'] : NULL;
+        $this->lastName = (isset($data['lastname'])) ? $data['lastname'] : NULL;
+        $this->active = (isset($data['active'])) ? $data['active'] : NULL;
+        $this->timeBalance = (isset($data['timebalance'])) ? $data['timebalance'] : NULL;
+        $this->timeModelForeignKey = (isset($data['timemodel_fk'])) ? $data['timemodel_fk'] : NULL;
     }
 }
