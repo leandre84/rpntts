@@ -78,16 +78,16 @@ class RpnttsController extends AbstractActionController
                 return $this->redirect()->toRoute('booking');
             }
         }
-        return array('form' => $form);
+        return array(
+            'form' => $form
+        );
     }
 
         
     public function bookingAction()
     {
         $user_session = new Container('user');
-        #$user_session->errorMessage = '';
-        #$user_session->successMessage = '';
-        
+
         $bookings = [];
         try {
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
@@ -96,13 +96,13 @@ class RpnttsController extends AbstractActionController
             $user_session->successMessage = '';
             $user_session->errorMessage = $e->getMessage();
         }
-        
+
         return new ViewModel(array(
-        'bookings' => $bookings,
-        'errorMessage' => $user_session->errorMessage,
-        'successMessage' => $user_session->successMessage,
-        'userName' => $user_session->userName,
-        'id' => $user_session->userPrimaryKey,
+            'bookings' => $bookings,
+            'errorMessage' => $user_session->errorMessage,
+            'successMessage' => $user_session->successMessage,
+            'userName' => $user_session->userName,
+            'id' => $user_session->userPrimaryKey,
         ));
     }
     
@@ -166,8 +166,8 @@ class RpnttsController extends AbstractActionController
             ));
         }
 
-        // Get the Booking with the specified id. An exception is thrown
-        // if it cannot be found, in which case go to the booking page.
+        /* Get the Booking with the specified id. An exception is thrown
+        if it cannot be found, in which case go to the booking page. */
         try {
             $booking = $this->getBookingTable()->getBookingMatchingBookingId($id);
             $user_session = new Container('user');
