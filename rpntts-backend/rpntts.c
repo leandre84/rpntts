@@ -17,8 +17,9 @@
 #define RPNTTS_DEFAULT_DB_PASSWORD "rpntts"
 #define RPNTTS_DEFAULT_DB_PORT 3306 
 
-
-#define SLEEPUSECONDS 200000
+/* these are useconds */
+#define SLEEPBETWEENDETECTIONS 500000
+#define SLEEPAFTERBOOKING 3000000
 
 #define ESPEAK_BUFFER 500
 #define ESPEAK_RATE 180
@@ -203,7 +204,7 @@ int main(int argc, char **argv) {
 
     while (exit_while == 0) {
 
-        usleep(SLEEPUSECONDS);
+        usleep(SLEEPBETWEENDETECTIONS);
 
         ndef_mass_booking = 0;
 
@@ -324,10 +325,27 @@ int main(int argc, char **argv) {
 
             /* Get Saldo etc. */
 
+            status = call_procedure(&mysql, "rpntts_update_global_saldo()");
+            if (status != 0) {
+                fprintf(stderr, "%s: Error calculating global saldo through procedure: %s\n", options.progname, mysql_error(&mysql));
+                if (options.single_run) break; else continue; 
+            }
+
+            status = update_user_timebalance(&mysql, &user);
+            if (status != 0) {
+                fprintf(stderr, "%s: Error updating user's time balance: %s\n", options.progname, mysql_error(&mysql));
+                if (options.single_run) break; else continue; 
+            }
+            else if (options.verbose) {
+                fprintf(stderr, "%s: User info: PK: %s timebalance: %s\n", options.progname, user.pk, user.timebalance);
+            }
+
+            usleep(SLEEPAFTERBOOKING);
+
         }
         else {
             if (options.verbose) {
-                fprintf(stderr, "%s: Nothing found...\n", options.progname);
+                // fprintf(stderr, "%s: Nothing found...\n", options.progname);
             }
         }
 
@@ -337,6 +355,9 @@ int main(int argc, char **argv) {
 
     }
 
+    if (options.verbose) {
+        fprintf(stderr, "%s: Exiting cleanly\n", options.progname);
+    }
     mysql_close(&mysql);
 
     return EXIT_SUCCESS;

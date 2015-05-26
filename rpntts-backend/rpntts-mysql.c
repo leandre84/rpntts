@@ -265,3 +265,57 @@ int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
     return retval;
 }
 
+int update_user_timebalance(MYSQL *mysql, rpntts_user *user) {
+    char sql[SQLBUF] = { 0 };
+    MYSQL_RES *result = NULL;
+    MYSQL_ROW row;
+    int status = 0;
+
+    strcat(sql, "SELECT timebalance FROM user WHERE pk='");
+    strcat(sql, user->pk);
+    strcat(sql, "'");
+
+    if (options.verbose) {
+        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+    }
+
+    if ((status = mysql_query(mysql, sql)) != 0) {
+        return 1;
+    }
+
+    result = mysql_store_result(mysql);
+    if (result == NULL) {
+        return 2;
+    }
+
+    row = mysql_fetch_row(result);
+    if (row == NULL) {
+        mysql_free_result(result);
+        return 3;
+    }
+
+    if (strlen(row[0]) > USER_TIMEBALANCE_LEN) {
+        /* Value unexepectedly larger than data structure */
+        mysql_free_result(result);
+        return 4;
+    }
+
+    strcpy(user->timebalance, row[0]);
+    mysql_free_result(result);
+
+    return 0;
+
+}
+
+int call_procedure(MYSQL *mysql, char *procedure) {
+    char sql[SQLBUF] = { 0 };
+
+    strcat(sql, "CALL ");
+    strcat(sql, procedure);
+    
+    if (options.verbose) {
+        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+    }
+
+    return mysql_query(mysql, sql);
+}
