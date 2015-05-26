@@ -60,7 +60,6 @@ class RpnttsController extends AbstractActionController
         if ($request->isPost()) {
             $form->setData($request->getPost());
 
-            // TODO: user auf active prüfen
             if ($form->isValid()) {
                 $formContent = $form->getData();
                 $clearTextPass = $formContent['passWord'];
@@ -69,6 +68,9 @@ class RpnttsController extends AbstractActionController
                 try {
                     $user = $this->getUserTable()->getUserMatchingNameAndPassword($userNameFromForm, $hashPass);
                 } catch (\Exception $e) {
+                    return $this->redirect()->toRoute('loginerror');
+                }
+                if ((int) $user->active === 0) {
                     return $this->redirect()->toRoute('loginerror');
                 }
                 $user_session = new Container('user');
