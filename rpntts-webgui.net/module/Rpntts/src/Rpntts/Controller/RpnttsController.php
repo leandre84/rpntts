@@ -14,8 +14,6 @@ class RpnttsController extends AbstractActionController
     protected $userTable;
     protected $cardTable;
     protected $bookingTable;
-    private $errorMessage;
-    private $successMessage;
 
     public function getTimeModelTable()
     {
@@ -55,7 +53,7 @@ class RpnttsController extends AbstractActionController
 
     public function loginAction()
     {     
-		$form = new LoginForm();
+        $form = new LoginForm();
         $form->get('submit')->setValue('Anmelden');
 
         $request = $this->getRequest();
@@ -86,15 +84,16 @@ class RpnttsController extends AbstractActionController
         
     public function bookingAction()
     {
-		$user_session = new Container('user');
-		
+        $user_session = new Container('user');
+        #$user_session->errorMessage = '';
+        #$user_session->successMessage = '';
+        
         $bookings = [];
         try {
-            $user_session = new Container('user');
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
-			$user_session->errorMessage = '';
+            $user_session->errorMessage = '';
         } catch (\Exception $e) {
-			$user_session->successMessage = '';
+            $user_session->successMessage = '';
             $user_session->errorMessage = $e->getMessage();
         }
         
@@ -121,9 +120,9 @@ class RpnttsController extends AbstractActionController
 
     public function addAction()
     {
-		$user_session = new Container('user');
-		$user_session->errorMessage = '';
-		$user_session->successMessage = '';
+        $user_session = new Container('user');
+        $user_session->errorMessage = '';
+        $user_session->successMessage = '';
 
         $form = new BookingForm();
         $form->get('submit')->setValue('Hinzufügen');
@@ -139,8 +138,10 @@ class RpnttsController extends AbstractActionController
                 try {
                     $booking->userForeignKey = $user_session->userPrimaryKey;
                     $this->getBookingTable()->saveBooking($booking);
+                    $user_session->errorMessage = '';
                     $user_session->successMessage = 'Buchung erfolgreich gespeichert.';
                 } catch (\Exception $e) {
+                    $user_session->successMessage = '';
                     $user_session->errorMessage = $e->getMessage();
                 }
                 
@@ -149,17 +150,16 @@ class RpnttsController extends AbstractActionController
             }
         }
         
-        return array('form' => $form, 'errorMessage' => $user_session->errorMessage, 'successMessage' => $user_session->successMessage);
+        return array(
+            'form' => $form,
+            'errorMessage' => $user_session->errorMessage,
+            'successMessage' => $user_session->successMessage
+        );
     }
 
     public function editAction()
     {
-		$user_session = new Container('user');
-		$user_session->errorMessage = '';
-		$user_session->successMessage = '';
-		
         $id = (int) $this->params()->fromRoute('id', 0);
-		
         if (!$id) {
             return $this->redirect()->toRoute('booking', array(
                 'action' => 'add'
@@ -170,54 +170,59 @@ class RpnttsController extends AbstractActionController
         // if it cannot be found, in which case go to the booking page.
         try {
             $booking = $this->getBookingTable()->getBookingMatchingBookingId($id);
+            $user_session = new Container('user');
+            $user_session->errorMessage = '';
         }
         catch (\Exception $e) {
-			$user_session->errorMessage = $e->getMessage();
+            $user_session->successMessage = '';
+            $user_session->errorMessage = $e->getMessage();
             return $this->redirect()->toRoute('booking', array(
                 'action' => 'booking',
-				'errorMessage' => $user_session->errorMessage,
-				'successMessage' => $user_session->successMessage
+                'errorMessage' => $user_session->errorMessage,
+                'successMessage' => $user_session->successMessage
             ));
         }
-		
+        
         $form  = new BookingForm();
         $form->bind($booking);
         $form->get('submit')->setAttribute('value', 'Übernehmen');
-		
-        $request = $this->getRequest();		
-        if ($request->isPost()) {			
+        
+        $request = $this->getRequest();     
+        if ($request->isPost()) {           
             $form->setInputFilter($booking->getInputFilter());
-            $form->setData($request->getPost());			
+            $form->setData($request->getPost());            
 
-			if ($form->isValid()) {
-				try {
-					$booking->primaryKey = $id;
-					$booking->userForeignKey = $user_session->userPrimaryKey;
-					$this->getBookingTable()->saveBooking($booking);
-					$user_session->successMessage = 'Buchung erfolgreich bearbeitet.';
-				} catch (\Exception $e) {
-					$user_session->errorMessage = $e->getMessage();
-				}
-
+            if ($form->isValid()) {
+                try {
+                    $booking->primaryKey = $id;
+                    $booking->userForeignKey = $user_session->userPrimaryKey;
+                    $this->getBookingTable()->saveBooking($booking);
+                    $user_session->errorMessage = '';
+                    $user_session->successMessage = 'Buchung erfolgreich bearbeitet.';
+                } catch (\Exception $e) {
+                    $user_session->successMessage = '';
+                    $user_session->errorMessage = $e->getMessage();
+                }
+                
                 // Redirect to list of bookings
-                return $this->redirect()->toRoute('booking');
+                return $this->redirect()->toRoute('booking', array(
+                    'action' => 'booking',
+                    'errorMessage' => $user_session->errorMessage,
+                    'successMessage' => $user_session->successMessage
+                ));
             }
         }
-		
+        
         return array(
             'id' => $id,
             'form' => $form,
-			'errorMessage' => $user_session->errorMessage,
-			'successMessage' => $user_session->successMessage
+            'errorMessage' => $user_session->errorMessage,
+            'successMessage' => $user_session->successMessage
         );
     }
     
    public function deleteAction()
-   {
-		$user_session = new Container('user');
-		$user_session->errorMessage = '';
-		$user_session->successMessage = '';
-		
+   { 
         $id = (int) $this->params()->fromRoute('id', 0);
         if (!$id) {
             return $this->redirect()->toRoute('booking');
@@ -229,20 +234,40 @@ class RpnttsController extends AbstractActionController
 
             if ($del == 'Ja') {
                 $id = (int) $request->getPost('id');
-				
-                $this->getBookingTable()->deleteBooking($id);
-				$user_session->successMessage = 'Buchung erfolgreich gelöscht.';
+                
+                try {
+                    $this->getBookingTable()->deleteBooking($id);
+                    $user_session = new Container('user');
+                    $user_session->errorMessage = '';
+                    $user_session->successMessage = 'Buchung erfolgreich gelöscht.';
+                } catch (\Exception $e) {
+                    $user_session->successMessage = '';
+                    $user_session->errorMessage = $e->getMessage();
+                }                
+            } elseif ($del == 'Nein') {
+                $user_session = new Container('user');
+                $user_session->errorMessage = '';
+                $user_session->successMessage = 'Buchung wurde nicht gelöscht.';
             }
 
             // Redirect to list of bookings
             return $this->redirect()->toRoute('booking');
         }
-
+        
+        try {
+            $booking = $this->getBookingTable()->getBookingMatchingBookingId($id);
+            $user_session = new Container('user');
+            $user_session->errorMessage = '';
+        } catch (\Exception $e) {
+            $user_session->successMessage = '';
+            $user_session->errorMessage = $e->getMessage();
+        }
+        
         return array(
             'id'    => $id,
-            'booking' => $this->getBookingTable()->getBookingMatchingBookingId($id),
-			'errorMessage' => $user_session->errorMessage,
-			'successMessage' => $user_session->successMessage
+            'booking' => $booking,
+            'errorMessage' => $user_session->errorMessage,
+            'successMessage' => $user_session->successMessage
         );
     }
 }
