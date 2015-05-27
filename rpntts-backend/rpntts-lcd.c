@@ -7,6 +7,7 @@
 #include "rpntts-lcd.h"
 
 int lcd_init(void) {
+    wiringPiSetup();
     /* rows, cols, shift register bits, rs, strb(=e), d0, d1, ... */
     return lcdInit(2, 16, 4, LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 0, 0, 0, 0);
 }
