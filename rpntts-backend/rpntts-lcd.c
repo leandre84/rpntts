@@ -23,7 +23,7 @@ void lcd_print_idle(int lcd_handle) {
 void lcd_print_user(int lcd_handle, rpnttsUser *user) {
     char line1[17] = { 0 };
     char line2[17] = { 0 };
-    /* this should be enough... */
+    /* this should be enough according to DB schema */
     char hours[5] = { 0 };
     char minutes[3] = {0};
 
