@@ -233,7 +233,7 @@ int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
 
     strcat(sql, "select min(timestampdiff(second, timestamp, now())) from booking where user_fk='");
     strcat(sql, user_pk);
-    strcat(sql, "'");
+    strcat(sql, "' and timestamp < now()");
 
     if (options.verbose) {
         fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
