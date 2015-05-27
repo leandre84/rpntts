@@ -22,14 +22,14 @@ typedef struct {
     char firstname[USER_FIRSTNAME_LEN+1];
     char lastname[USER_LASTNAME_LEN+1];
     char timebalance[USER_TIMEBALANCE_LEN+1];
-} rpntts_user;
+} rpnttsUser;
 
-int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user);
-int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpntts_user *user);
+int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpnttsUser *user);
+int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpnttsUser *user);
 int do_booking(MYSQL *mysql, char *user_pk);
 int do_nfc_text_mass_booking(MYSQL *mysql, char *nfc_text, char *user_pk);
 int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk);
-int update_user_timebalance(MYSQL *mysql, rpntts_user *user);
+int update_user_timebalance(MYSQL *mysql, rpnttsUser *user);
 int call_procedure(MYSQL *mysql, char *procedure);
 
 #endif /* RPNTTS_MYSQL_H */

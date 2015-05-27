@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     uint8_t card_uid_len = 0;
     char card_uid[(MAXUIDLEN*2)+1];
     MYSQL mysql;
-    rpntts_user user;
+    rpnttsUser user;
     espeak_VOICE espeak_voice;
     espeak_POSITION_TYPE espeak_position_type;
     espeak_ERROR espeak_error;
@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
 
 
             /* Lookup user corresponding to card UID */
-            memset(&user, '\0', sizeof(rpntts_user));
+            memset(&user, '\0', sizeof(rpnttsUser));
             status = get_user_by_card_uid(&mysql, card_uid, &user);
             if (status != 0) {
                 if (options.verbose) {

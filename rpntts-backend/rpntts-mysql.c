@@ -6,7 +6,7 @@
 #include "rpntts-common.h"
 #include "rpntts-mysql.h"
 
-int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
+int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpnttsUser *user) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
@@ -61,7 +61,7 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpntts_user *user) {
 
 }
 
-int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpntts_user *user) {
+int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpnttsUser *user) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
@@ -265,7 +265,7 @@ int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
     return retval;
 }
 
-int update_user_timebalance(MYSQL *mysql, rpntts_user *user) {
+int update_user_timebalance(MYSQL *mysql, rpnttsUser *user) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
