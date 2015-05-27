@@ -58,6 +58,10 @@ class BookingTable
         $id = (int) $booking->primaryKey;
         if ($id == 0) {
             $this->tableGateway->insert($data);
+            // Typen: A = Standard, U = Urlaub
+            // Nach Insert global_update() aufrufen
+            // Vorher Überprüfung auf Urlaub, wenn ja Urlaubs-Procedure
+            // Update deaktvieren
         } else {
             if ($this->getBookingMatchingBookingId($id)) {
                 $this->tableGateway->update($data, array('pk' => $id));
@@ -69,7 +73,8 @@ class BookingTable
 
     public function deleteBooking($id)
     {
-		var_dump($id);
+		// Löschen über Procedure rpntts_delete_booking (Param booking PK)
+        var_dump($id);
         $this->tableGateway->delete(array('pk' => (int) $id));
     }
  }
