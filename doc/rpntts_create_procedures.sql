@@ -58,6 +58,7 @@ BEGIN
 END //
 DELIMITER ;
 
+
 DROP PROCEDURE IF EXISTS rpntts_delete_booking;
 DELIMITER //
 CREATE PROCEDURE rpntts_delete_booking(IN booking INT)
@@ -95,6 +96,7 @@ BEGIN
 END //
 DELIMITER ;
 
+
 DROP PROCEDURE IF EXISTS rpntts_update_global_saldo;
 DELIMITER //
 CREATE PROCEDURE rpntts_update_global_saldo()
@@ -116,6 +118,65 @@ BEGIN
       call rpntts_update_saldo(booking1,booking2);
     END IF;
   END WHILE;
+
+END //
+DELIMITER ;
+DROP PROCEDURE IF EXISTS rpntts_holiday_booking;
+
+
+DELIMITER //
+CREATE PROCEDURE rpntts_holiday_booking(IN user INT, IN day CHAR(8), IN type VARCHAR(2), IN text VARCHAR(64))
+
+BEGIN
+
+  DECLARE dow INT;
+  DECLARE tbadjust FLOAT;
+  DECLARE hours INT;
+  DECLARE minutes INT;
+  DECLARE starttime TIMESTAMP;
+  DECLARE endtime TIMESTAMP;
+
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
+
+  SET starttime = str_to_date(concat(day, '080000'), '%Y%m%d%H%i%s');
+  SET dow = dayofweek(str_to_date(day, '%Y%m%d'));
+
+  IF dow = 1 THEN
+    select sunday into tbadjust from user, timemodel where timemodel_fk=timemodel.pk and user.pk = user;
+  END IF;
+  IF dow = 2 THEN
+    select monday into tbadjust from user, timemodel where timemodel_fk=timemodel.pk and user.pk = user;
+  END IF;
+  IF dow = 3 THEN
+    select tuesday into tbadjust from user, timemodel where timemodel_fk=timemodel.pk and user.pk = user;
+  END IF;  
+  IF dow = 4 THEN
+    select wednesday into tbadjust from user, timemodel where timemodel_fk=timemodel.pk and user.pk = user;
+  END IF;
+  IF dow = 5 THEN
+    select thursday into tbadjust from user, timemodel where timemodel_fk=timemodel.pk and user.pk = user;
+  END IF;
+  IF dow = 6 THEN
+    select friday into tbadjust from user, timemodel where timemodel_fk=timemodel.pk and user.pk = user;
+  END IF;
+  IF dow = 7 THEN
+    select saturday into tbadjust from user, timemodel where timemodel_fk=timemodel.pk and user.pk = user;
+  END IF;
+
+  IF tbadjust IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No user or timemodel found';
+  END IF;
+
+  IF type = 'UH' THEN
+    SET tbadjust = tbadjust/2;
+  END IF;
+
+  SET endtime = addtime(starttime, maketime(floor(tbadjust), (tbadjust-floor(tbadjust))*60, 0));
+
+  START TRANSACTION;
+    insert into booking(timestamp, type, text, user_fk) values(starttime, type, text, user);
+    insert into booking(timestamp, type, text, user_fk) values(endtime, type, text, user);
+  COMMIT;
 
 END //
 DELIMITER ;
