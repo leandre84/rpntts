@@ -16,12 +16,18 @@
 #define BOOKINGDIFF 60
 
 typedef struct {
+    char text[USER_TIMEBALANCE_LEN+1];
+    int hours;
+    int minutes;
+} timeBalance;
+
+typedef struct {
     char pk[USER_PK_LEN+1];
     char username[USER_USERNAME_LEN+1];
     char persno[USER_PERSNO_LEN+1];
     char firstname[USER_FIRSTNAME_LEN+1];
     char lastname[USER_LASTNAME_LEN+1];
-    char timebalance[USER_TIMEBALANCE_LEN+1];
+    timeBalance timebalance;
 } rpnttsUser;
 
 int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpnttsUser *user);

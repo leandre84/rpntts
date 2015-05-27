@@ -10,7 +10,6 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpnttsUser *user) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
-    int status = 0;
     unsigned int i = 0;
 
     strcat(sql, "SELECT user.pk, username, persno, firstname, lastname FROM user, card WHERE card.user_fk=user.pk AND carduid='");
@@ -21,7 +20,7 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpnttsUser *user) {
         fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
-    if ((status = mysql_query(mysql, sql)) != 0) {
+    if (mysql_query(mysql, sql) != 0) {
         return 1;
     }
 
@@ -65,7 +64,6 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpnttsUser *user) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
-    int status = 0;
     unsigned int i = 0;
     char *nfc_text_copy = NULL;
     char *token = NULL;
@@ -117,7 +115,7 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpnttsUser *user) {
         fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
-    if ((status = mysql_query(mysql, sql)) != 0) {
+    if (mysql_query(mysql, sql) != 0) {
         return 1;
     }
 
@@ -231,7 +229,6 @@ int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
-    int status = 0;
     int retval = 0;
 
     strcat(sql, "select min(timestampdiff(second, timestamp, now())) from booking where user_fk='");
@@ -242,7 +239,7 @@ int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
         fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
-    if ((status = mysql_query(mysql, sql)) != 0) {
+    if (mysql_query(mysql, sql) != 0) {
         return 1;
     }
 
@@ -269,7 +266,7 @@ int update_user_timebalance(MYSQL *mysql, rpnttsUser *user) {
     char sql[SQLBUF] = { 0 };
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
-    int status = 0;
+    double tb;
 
     strcat(sql, "SELECT timebalance FROM user WHERE pk='");
     strcat(sql, user->pk);
@@ -279,7 +276,7 @@ int update_user_timebalance(MYSQL *mysql, rpnttsUser *user) {
         fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
-    if ((status = mysql_query(mysql, sql)) != 0) {
+    if (mysql_query(mysql, sql) != 0) {
         return 1;
     }
 
@@ -300,7 +297,11 @@ int update_user_timebalance(MYSQL *mysql, rpnttsUser *user) {
         return 4;
     }
 
-    strcpy(user->timebalance, row[0]);
+    strcpy((user->timebalance).text, row[0]);
+    sscanf(row[0], "%lf", &tb);
+    (user->timebalance).hours = (int) tb;
+    (user->timebalance).minutes = (int) ((tb-(user->timebalance).hours)*60);
+
     mysql_free_result(result);
 
     return 0;

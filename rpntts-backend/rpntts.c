@@ -348,7 +348,7 @@ int main(int argc, char **argv) {
                 if (options.single_run) break; else continue; 
             }
             else if (options.verbose) {
-                fprintf(stderr, "%s: User info: PK: %s timebalance: %s\n", options.progname, user.pk, user.timebalance);
+                fprintf(stderr, "%s: User info: PK: %s timebalance: %s\n", options.progname, user.pk, user.timebalance.text);
             }
 
             usleep(SLEEPAFTERBOOKING);
