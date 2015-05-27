@@ -135,6 +135,8 @@ BEGIN
   DECLARE minutes INT;
   DECLARE starttime TIMESTAMP;
   DECLARE endtime TIMESTAMP;
+  DECLARE pk1 INT;
+  DECLARE pk2 INT;
 
   DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
 
@@ -175,7 +177,10 @@ BEGIN
 
   START TRANSACTION;
     insert into booking(timestamp, type, text, user_fk) values(starttime, type, text, user);
+    select last_insert_id() into pk1;
     insert into booking(timestamp, type, text, user_fk) values(endtime, type, text, user);
+    select last_insert_id() into pk2;
+    call rpntts_update_saldo(pk1,pk2);
   COMMIT;
 
 END //
