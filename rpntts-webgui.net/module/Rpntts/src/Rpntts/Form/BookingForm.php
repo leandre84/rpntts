@@ -28,9 +28,8 @@ class BookingForm extends Form
             'options' => array(
                 'label' => 'Buchungstyp: ',
                 'options' => array(
-                             'AE' => 'AE',
-                             'BE' => 'BE',
-                             'CE' => 'CE'
+                             'A' => 'A',
+                             'U' => 'U',
                 )
             ),
         ));
