@@ -260,17 +260,21 @@ int main(int argc, char **argv) {
                             /* Try to look up user by NFC text record infos */
                             status = get_user_by_nfc_text(&mysql, ndef_text, &user);
                             if (status == 0) {
-                                printf("%s: Found user via NDEF text record, PK: %s\n", options.progname, user.pk);
+                                if (options.verbose) {
+                                    fprintf(stderr, "%s: Found user via NDEF text record, PK: %s\n", options.progname, user.pk);
+                                }
                                 ndef_mass_booking = 1;
                                 /* Proceed with booking, we're not break/continuing the loop here */
                             } else {
                                 fprintf(stderr, "%s: Unable to look up user according to NFC text record: %d\n", options.progname, status);
+                                lcd_print_text(lcd_handle, "rpntts ERROR", "NDEF user lookup", 5000000);
                                 if (options.single_run) break; else continue; 
                             }
                         }
                         else { 
                             if (options.verbose) {
                                 fprintf(stderr, "%s: NDEF record detected, but there is no text record\n", options.progname);
+                                lcd_print_text(lcd_handle, "rpntts ERROR", "NDEF user lookup", 5000000);
                             }
                             if (options.single_run) break; else continue; 
                         }
@@ -278,27 +282,18 @@ int main(int argc, char **argv) {
                     else {
                         if (options.verbose) {
                             fprintf(stderr, "%s: No NDEF record detected\n", options.progname);
+                            lcd_print_text(lcd_handle, "rpntts ERROR", "unknown card", 5000000);
                         }
                         if (options.single_run) break; else continue; 
                     }
                 }
+                /* this should not happen */
                 else {
                     if (options.verbose) {
                         fprintf(stderr, "%s: No tag detected\n", options.progname);
                     }
                     if (options.single_run) break; else continue; 
                 }
-            }
-
-            /* Greet user */
-            if (! options.quiet) {
-                memset(espeak_text, '\0', ESPEAK_TEXT_LENGTH);
-                strcat(espeak_text, "Hallo ");
-                strcat(espeak_text, user.firstname);
-                strcat(espeak_text, " ");
-                strcat(espeak_text, user.lastname);
-                espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
-                espeak_Synchronize();
             }
 
             if (options.no_booking) {
@@ -312,9 +307,11 @@ int main(int argc, char **argv) {
                     fprintf(stderr, "%s: Error during booking: ", options.progname);
                     if (status == -1) {
                         fprintf(stderr, "booking time intervall below limit\n");
+                        lcd_print_text(lcd_handle, "rpntts ERROR", "blocked 1m", 5000000);
                     }
                     else {
                         fprintf(stderr, "%s\n", mysql_error(&mysql));
+                        lcd_print_text(lcd_handle, "rpntts ERROR", "during booking", 5000000);
                     }
                     if (options.single_run) break; else continue; 
                 }
@@ -327,6 +324,7 @@ int main(int argc, char **argv) {
                 status = do_nfc_text_mass_booking(&mysql, ndef_text, user.pk);
                 if (status != 0) {
                     fprintf(stderr, "%s: Error during mass booking: %s\n", options.progname, mysql_error(&mysql));
+                    lcd_print_text(lcd_handle, "rpntts ERROR", "NFC mass booking", 5000000);
                     if (options.single_run) break; else continue; 
                 }
                 else if (options.verbose) {
@@ -339,12 +337,14 @@ int main(int argc, char **argv) {
             status = call_procedure(&mysql, "rpntts_update_global_saldo()");
             if (status != 0) {
                 fprintf(stderr, "%s: Error calculating global saldo through procedure: %s\n", options.progname, mysql_error(&mysql));
+                lcd_print_text(lcd_handle, "rpntts ERROR", "update saldo", 5000000);
                 if (options.single_run) break; else continue; 
             }
 
             status = update_user_timebalance(&mysql, &user);
             if (status != 0) {
                 fprintf(stderr, "%s: Error updating user's time balance: %s\n", options.progname, mysql_error(&mysql));
+                lcd_print_text(lcd_handle, "rpntts ERROR", "no timebalance", 5000000);
                 if (options.single_run) break; else continue; 
             }
             else if (options.verbose) {
@@ -353,14 +353,34 @@ int main(int argc, char **argv) {
 
             lcd_print_user(lcd_handle, &user);
 
-            usleep(SLEEPAFTERBOOKING);
+            /* Read saldo */
+            if (! options.quiet) {
+                memset(espeak_text, '\0', ESPEAK_TEXT_LENGTH);
+                strcat(espeak_text, "Hallo ");
+                strcat(espeak_text, user.firstname);
+                strcat(espeak_text, " ");
+                strcat(espeak_text, user.lastname);
+                strcat(espeak_text, ", Ihr neues Saldo beträgt: ");
+                strcat(espeak_text, user.timebalance.hourss);
+                strcat(espeak_text, " Stunden und ");
+                strcat(espeak_text, user.timebalance.minutess);
+                strcat(espeak_text, " Minuten.");
+                espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
+                espeak_Synchronize();
+            }
+
+            if (options.quiet) {
+                usleep(SLEEPAFTERBOOKING);
+            }               
 
         }
+        /*
         else {
             if (options.verbose) {
-                // fprintf(stderr, "%s: Nothing found...\n", options.progname);
+                fprintf(stderr, "%s: Nothing found...\n", options.progname);
             }
         }
+        */
 
         if (options.single_run) {
             break;

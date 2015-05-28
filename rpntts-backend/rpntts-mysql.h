@@ -17,6 +17,8 @@
 
 typedef struct {
     char text[USER_TIMEBALANCE_LEN+1];
+    char hourss[5];
+    char minutess[3];
     int hours;
     int minutes;
 } timeBalance;
