@@ -121,9 +121,9 @@ BEGIN
 
 END //
 DELIMITER ;
+
+
 DROP PROCEDURE IF EXISTS rpntts_holiday_booking;
-
-
 DELIMITER //
 CREATE PROCEDURE rpntts_holiday_booking(IN user INT, IN day CHAR(8), IN type VARCHAR(2), IN text VARCHAR(64))
 
