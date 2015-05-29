@@ -19,12 +19,16 @@
 #define RPNTTS_DEFAULT_DB_PORT 3306 
 
 /* these are useconds */
-#define SLEEPBETWEENDETECTIONS 500000
-#define SLEEPAFTERBOOKING 3000000
+#define SLEEP_BETWEEN_DETECTIONS 500000
+#define SLEEP_AFTER_BOOKING 3000000
+#define SLEEP_AFTER_ERROR_DISPLAYED 5000000
 
 #define ESPEAK_BUFFER 500
 #define ESPEAK_RATE 180
 #define ESPEAK_TEXT_LENGTH 256
+
+#define ESPEAK_ERROR_UNKNOWN_CARD "Unbekannte Karte"
+#define ESPEAK_ERROR_INTERVALL "Buchung blockiert - Mindestintervall beachten"
 
 rpnttsOptions options;
 volatile unsigned int exit_while = 0;
@@ -172,6 +176,13 @@ int main(int argc, char **argv) {
         return 3;
     }
 
+    /* Init LCD */
+    lcd_handle = lcd_init();
+    if (lcd_handle < 0) {
+        fprintf(stderr, "%s: Error initializing LCD\n", options.progname);
+        return 4;
+    }
+
     /* Init espeak */
     if (! options.quiet) {
         memset(&espeak_voice, '\0', sizeof(espeak_VOICE));
@@ -181,27 +192,20 @@ int main(int argc, char **argv) {
         espeak_voice.variant = 1;
         if ((espeak_error = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, ESPEAK_BUFFER, NULL, 0)) == EE_INTERNAL_ERROR) {
             fprintf(stderr, "%s: Error initializing espeak: %d\n", options.progname, espeak_error);
-            return 4;
+            return 5;
         }
         if ((espeak_error = espeak_SetVoiceByProperties(&espeak_voice)) != EE_OK) {
             fprintf(stderr, "%s: Error setting espeak voice: %d\n", options.progname, espeak_error);
-            return 5;
+            return 6;
         }
         if ((espeak_error = espeak_SetParameter(espeakRATE, ESPEAK_RATE, 0)) != EE_OK) {
             fprintf(stderr, "%s: Error setting espeak rate: %d\n", options.progname, espeak_error);
-            return 6;
+            return 7;
         }
 
         strncpy(espeak_text, "rpntts initialisiert, akzeptiere Buchungen", ESPEAK_TEXT_LENGTH);
         espeak_Synth(espeak_text, sizeof(espeak_text), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
-        espeak_Synchronize();
-    }
-
-    /* Initialize LCD */
-    lcd_handle = lcd_init();
-    if (lcd_handle < 0) {
-        fprintf(stderr, "%s: Error initializing LCD\n", options.progname);
-        return 7;
+        //espeak_Synchronize();
     }
 
     /* Connect to mysql DB */
@@ -215,7 +219,7 @@ int main(int argc, char **argv) {
 
         lcd_print_idle(lcd_handle);
 
-        usleep(SLEEPBETWEENDETECTIONS);
+        usleep(SLEEP_BETWEEN_DETECTIONS);
 
         ndef_mass_booking = 0;
 
@@ -267,14 +271,14 @@ int main(int argc, char **argv) {
                                 /* Proceed with booking, we're not break/continuing the loop here */
                             } else {
                                 fprintf(stderr, "%s: Unable to look up user according to NFC text record: %d\n", options.progname, status);
-                                lcd_print_text(lcd_handle, "rpntts ERROR", "NDEF user lookup", 5000000);
+                                lcd_print_text(lcd_handle, "rpntts ERROR", "NDEF user lookup", SLEEP_AFTER_ERROR_DISPLAYED);
                                 if (options.single_run) break; else continue; 
                             }
                         }
                         else { 
                             if (options.verbose) {
                                 fprintf(stderr, "%s: NDEF record detected, but there is no text record\n", options.progname);
-                                lcd_print_text(lcd_handle, "rpntts ERROR", "NDEF user lookup", 5000000);
+                                lcd_print_text(lcd_handle, "rpntts ERROR", "NDEF user lookup", SLEEP_AFTER_ERROR_DISPLAYED);
                             }
                             if (options.single_run) break; else continue; 
                         }
@@ -282,7 +286,14 @@ int main(int argc, char **argv) {
                     else {
                         if (options.verbose) {
                             fprintf(stderr, "%s: No NDEF record detected\n", options.progname);
-                            lcd_print_text(lcd_handle, "rpntts ERROR", "unknown card", 5000000);
+                            if (options.quiet) {
+                                lcd_print_text(lcd_handle, "rpntts ERROR", "unknown card", SLEEP_AFTER_ERROR_DISPLAYED);
+                            }
+                            else {
+                                lcd_print_text(lcd_handle, "rpntts ERROR", "unknown card", 0);
+                                espeak_Synth(ESPEAK_ERROR_UNKNOWN_CARD, sizeof(ESPEAK_ERROR_UNKNOWN_CARD), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
+                                espeak_Synchronize();
+                            }
                         }
                         if (options.single_run) break; else continue; 
                     }
@@ -307,11 +318,18 @@ int main(int argc, char **argv) {
                     fprintf(stderr, "%s: Error during booking: ", options.progname);
                     if (status == -1) {
                         fprintf(stderr, "booking time intervall below limit\n");
-                        lcd_print_text(lcd_handle, "rpntts ERROR", "blocked 1m", 5000000);
+                        if (options.quiet) {
+                            lcd_print_text(lcd_handle, "rpntts ERROR", "blocked 1m", SLEEP_AFTER_ERROR_DISPLAYED);
+                        }
+                        else {
+                            lcd_print_text(lcd_handle, "rpntts ERROR", "blocked 1m", 0);
+                            espeak_Synth(ESPEAK_ERROR_INTERVALL, sizeof(ESPEAK_ERROR_INTERVALL), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
+                            espeak_Synchronize();
+                        }
                     }
                     else {
                         fprintf(stderr, "%s\n", mysql_error(&mysql));
-                        lcd_print_text(lcd_handle, "rpntts ERROR", "during booking", 5000000);
+                        lcd_print_text(lcd_handle, "rpntts ERROR", "during booking", SLEEP_AFTER_ERROR_DISPLAYED);
                     }
                     if (options.single_run) break; else continue; 
                 }
@@ -324,7 +342,7 @@ int main(int argc, char **argv) {
                 status = do_nfc_text_mass_booking(&mysql, ndef_text, user.pk);
                 if (status != 0) {
                     fprintf(stderr, "%s: Error during mass booking: %s\n", options.progname, mysql_error(&mysql));
-                    lcd_print_text(lcd_handle, "rpntts ERROR", "NFC mass booking", 5000000);
+                    lcd_print_text(lcd_handle, "rpntts ERROR", "NFC mass booking", SLEEP_AFTER_ERROR_DISPLAYED);
                     if (options.single_run) break; else continue; 
                 }
                 else if (options.verbose) {
@@ -337,14 +355,14 @@ int main(int argc, char **argv) {
             status = call_procedure(&mysql, "rpntts_update_global_saldo()");
             if (status != 0) {
                 fprintf(stderr, "%s: Error calculating global saldo through procedure: %s\n", options.progname, mysql_error(&mysql));
-                lcd_print_text(lcd_handle, "rpntts ERROR", "update saldo", 5000000);
+                lcd_print_text(lcd_handle, "rpntts ERROR", "update saldo", SLEEP_AFTER_ERROR_DISPLAYED);
                 if (options.single_run) break; else continue; 
             }
 
             status = update_user_timebalance(&mysql, &user);
             if (status != 0) {
                 fprintf(stderr, "%s: Error updating user's time balance: %s\n", options.progname, mysql_error(&mysql));
-                lcd_print_text(lcd_handle, "rpntts ERROR", "no timebalance", 5000000);
+                lcd_print_text(lcd_handle, "rpntts ERROR", "no timebalance", SLEEP_AFTER_ERROR_DISPLAYED);
                 if (options.single_run) break; else continue; 
             }
             else if (options.verbose) {
@@ -370,7 +388,7 @@ int main(int argc, char **argv) {
             }
 
             if (options.quiet) {
-                usleep(SLEEPAFTERBOOKING);
+                usleep(SLEEP_AFTER_BOOKING);
             }               
 
         }
