@@ -341,7 +341,7 @@ int main(int argc, char **argv) {
                 /* Do mass booking */
                 status = do_nfc_text_mass_booking(&mysql, ndef_text, user.pk);
                 if (status != 0) {
-                    fprintf(stderr, "%s: Error during mass booking: %s\n", options.progname, mysql_error(&mysql));
+                    fprintf(stderr, "%s: Error during mass booking, status: %d, mysql error: %s\n", options.progname, status, mysql_error(&mysql));
                     lcd_print_text(lcd_handle, "rpntts ERROR", "NFC mass booking", SLEEP_AFTER_ERROR_DISPLAYED);
                     if (options.single_run) break; else continue; 
                 }

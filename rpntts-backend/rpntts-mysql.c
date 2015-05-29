@@ -76,8 +76,7 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpnttsUser *user) {
     }
 
     strcpy(nfc_text_copy, nfc_text);
-    token = strtok(nfc_text_copy, "|");
-    while (token != NULL) {
+    while ((token = strsep(&nfc_text_copy, "|")) != NULL) {
         if (i == 0) {
             if (strcmp(token, "rpntts") != 0) {
                 return 2;
@@ -101,7 +100,6 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpnttsUser *user) {
             /* Don't care */
             break;
         }
-        token = strtok(NULL, "|");
         i++;
     }
 
@@ -180,6 +178,9 @@ int do_nfc_text_mass_booking(MYSQL *mysql, char *nfc_text, char *user_pk) {
     unsigned int i = 0;
     char *nfc_text_copy = NULL;
     char *token = NULL;
+    char *token_copy = NULL;
+    char *btype = NULL;
+    char *bvalue = NULL;
 
     nfc_text_copy = alloca(strlen(nfc_text) * sizeof(char) + 1);
     if (nfc_text_copy == NULL) {
@@ -191,26 +192,52 @@ int do_nfc_text_mass_booking(MYSQL *mysql, char *nfc_text, char *user_pk) {
         return 2;
     }
 
-    token = strtok(nfc_text_copy, "|");
-    while (token != NULL) {
+    while ((token = strsep(&nfc_text_copy, "|")) != NULL) {
         if (i > 2) {
+            token_copy = alloca(strlen(token) * sizeof(char) + 1);
+            if (token_copy == NULL) {
+                return 3;
+            }
+            strcpy(token_copy, token);
+
+            btype = strsep(&token_copy, ":");
+            bvalue = strsep(&token_copy, ":");
+            if (btype == NULL || bvalue == NULL) {
+              return 4; 
+            }
+            
             memset(sql, '\0', SQLBUF*sizeof(char));
-            strcat(sql, "INSERT INTO booking (timestamp, text, user_fk) VALUES (str_to_date('");
-            strcat(sql, token);
-            strcat(sql, "', '%Y%m%d%H%i%s'), 'NDEF derived booking', '");
-            strcat(sql, user_pk);
-            strcat(sql, "')");
+
+            if (strcmp(btype, "A") == 0) {
+                strcat(sql, "INSERT INTO booking (timestamp, text, type, user_fk) VALUES (str_to_date('");
+                strcat(sql, bvalue);
+                strcat(sql, "', '%Y%m%d%H%i%s'), 'NDEF derived booking', 'A', '");
+                strcat(sql, user_pk);
+                strcat(sql, "')");
+            }
+            else if (strcmp(btype, "U") == 0 || strcmp(btype, "UH") == 0) {
+                strcat(sql, "CALL rpntts_holiday_booking('");
+                strcat(sql, user_pk);
+                strcat(sql, "','");
+                strcat(sql, bvalue);
+                strcat(sql, "','");
+                strcat(sql, btype);
+                strcat(sql, "','NDEF derived holiday booking')");
+            }
+            else {
+                return 5;
+            }
+
             if (options.verbose) {
                 fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
             }
             if (mysql_query(mysql, sql) != 0) {
                 if (mysql_rollback(mysql) != 0) {
-                    return 4;
+                    return 6;
                 }
-                return 3;
+                return 7;
             }
         }
-        token = strtok(NULL, "|");
         i++;
     }
 
