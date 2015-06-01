@@ -16,11 +16,17 @@ class BookingForm extends Form
             'type' => 'Hidden',
         ));
         $this->add(array(
+            'type' => 'Zend\Form\Element\DateTime',
             'name' => 'timeStamp',
-            'type' => 'Text',
             'options' => array(
-                'label' => 'Datum/Uhrzeit: ',
+                    'label' => 'Datum/Uhrzeit: ',
+                    'format' => 'd.m.Y H:i:s'
             ),
+            /* 'attributes' => array(
+                    'min' => '01.01.2010 00:00:00',
+                    'max' => '01.01.2020 00:00:00',
+                    'step' => '1', // minutes; default step interval is 1 min
+            ) */
         ));
         $this->add(array(
             'name' => 'type',

@@ -46,7 +46,7 @@ class Booking implements InputFilterAwareInterface
                 ),
             ));
             
-            $inputFilter->add(array(
+            /* $inputFilter->add(array(
                 'name'     => 'timeStamp',
                 'required' => true,
                 'filters'  => array(
@@ -63,7 +63,7 @@ class Booking implements InputFilterAwareInterface
                         ),
                     ),
                 ),
-            ));
+            )); */
 
             $inputFilter->add(array(
                 'name'     => 'type',
