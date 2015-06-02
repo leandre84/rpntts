@@ -131,7 +131,7 @@ class RpnttsController extends AbstractActionController
         $user_session->successMessage = '';
 
         $form = new BookingForm();
-        $form->get('submit')->setValue('Hinzufügen');
+        $form->get('submit')->setValue('Speichern');
         
         $request = $this->getRequest();
         if ($request->isPost()) {
@@ -142,6 +142,10 @@ class RpnttsController extends AbstractActionController
             if ($form->isValid()) {
                 $booking->exchangeArray($form->getData());
                 try {
+                    $dateTime = $form->get('timeStamp')->getValue();
+                    $dateTime = strtotime($dateTime);
+                    $dateTime = date('Y-m-d H:i:s', $dateTime);
+                    $booking->timeStamp = $dateTime;
                     $booking->userForeignKey = $user_session->userPrimaryKey;
                     $this->getBookingTable()->saveBooking($booking);
                     $user_session->errorMessage = '';
