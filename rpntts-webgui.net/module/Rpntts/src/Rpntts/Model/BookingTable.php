@@ -23,13 +23,13 @@ class BookingTable
     {
         $id  = (int) $id;
         $rowSet = $this->tableGateway->select(array('user_fk' => $id));
-		$row = $rowSet->current();
+        $row = $rowSet->current();
         if (!$row) {
             throw new \Exception('Keine Buchungen für Benutzerkennung '  . $id);
         }
         
-		$rowSet = $this->tableGateway->select(array('user_fk' => $id));
-		
+        $rowSet = $this->tableGateway->select(array('user_fk' => $id));
+        
         return $rowSet;
     }
     
@@ -37,7 +37,7 @@ class BookingTable
     {
         $id  = (int) $id;
         $rowSet = $this->tableGateway->select(array('pk' => $id));
-		$row = $rowSet->current();
+        $row = $rowSet->current();
         if (!$row) {
             throw new \Exception('Keine Buchung für Buchungs-ID ' . $id);
         }
@@ -54,10 +54,15 @@ class BookingTable
             'text' => $booking->text,
             'user_fk' => $booking->userForeignKey,
         );
-		
+        
         $id = (int) $booking->primaryKey;
         if ($id == 0) {
             $this->tableGateway->insert($data);
+            // Call stored procedure for updating global saldo
+            $dbAdapter = $this->tableGateway->getAdapter();
+            $stmt = $dbAdapter->createStatement();
+            $stmt->prepare('CALL rpntts_update_global_saldo()');
+            $stmt->execute();     
             // Typen: A = Standard, U = Urlaub
             // Nach Insert global_update() aufrufen
             // Vorher Überprüfung auf Urlaub, wenn ja Urlaubs-Procedure
@@ -73,9 +78,12 @@ class BookingTable
 
     public function deleteBooking($id)
     {
-		// Löschen über Procedure rpntts_delete_booking (Param booking PK)
-        var_dump($id);
-        $this->tableGateway->delete(array('pk' => (int) $id));
+        // Call stored procedure for delete booking
+        $dbAdapter = $this->tableGateway->getAdapter();
+        $stmt = $dbAdapter->createStatement();
+        $stmt->prepare('CALL rpntts_delete_booking(?)');
+        $stmt->getResource()->bindParam(1, $id, \PDO::PARAM_INT); 
+        $stmt->execute();
     }
  }
  

@@ -10,7 +10,6 @@ use Zend\View\Model\ViewModel;
 
 // Allgemein TODOS:
 //Order by timestamp
-//Date Objekt
 
 class RpnttsController extends AbstractActionController
 {
