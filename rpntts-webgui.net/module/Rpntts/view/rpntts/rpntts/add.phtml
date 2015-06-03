@@ -4,7 +4,7 @@
  $this->headTitle($title);
  ?>
  <a href="<?php echo $this->url('booking',
-            array('action'=>'booking'));?>">Ihre Buchungen</a>
+            array('action'=>'booking'));?>">Ihre Buchungen&nbsp;|</a>
  <a href="<?php echo $this->serverUrl(true);?>"><?php echo $this->escapeHtml($title); ?></a>
  <p>
     <?php if ($errorMessage) {
@@ -28,4 +28,16 @@
  echo $this->formRow($form->get('text'));
  echo $this->formSubmit($form->get('submit'));
  echo $this->form()->closeTag();
- 
+ ?>
+ <br />
+ <p>
+    <h4>Hinweise zu Eingabe</h4>
+    <ul>
+        <li><strong>Datum/Uhrzeit:&nbsp;</strong>Das g&uuml;ltige Format ist "TT.MM.JJJJ HH:MM", also zum Beispiel "01.01.2015 08:00".</li>
+        <li><strong>Buchungstyp:&nbsp;</strong>Der Typ ist aus dem Dropdown-Feld auszuw&auml;hlen.* </li>
+        <li><strong>Buchungstext:&nbsp;</strong>Freitextfeld mit maximal 100 Zeichen.</li>
+    </ul>
+* <em>Bei der Auswahl von "U" oder "UH" f&uuml;r eine Urlaubsbuchung ist lediglich das Datum relevant, nicht jedoch die Uhrzeit.<br />
+&nbsp;&nbsp;Eine eingegebene Uhrzeit wird vom System automatisch entfernt und dann eine Urlaubsbuchung gem&auml;&szlig; der<br /> 
+&nbsp;&nbsp;Soll-Arbeitszeit berechnet.</em>
+</p>
