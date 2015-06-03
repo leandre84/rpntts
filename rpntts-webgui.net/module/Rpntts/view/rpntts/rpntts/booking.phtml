@@ -7,6 +7,8 @@ $this->headTitle($title);
     <?php echo '<strong>Eingeloggt als Benutzer: </strong>' . $this->escapeHtml($userName);?>
     <a href="<?php echo $this->url('logout',
             array('action'=>'logout'));?>">&nbsp;Logout</a>
+    <?php echo ' | <strong>Saldo: </strong>' . $this->escapeHtml($timeBalance);?>
+    <?php echo ' | <strong>Personalnummer: </strong>' . $this->escapeHtml($staffNumber);?>
 </p>
 <p>
     <?php if ($errorMessage) {
@@ -27,7 +29,7 @@ $this->headTitle($title);
 <table class="table">
 <tr>
     <th>Buchungsnummer</th>
-    <th>Zeit</th>
+    <th>Datum/Uhrzeit</th>
     <th>Typ</th>
     <th>Beschreibung</th>
     <th>Benutzer-ID</th>

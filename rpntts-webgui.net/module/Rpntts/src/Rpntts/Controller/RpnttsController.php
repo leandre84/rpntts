@@ -79,6 +79,8 @@ class RpnttsController extends AbstractActionController
                 $user_session = new Container('user');
                 $user_session->userName = $user->userName;
                 $user_session->userPrimaryKey = $user->primaryKey;
+                $user_session->userTimeBalance = $user->timeBalance;
+                $user_session->staffNumber = $user->staffNumber;
                 
                 return $this->redirect()->toRoute('booking');
             }
@@ -92,9 +94,19 @@ class RpnttsController extends AbstractActionController
     public function bookingAction()
     {
         $user_session = new Container('user');
+        try {
+            $user = $this->getUserTable()->getUser($user_session->userPrimaryKey);
+        } catch (\Exception $e) {
+            $user_session->successMessage = '';
+            $user_session->errorMessage = $e->getMessage();
+        }
 
         $bookings = [];
+        $timeBalance = '';
+        $staffNumber = '';
         try {
+            $timeBalance = $user->timeBalance;
+            $staffNumber = $user_session->staffNumber;
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
             $user_session->errorMessage = '';
         } catch (\Exception $e) {
@@ -103,6 +115,8 @@ class RpnttsController extends AbstractActionController
         }
 
         return new ViewModel(array(
+            'staffNumber' => $staffNumber,
+            'timeBalance' => $timeBalance,
             'bookings' => $bookings,
             'errorMessage' => $user_session->errorMessage,
             'successMessage' => $user_session->successMessage,
@@ -142,7 +156,7 @@ class RpnttsController extends AbstractActionController
                 $booking->exchangeArray($form->getData());
                 try {
                     $dateTime = $form->get('timeStamp')->getValue();
-                    $dateTime = date('Y-m-d H:i:s', $strtotime($dateTime));
+                    $dateTime = date('Y-m-d H:i:s', strtotime($dateTime));
                     $booking->timeStamp = $dateTime;
                     $booking->userForeignKey = $user_session->userPrimaryKey;
                     $this->getBookingTable()->saveBooking($booking);
