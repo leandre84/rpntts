@@ -2,6 +2,9 @@
  $title = utf8_encode('Buchung bearbeiten');
  $this->headTitle($title);
  ?>
+ <a href="<?php echo $this->url('booking',
+            array('action'=>'booking'));?>">Ihre Buchungen</a>
+ <a href="<?php echo $this->serverUrl(true);?>"><?php echo $this->escapeHtml($title); ?></a>
  <p>
     <?php if ($errorMessage) {
 		echo '<font color="red">Es ist ein Fehler aufgetreten: </font>' . $this->escapeHtml($errorMessage);

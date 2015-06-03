@@ -3,6 +3,8 @@ $title = 'Ihre Buchungen';
 $this->headTitle($title);
 ?>
 <br />
+<a href="<?php echo $this->url('booking',
+            array('action'=>'booking'));?>"></a>
 <p>
     <?php echo '<strong>Eingeloggt als Benutzer: </strong>' . $this->escapeHtml($userName);?>
     <a href="<?php echo $this->url('logout',

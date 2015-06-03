@@ -3,15 +3,18 @@
  $title = utf8_encode('Neue Buchung hinzufügen');
  $this->headTitle($title);
  ?>
+ <a href="<?php echo $this->url('booking',
+            array('action'=>'booking'));?>">Ihre Buchungen</a>
+ <a href="<?php echo $this->serverUrl(true);?>"><?php echo $this->escapeHtml($title); ?></a>
  <p>
     <?php if ($errorMessage) {
-		echo '<font color="red">Es ist ein Fehler aufgetreten: </font>' . $this->escapeHtml($errorMessage);
-	}?>
+        echo '<font color="red">Es ist ein Fehler aufgetreten: </font>' . $this->escapeHtml($errorMessage);
+    }?>
 </p>
 <p>
     <?php if ($successMessage) {
-		echo '<font color="green">' . $this->escapeHtml($errorMessage) . '</font>';
-	}?>
+        echo '<font color="green">' . $this->escapeHtml($errorMessage) . '</font>';
+    }?>
 </p>
  <h1><?php echo $this->escapeHtml($title); ?></h1>
  <?php
