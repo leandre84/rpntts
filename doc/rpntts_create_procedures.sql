@@ -269,3 +269,11 @@ BEGIN
 
 END //
 DELIMITER ;
+
+-- schedule daily event
+DROP EVENT IF EXISTS calculate_daily_saldo;
+CREATE EVENT calculate_daily_saldo
+ON SCHEDULE EVERY 24 HOUR
+STARTS '2015-06-01 00:00:00'
+ON COMPLETION NOT PRESERVE ENABLE
+DO call rpntts_saldo_per_day(current_date(), '%Y%m%d');
