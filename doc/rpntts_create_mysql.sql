@@ -49,6 +49,12 @@ CREATE TABLE booking(
     FOREIGN KEY(link_fk) REFERENCES booking(pk)
 );
 
+CREATE TABLE day(
+    day DATE PRIMARY KEY,
+    holiday BOOLEAN NOT NULL DEFAULT false,
+    computed BOOLEAN NOT NULL DEFAULT false
+);
+
 ALTER TABLE timemodel ADD CONSTRAINT timemodel_modelname_ux UNIQUE (modelname);
 ALTER TABLE timemodel ADD CONSTRAINT timemodel_weekdays_ux UNIQUE (monday, tuesday, wednesday, thursday, friday, saturday, sunday);
 ALTER TABLE user ADD CONSTRAINT user_username_ux UNIQUE (username);
