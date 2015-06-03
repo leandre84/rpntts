@@ -20,7 +20,7 @@ class BookingForm extends Form
             'name' => 'timeStamp',
             'options' => array(
                     'label' => 'Datum/Uhrzeit: ',
-                    'format' => 'd.m.Y H:i:s'
+                    'format' => 'd.m.Y H:i'
             ),
             /* 'attributes' => array(
                     'min' => '01.01.2010 00:00:00',
@@ -36,6 +36,7 @@ class BookingForm extends Form
                 'options' => array(
                              'A' => 'A',
                              'U' => 'U',
+                             'UH' => 'UH',
                 )
             ),
         ));

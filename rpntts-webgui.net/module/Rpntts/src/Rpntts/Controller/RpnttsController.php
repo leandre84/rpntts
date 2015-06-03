@@ -142,8 +142,7 @@ class RpnttsController extends AbstractActionController
                 $booking->exchangeArray($form->getData());
                 try {
                     $dateTime = $form->get('timeStamp')->getValue();
-                    $dateTime = strtotime($dateTime);
-                    $dateTime = date('Y-m-d H:i:s', $dateTime);
+                    $dateTime = date('Y-m-d H:i:s', $strtotime($dateTime));
                     $booking->timeStamp = $dateTime;
                     $booking->userForeignKey = $user_session->userPrimaryKey;
                     $this->getBookingTable()->saveBooking($booking);
