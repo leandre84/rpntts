@@ -184,4 +184,88 @@ BEGIN
   COMMIT;
 
 END //
+
+
+DELIMITER ;
+DROP PROCEDURE IF EXISTS rpntts_saldo_per_day;
+DELIMITER //
+CREATE PROCEDURE rpntts_saldo_per_day(IN forday VARCHAR(8))
+
+BEGIN
+
+  DECLARE loop_finished BOOLEAN;
+
+  DECLARE dow INT;
+  DECLARE xholiday BOOLEAN;
+  DECLARE xcomputed BOOLEAN;
+  DECLARE user INT;
+  DECLARE tbmonday FLOAT;
+  DECLARE tbtuesday FLOAT;
+  DECLARE tbwednesday FLOAT;
+  DECLARE tbthursday FLOAT;
+  DECLARE tbfriday FLOAT;
+  DECLARE tbsaturday FLOAT;
+  DECLARE tbsunday FLOAT;
+  
+  DECLARE saldo_cursor CURSOR FOR
+  select user.pk, monday, tuesday, wednesday, thursday, friday, saturday, sunday from user, timemodel where timemodel_fk=timemodel.pk and exists (select 1 from day where day=str_to_date(forday, '%Y%m%d') and computed=FALSE);
+
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET loop_finished = TRUE;
+  
+  SET dow = dayofweek(str_to_date(forday, '%Y%m%d'));
+  select holiday, computed into xholiday, xcomputed from day where day=str_to_date(forday, '%Y%m%d');
+
+  IF dow IS NULL OR xholiday IS NULL OR xcomputed THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Could not get info for desired day';
+  END IF;
+
+  IF xcomputed = TRUE THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Calculations already performed for this date';
+  END IF;
+
+  START TRANSACTION;
+
+  IF xholiday = FALSE THEN
+    OPEN saldo_cursor;
+    get_data: LOOP
+    
+    FETCH saldo_cursor INTO user, tbmonday, tbtuesday, tbwednesday, tbthursday, tbfriday, tbsaturday, tbsunday;
+
+    IF loop_finished = TRUE THEN
+      LEAVE get_data;
+    END IF;
+
+    IF dow = 1 THEN
+      update user set timebalance=timebalance-tbsunday where pk=user;
+    END IF;
+    IF dow = 2 THEN
+      update user set timebalance=timebalance-tbmonday where pk=user;
+    END IF;
+    IF dow = 3 THEN
+      update user set timebalance=timebalance-tbtuesday where pk=user;
+    END IF;
+    IF dow = 4 THEN
+      update user set timebalance=timebalance-tbwednesday where pk=user;
+    END IF;
+    IF dow = 5 THEN
+      update user set timebalance=timebalance-tbthursday where pk=user;
+    END IF;
+    IF dow = 6 THEN
+      update user set timebalance=timebalance-tbfriday where pk=user;
+    END IF;
+    IF dow = 7 THEN
+      update user set timebalance=timebalance-tbsaturday where pk=user;
+    END IF;
+
+    END LOOP get_data;
+
+    CLOSE saldo_cursor;
+  END IF;
+
+  update day set computed=TRUE where day=str_to_date(forday, '%Y%m%d');
+  
+  COMMIT;
+
+END //
 DELIMITER ;
