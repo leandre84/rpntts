@@ -7,8 +7,8 @@ $this->headTitle($title);
             array('action'=>'booking'));?>"></a>
 <p>
     <?php echo '<strong>Eingeloggt als Benutzer: </strong>' . $this->escapeHtml($userName);?>
-    <a href="<?php echo $this->url('logout',
-            array('action'=>'logout'));?>">&nbsp;Logout</a>
+    &nbsp;<a href="<?php echo $this->url('logout',
+            array('action'=>'logout'));?>">Logout</a>
     <?php echo ' | <strong>Saldo: </strong>' . $this->escapeHtml($timeBalance);?>
     <?php echo ' | <strong>Personalnummer: </strong>' . $this->escapeHtml($staffNumber);?>
 </p>
