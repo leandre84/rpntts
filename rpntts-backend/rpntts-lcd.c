@@ -33,15 +33,27 @@ void lcd_print_idle(int lcd_handle) {
 void lcd_print_user(int lcd_handle, rpnttsUser *user) {
     char line1[17] = { 0 };
     char line2[17] = { 0 };
+    unsigned int line2_spacing = 0;
 
     strncat(line1, user->lastname, 13);
-    strncat(line1, " ", 1);
+    strcat(line1, " ");
     strncat(line1, user->firstname, 1);
-    strncat(line1, ".", 1);
+    strcat(line1, ".");
 
-    strncat(line2, "Saldo: ", 7);
+    strncat(line2, LCD_SALDO, strlen(LCD_SALDO));
+    line2_spacing = 16-strlen(LCD_SALDO)-strlen(user->timebalance.hourss)-1-strlen(user->timebalance.minutess);
+    if (user->timebalance.negative) {
+        line2_spacing -= 1;
+    }
+    while (line2_spacing) {
+        strcat(line2, " ");
+        line2_spacing--;
+    }
+    if (user->timebalance.negative) {
+        strcat(line2, "-");
+    }
     strncat(line2, user->timebalance.hourss, 4);
-    strncat(line2, ":", 1);
+    strcat(line2, ":");
     strncat(line2, user->timebalance.minutess, 2);
 
     lcd_clear(lcd_handle);

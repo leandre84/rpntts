@@ -326,6 +326,10 @@ int update_user_timebalance(MYSQL *mysql, rpnttsUser *user) {
 
     strcpy((user->timebalance).text, row[0]);
     sscanf(row[0], "%lf", &tb);
+    if (tb < 0) {
+        (user->timebalance).negative = 1;
+        tb *= -1;
+    }
     (user->timebalance).hours = (int) tb;
     (user->timebalance).minutes = (int) ((tb-(user->timebalance).hours)*60);
     snprintf((user->timebalance).hourss, 5, "%d", (user->timebalance).hours);

@@ -366,7 +366,7 @@ int main(int argc, char **argv) {
                 if (options.single_run) break; else continue; 
             }
             else if (options.verbose) {
-                fprintf(stderr, "%s: User info: PK: %s timebalance: %s, Hours: %d, Minutes: %d\n", options.progname, user.pk, user.timebalance.text, user.timebalance.hours, user.timebalance.minutes);
+                fprintf(stderr, "%s: User info: PK: %s timebalance: %s, Hours: %d, Minutes: %d, negative: %d\n", options.progname, user.pk, user.timebalance.text, user.timebalance.hours, user.timebalance.minutes, user.timebalance.negative);
             }
 
             lcd_print_user(lcd_handle, &user);
