@@ -69,10 +69,11 @@ BEGIN
   DECLARE booking_user_fk INT;
   DECLARE linked_booking INT;
   DECLARE booking_tb FLOAT;
+  DECLARE booking_type VARCHAR(2);
 
   DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
 
-  select count(*), user_fk, link_fk into booking_cnt, booking_user_fk, linked_booking from booking where pk = booking;
+  select count(*), user_fk, link_fk, type into booking_cnt, booking_user_fk, linked_booking, booking_type from booking where pk = booking;
 
   IF booking_cnt IS NULL THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No such booking';
@@ -90,6 +91,10 @@ BEGIN
   END IF;
 
   delete from booking where pk = booking;
+
+  IF (booking_type = 'U' OR booking_type = 'UH') AND linked_booking IS NOT NULL THEN
+    delete from booking where pk = linked_booking;
+  END IF;
 
   COMMIT;
 
