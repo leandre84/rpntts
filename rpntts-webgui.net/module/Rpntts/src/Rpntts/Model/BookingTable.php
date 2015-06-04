@@ -30,6 +30,11 @@ class BookingTable
         
         $rowSet = $this->tableGateway->select(array('user_fk' => $id));
         
+        /* $dbAdapter = $this->tableGateway->getAdapter();
+        $query = "SELECT * FROM booking WHERE user_fk = " . $id . " ORDER BY timestamp DESC";
+        $statement = $dbAdapter->query($query);
+        $rowSet = $this->tableGateway->select($statement); */   
+        
         return $rowSet;
     }
     
