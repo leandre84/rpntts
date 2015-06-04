@@ -45,26 +45,7 @@ class Booking implements InputFilterAwareInterface
                     array('name' => 'Int'),
                 ),
             ));
-            
-            /* $inputFilter->add(array(
-                'name'     => 'timeStamp',
-                'required' => true,
-                'filters'  => array(
-                    array('name' => 'StripTags'),
-                    array('name' => 'StringTrim'),
-                ),
-                'validators' => array(
-                    array(
-                        'name'    => 'StringLength',
-                        'options' => array(
-                            'encoding' => 'UTF-8',
-                            'min'      => 10,
-                            'max'      => 19,
-                        ),
-                    ),
-                ),
-            )); */
-
+ 
             $inputFilter->add(array(
                 'name'     => 'type',
                 'required' => true,
