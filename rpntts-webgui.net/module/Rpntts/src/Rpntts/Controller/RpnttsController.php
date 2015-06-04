@@ -192,6 +192,10 @@ class RpnttsController extends AbstractActionController
         if it cannot be found, in which case go to the booking page. */
         try {
             $booking = $this->getBookingTable()->getBookingMatchingBookingId($id);
+            $dateTimeFromBooking = $booking->timeStamp;
+            $dateTimeFromBooking = preg_replace('/^(.*)(.*:.*)$/isum', '\1', $dateTimeFromBooking);
+            $dateTimeFromBooking = date('d.m.Y H:i', strtotime($dateTimeFromBooking));
+            $booking->timeStamp = $dateTimeFromBooking;
             $user_session = new Container('user');
             $user_session->errorMessage = '';
         }
@@ -216,6 +220,9 @@ class RpnttsController extends AbstractActionController
 
             if ($form->isValid()) {
                 try {
+                    $dateTime = $form->get('timeStamp')->getValue();
+                    $dateTime = date('Y-m-d H:i:s', strtotime($dateTime));
+                    $booking->timeStamp = $dateTime;
                     $booking->primaryKey = $id;
                     $booking->userForeignKey = $user_session->userPrimaryKey;
                     $this->getBookingTable()->saveBooking($booking);

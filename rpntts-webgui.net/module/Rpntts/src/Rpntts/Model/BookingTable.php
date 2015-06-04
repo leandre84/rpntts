@@ -56,39 +56,35 @@ class BookingTable
         );
         
         $id = (int) $booking->primaryKey;
-        if ($id == NULL) {
-            if ($this->isHolidayBooking($data['type'])) {
-                // Format date from booking for stored procedure
-                $date = $data['timestamp'];
-                $date = preg_replace('/^(.*)\s(.*:.*)$/isum', '\1', $date);
-                $date = date('Y-m-d', strtotime($date));
-                $date = str_replace('-', '', $date);
-                
-                // Call stored procedure for holiday booking
-                $dbAdapter = $this->tableGateway->getAdapter();
-                $stmt = $dbAdapter->createStatement();
-                $stmt->prepare('CALL rpntts_holiday_booking(?, ?, ?, ?)');
-                $stmt->getResource()->bindParam(1, $data['user_fk'], \PDO::PARAM_INT);
-                $stmt->getResource()->bindParam(2, $date, \PDO::PARAM_STR); 
-                $stmt->getResource()->bindParam(3, $data['type'], \PDO::PARAM_STR); 
-                $stmt->getResource()->bindParam(4, $data['text'], \PDO::PARAM_STR); 
-                $stmt->execute();
-            } else {
-                $this->tableGateway->insert($data);
-                
-                // Call stored procedure for updating global saldo
-                $dbAdapter = $this->tableGateway->getAdapter();
-                $stmt = $dbAdapter->createStatement();
-                $stmt->prepare('CALL rpntts_update_global_saldo()');
-                $stmt->execute();     
-            }
-            // Update deaktvieren
+        if ($id != NULL) {
+            $this->deleteBooking($id);
+            $data['pk'] = NULL;
+        }
+        
+        // Format date from booking for stored procedure
+        $date = $data['timestamp'];
+        $date = preg_replace('/^(.*)\s(.*:.*)$/isum', '\1', $date);
+        $date = date('Y-m-d', strtotime($date));
+        $date = str_replace('-', '', $date);
+            
+        if ($this->isHolidayBooking($data['type'])) {
+            // Call stored procedure for holiday booking
+            $dbAdapter = $this->tableGateway->getAdapter();
+            $stmt = $dbAdapter->createStatement();
+            $stmt->prepare('CALL rpntts_holiday_booking(?, ?, ?, ?)');
+            $stmt->getResource()->bindParam(1, $data['user_fk'], \PDO::PARAM_INT);
+            $stmt->getResource()->bindParam(2, $date, \PDO::PARAM_STR); 
+            $stmt->getResource()->bindParam(3, $data['type'], \PDO::PARAM_STR); 
+            $stmt->getResource()->bindParam(4, $data['text'], \PDO::PARAM_STR); 
+            $stmt->execute();
         } else {
-            if ($this->getBookingMatchingBookingId($id)) {
-                $this->tableGateway->update($data, array('pk' => $id));
-            } else {
-                throw new \Exception("Buchung mit der ID " . $id . " existiert nicht.");
-            }
+            $this->tableGateway->insert($data);
+            
+            // Call stored procedure for updating global saldo
+            $dbAdapter = $this->tableGateway->getAdapter();
+            $stmt = $dbAdapter->createStatement();
+            $stmt->prepare('CALL rpntts_update_global_saldo()');
+            $stmt->execute();     
         }
     }
 
