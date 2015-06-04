@@ -68,10 +68,6 @@ class BookingTable
                 $dbAdapter = $this->tableGateway->getAdapter();
                 $stmt = $dbAdapter->createStatement();
                 $stmt->prepare('CALL rpntts_holiday_booking(?, ?, ?, ?)');
-                var_dump($date);
-                var_dump($data['user_fk']);
-                var_dump($data['type']);
-                var_dump($data['text']);
                 $stmt->getResource()->bindParam(1, $data['user_fk'], \PDO::PARAM_INT);
                 $stmt->getResource()->bindParam(2, $date, \PDO::PARAM_STR); 
                 $stmt->getResource()->bindParam(3, $data['type'], \PDO::PARAM_STR); 
