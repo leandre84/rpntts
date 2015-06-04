@@ -21,6 +21,7 @@ typedef struct {
     char minutess[3];
     int hours;
     int minutes;
+    int negative;
 } timeBalance;
 
 typedef struct {

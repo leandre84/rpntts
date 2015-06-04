@@ -10,6 +10,8 @@
 #define LCD_D6 9 
 #define LCD_D7 8
 
+#define LCD_SALDO "Saldo: "
+
 int lcd_init(void);
 void lcd_print_idle(int lcd_handle);
 void lcd_print_user(int lcd_handle, rpnttsUser *user);
