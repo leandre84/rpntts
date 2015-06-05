@@ -379,6 +379,9 @@ int main(int argc, char **argv) {
                 strcat(espeak_text, " ");
                 strcat(espeak_text, user.lastname);
                 strcat(espeak_text, ", Ihr neues Saldo beträgt: ");
+                if (user.timebalance.negative) {
+                    strcat(espeak_text, "minus ");
+                }
                 strcat(espeak_text, user.timebalance.hourss);
                 strcat(espeak_text, " Stunden und ");
                 strcat(espeak_text, user.timebalance.minutess);
