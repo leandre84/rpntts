@@ -20,7 +20,6 @@ BEGIN
 
   DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
 
-
   select count(*), user_fk, timestamp, type, computed, link_fk into booking1_cnt, booking1_user_fk, booking1_timestamp, booking1_type, booking1_computed, booking1_link_fk from booking where pk = booking1;
   select count(*), user_fk, timestamp, type, computed, link_fk into booking2_cnt, booking2_user_fk, booking2_timestamp, booking2_type, booking2_computed, booking2_link_fk from booking where pk = booking2;
 
