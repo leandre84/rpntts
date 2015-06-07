@@ -24,7 +24,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     // All Static variables
     // Database Version
-    private static final int DATABASE_VERSION = 1;
+    // Bei Änderungen muss die aufgezählt werden.
+    private static final int DATABASE_VERSION = 2;
 
     // Database Name
     private static final String DATABASE_NAME = "timetracker";
@@ -37,6 +38,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_ID = "id";
     private static final String KEY_DATE = "date";
     private static final String KEY_SENT = "sent";
+    private static final String KEY_TYPE = "type";
+
     //Setting Table Columns names
     private static final String KEY_KEY = "key";
     private static final String KEY_VALUE = "value";
@@ -52,7 +55,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         String CREATE_ENTRY_TABLE = "CREATE TABLE " + TABLE_ENTRY + "("
                 + KEY_ID + " INTEGER PRIMARY KEY,"
                 + KEY_DATE + " TEXT,"
-                + KEY_SENT + " TEXT)";
+                + KEY_SENT + " TEXT,"
+                + KEY_TYPE + " TEXT)";
         db.execSQL(CREATE_ENTRY_TABLE);
 
         String CREATE_SETTING_TABLE = "CREATE TABLE " + TABLE_SETTING + "("
@@ -88,7 +92,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public Setting getSetting(String key) {
         SQLiteDatabase db = this.getReadableDatabase();
-
+        // =? ist ein Platzhalter der den String unten nimmt
         Cursor cursor = db.query(TABLE_SETTING, new String[]{KEY_KEY, KEY_VALUE}, KEY_KEY + "=?",
                 new String[]{key}, null, null, null);
 
@@ -124,9 +128,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
+        // Da in DB nur Integer muss man es in String umwandeln.
         values.put(KEY_DATE, Long.toString(entry.getDate().getTime().getTime())); // Date converted into long and then into a string
         values.put(KEY_SENT, Boolean.toString(entry.isSent()));
-
+        values.put(KEY_TYPE, entry.getType());
         Log.i("values", values.toString());
 
         // Inserting Row
@@ -138,7 +143,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public Entry getEntry(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_ENTRY, new String[]{KEY_ID,
-                        KEY_DATE, KEY_SENT}, KEY_ID + "=?",
+                        KEY_DATE, KEY_SENT, KEY_TYPE}, KEY_ID + "=?",
                 new String[]{String.valueOf(id)}, null, null, null);
         if (cursor != null)
             cursor.moveToFirst();
@@ -146,7 +151,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(Long.parseLong(cursor.getString(1)));
 
-        Entry entry = new Entry(Integer.parseInt(cursor.getString(0)), calendar, Boolean.parseBoolean(cursor.getString(2)));
+        Entry entry = new Entry(Integer.parseInt(cursor.getString(0)), calendar, Boolean.parseBoolean(cursor.getString(2)), cursor.getString(3));
         // return entry
         return entry;
     }
@@ -166,7 +171,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 Calendar calendar = Calendar.getInstance();
 
                 calendar.setTimeInMillis(Long.parseLong(cursor.getString(1)));
-                Entry entry = new Entry(Integer.parseInt(cursor.getString(0)), calendar, Boolean.parseBoolean(cursor.getString(2)));
+                Entry entry = new Entry(Integer.parseInt(cursor.getString(0)), calendar, Boolean.parseBoolean(cursor.getString(2)), cursor.getString(3));
                 // Adding entry to list
                 entryList.add(entry);
             } while (cursor.moveToNext());
@@ -189,6 +194,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_DATE, Long.toString(entry.getDate().getTime().getTime())); // Date converted into long and then into a string
         values.put(KEY_SENT, Boolean.toString(entry.isSent()));
+        values.put(KEY_TYPE, entry.getType());
 
         // updating row
         return db.update(TABLE_ENTRY, values, KEY_ID + " = ?",
@@ -207,6 +213,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public void deleteAllEntries() {
         SQLiteDatabase db = this.getWritableDatabase();
+        // mit 1 = 1 -->  man löscht alle.
         db.delete(TABLE_ENTRY, "1 = 1", new String[]{});
         db.close();
     }

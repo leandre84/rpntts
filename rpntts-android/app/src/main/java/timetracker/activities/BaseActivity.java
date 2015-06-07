@@ -29,15 +29,18 @@ public class BaseActivity extends ActionBarActivity {
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
 
-
+    // Wird ausgeführt wenn Acivity gestartet wird. Startpunkt jeder Activity.
+    //
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Hier wird das Layout von Base Activity geladen
         setContentView(R.layout.activity_base);
+        // Hier wird der Drawer (Menu) geladen
         listView = (ListView) findViewById(R.id.left_drawer);
-
+        // Verweist auf das Hauptlayout
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-
+        // Verweist auf den Pfeil, der toggelt
         mDrawerToggle = new ActionBarDrawerToggle(
                 this,                  /* host Activity */
                 mDrawerLayout,         /* DrawerLayout object */
@@ -62,7 +65,7 @@ public class BaseActivity extends ActionBarActivity {
             }
         };
 
-        // Set the drawer toggle as the DrawerListener
+        // Set the drawer toggle as the DrawerListener - Damit dem Pfeil dynamisch angepasst wird.
         mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -70,23 +73,23 @@ public class BaseActivity extends ActionBarActivity {
 
 
         // load slide menu items
+        // Eintrag im string ist ein array. Hier werden die Items und die Icons rausgeholt.
         navMenuTitles = getResources().getStringArray(R.array.nav_drawer_items);
         navMenuIcons = getResources().obtainTypedArray(R.array.nav_drawer_icons);
         navDrawerItems = new ArrayList<NavDrawerItem>();
-
+        // Hinzufügen der Icons. Zusammenbau mit Beschriftung und Titel
         for (int i = 0; i < navMenuTitles.length; i++) {
             navDrawerItems.add(new NavDrawerItem(navMenuTitles[i], navMenuIcons.getResourceId(i, -1)));
         }
 
-        // Recycle the typed array
+        // Recycle the typed array, sollte automatisch passieren
         navMenuIcons.recycle();
-
+        // Wenn man auf ein Item im Menu drückt, wird es ausgeführt.
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 switch (position) {
                     case 0: // first menu item = home
-                        // Intent defines what activity to be switched to
                         startActivity(new Intent(BaseActivity.this, TimeOverviewActivity.class));
                         break;
                     case 1: // second elements
@@ -94,13 +97,10 @@ public class BaseActivity extends ActionBarActivity {
                 }
             }
         });
-        // adapter is an object which will handled to the listview
-        // the information
+        // Adapter speichert Informationen. Dann kann die listView auf den Adapter zugreifen,
+        // und der Adapter auf die Daten.
         adapter = new NavDrawerListAdapter(getApplicationContext(), navDrawerItems);
         listView.setAdapter(adapter);
-
-        //  getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
-        //  getSupportActionBar().setIcon(R.mipmap.ic_launcher);
 
     }
 
