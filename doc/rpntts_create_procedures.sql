@@ -275,6 +275,7 @@ END //
 DELIMITER ;
 
 -- schedule daily event
+-- also set event_scheduler=on under [mysqld] in /etc/mysql/my.cnf
 DROP EVENT IF EXISTS calculate_daily_saldo;
 CREATE EVENT calculate_daily_saldo
 ON SCHEDULE EVERY 24 HOUR
