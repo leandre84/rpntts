@@ -334,7 +334,7 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
         if (status != PH_ERR_SUCCESS) {
             fprintf(stderr, "%s: Error getting ndef tag state\n", options.progname);
         }
-        fprintf(stderr, "%s: NDEF tag state: %d\n", options.progname, config_value);
+        fprintf(stderr, "%s: NDEF tag state after seting it to writeable: %d\n", options.progname, config_value);
     }
 
     if (ndef_presence) {
