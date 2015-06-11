@@ -303,6 +303,7 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     phStatus_t status;
     uint8_t ndef_presence = 0;
+    uint16_t config_value = 0;
 
     status = phalTop_Reset(ptagop);
     if (status != PH_ERR_SUCCESS) {
@@ -317,6 +318,23 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     status = phalTop_CheckNdef(ptagop, &ndef_presence);
     if (status != PH_ERR_SUCCESS) {
        return RPNTTS_NFC_DETECTNDEF_ERR_CHECKNDEF; 
+    }
+
+    if (options.verbose) {
+        status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_T4T_GET_TAG_STATE, &config_value);
+        if (status != PH_ERR_SUCCESS) {
+            fprintf(stderr, "%s: Error getting ndef tag state\n", options.progname);
+        }
+        fprintf(stderr, "%s: NDEF tag state: %d\n", options.progname, config_value);
+        status = phalTop_SetConfig(ptagop, PHAL_TOP_CONFIG_T4T_WRITE_ACCESS, PHAL_TOP_T4T_NDEF_FILE_WRITE_ACCESS);
+        if (status != PH_ERR_SUCCESS) {
+            fprintf(stderr, "%s: Error setting write access\n", options.progname);
+        }
+        status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_T4T_GET_TAG_STATE, &config_value);
+        if (status != PH_ERR_SUCCESS) {
+            fprintf(stderr, "%s: Error getting ndef tag state\n", options.progname);
+        }
+        fprintf(stderr, "%s: NDEF tag state: %d\n", options.progname, config_value);
     }
 
     if (ndef_presence) {
