@@ -280,5 +280,5 @@ DROP EVENT IF EXISTS calculate_daily_saldo;
 CREATE EVENT calculate_daily_saldo
 ON SCHEDULE EVERY 1 DAY 
 STARTS '2015-06-01 00:00:00'
-ON COMPLETION NOT PRESERVE ENABLE
+ON COMPLETION PRESERVE ENABLE
 DO call rpntts_saldo_per_day(date_format(current_date(), '%Y%m%d'));
