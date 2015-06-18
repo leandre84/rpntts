@@ -15,19 +15,23 @@ int lcd_init(void) {
 void lcd_print_idle(int lcd_handle) {
     time_t rawtime;
     struct tm *timeinfo;
-    char times[9] = { 0 };
+    static char times[9];
+    char timesn[9];
 
-    time (&rawtime);
+    time(&rawtime);
     timeinfo = localtime(&rawtime);
-    snprintf(times, 9, "%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    snprintf(timesn, 9, "%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 
-    lcd_clear(lcd_handle);
-    lcdPosition(lcd_handle, 0, 0);
-    lcdPuts(lcd_handle, "rpntts");
-    lcdPosition(lcd_handle, 8, 0);
-    lcdPuts(lcd_handle, times);
-    lcdPosition(lcd_handle, 0, 1);
-    lcdPuts(lcd_handle, "     ready");
+    if (strcmp(times, timesn) != 0) {
+        strcpy(times, timesn);
+        lcd_clear(lcd_handle);
+        lcdPosition(lcd_handle, 0, 0);
+        lcdPuts(lcd_handle, "rpntts");
+        lcdPosition(lcd_handle, 8, 0);
+        lcdPuts(lcd_handle, times);
+        lcdPosition(lcd_handle, 0, 1);
+        lcdPuts(lcd_handle, "     ready");
+    }
 }
 
 void lcd_print_user(int lcd_handle, rpnttsUser *user) {
