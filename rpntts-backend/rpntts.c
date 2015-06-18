@@ -19,7 +19,7 @@
 #define RPNTTS_DEFAULT_DB_PORT 3306 
 
 /* these are useconds */
-#define SLEEP_BETWEEN_DETECTIONS 500000
+#define SLEEP_BETWEEN_DETECTIONS 100000
 #define SLEEP_AFTER_BOOKING 3000000
 #define SLEEP_AFTER_ERROR_DISPLAYED 5000000
 
@@ -271,14 +271,14 @@ int main(int argc, char **argv) {
                                 /* Proceed with booking, we're not break/continuing the loop here */
                             } else {
                                 fprintf(stderr, "%s: Unable to look up user according to NFC text record: %d\n", options.progname, status);
-                                lcd_print_text(lcd_handle, "rpntts ERROR", "NDEF user lookup", SLEEP_AFTER_ERROR_DISPLAYED);
+                                lcd_print_text(lcd_handle, "  rpntts ERROR", "NDEF user lookup", SLEEP_AFTER_ERROR_DISPLAYED);
                                 if (options.single_run) break; else continue; 
                             }
                         }
                         else { 
                             if (options.verbose) {
                                 fprintf(stderr, "%s: NDEF record detected, but there is no text record\n", options.progname);
-                                lcd_print_text(lcd_handle, "rpntts ERROR", "NDEF user lookup", SLEEP_AFTER_ERROR_DISPLAYED);
+                                lcd_print_text(lcd_handle, "  rpntts ERROR", "NDEF user lookup", SLEEP_AFTER_ERROR_DISPLAYED);
                             }
                             if (options.single_run) break; else continue; 
                         }
@@ -287,10 +287,10 @@ int main(int argc, char **argv) {
                         if (options.verbose) {
                             fprintf(stderr, "%s: No NDEF record detected\n", options.progname);
                             if (options.quiet) {
-                                lcd_print_text(lcd_handle, "rpntts ERROR", "unknown card", SLEEP_AFTER_ERROR_DISPLAYED);
+                                lcd_print_text(lcd_handle, "  rpntts ERROR", "  unknown card", SLEEP_AFTER_ERROR_DISPLAYED);
                             }
                             else {
-                                lcd_print_text(lcd_handle, "rpntts ERROR", "unknown card", 0);
+                                lcd_print_text(lcd_handle, "  rpntts ERROR", "  unknown card", 0);
                                 espeak_Synth(ESPEAK_ERROR_UNKNOWN_CARD, sizeof(ESPEAK_ERROR_UNKNOWN_CARD), 0, espeak_position_type, 0, espeakCHARS_AUTO, NULL, NULL);
                                 espeak_Synchronize();
                             }
