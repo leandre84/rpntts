@@ -105,7 +105,7 @@ class RpnttsController extends AbstractActionController
             $timeBalance = $user->timeBalance;
             $staffNumber = $user_session->staffNumber;
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
-            $user_session->errorMessage = '';
+            #$user_session->errorMessage = '';
         } catch (\Exception $e) {
             $user_session->successMessage = '';
             $user_session->errorMessage = $e->getMessage();
