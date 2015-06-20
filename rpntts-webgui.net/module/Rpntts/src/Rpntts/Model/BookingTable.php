@@ -65,14 +65,14 @@ class BookingTable
             $this->deleteBooking($id);
             $data['pk'] = NULL;
         }
-        
-        // Format date from booking for stored procedure
-        $date = $data['timestamp'];
-        $date = preg_replace('/^(.*)\s(.*:.*)$/isum', '\1', $date);
-        $date = date('Y-m-d', strtotime($date));
-        $date = str_replace('-', '', $date);
-            
+   
         if ($this->isHolidayBooking($data['type'])) {
+            // Format date from booking for stored procedure
+            $date = $data['timestamp'];
+            $date = preg_replace('/^(.*)\s(.*:.*)$/isum', '\1', $date);
+            $date = date('Y-m-d', strtotime($date));
+            $date = str_replace('-', '', $date);
+            
             // Call stored procedure for holiday booking
             $dbAdapter = $this->tableGateway->getAdapter();
             $stmt = $dbAdapter->createStatement();
