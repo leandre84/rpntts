@@ -179,6 +179,10 @@ BEGIN
 
   SET endtime = addtime(starttime, maketime(floor(tbadjust), (tbadjust-floor(tbadjust))*60, 0));
 
+  IF starttime = endtime THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User is not working at this day according to timemodel';
+  END IF;
+
   START TRANSACTION;
     insert into booking(timestamp, type, text, user_fk) values(starttime, type, text, user);
     select last_insert_id() into pk1;
