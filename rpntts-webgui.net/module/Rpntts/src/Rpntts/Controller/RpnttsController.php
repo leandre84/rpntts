@@ -102,7 +102,11 @@ class RpnttsController extends AbstractActionController
         $timeBalance = '';
         $staffNumber = '';
         try {
-            $timeBalance = $user->timeBalance;
+            if (preg_match('/(\d+)(\.\d+)/', $user->timeBalance, $matches) === 1) {
+                $minutes = floatval('0' . ((double) $matches[2]) * 60);
+                $timeBalance = $matches[1] . ' Stunden und ' . floor($minutes) . ' Minuten';
+            }
+            $timeBalance = $timeBalance;
             $staffNumber = $user_session->staffNumber;
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
             #$user_session->errorMessage = '';
