@@ -17,7 +17,7 @@ int get_user_by_card_uid(MYSQL *mysql, char *card_uid, rpnttsUser *user) {
     strcat(sql, "' AND user.active='1' AND card.active='1'");
 
     if (options.verbose) {
-        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+        fprintf(stdout, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
     if (mysql_query(mysql, sql) != 0) {
@@ -110,7 +110,7 @@ int get_user_by_nfc_text(MYSQL *mysql, char *nfc_text, rpnttsUser *user) {
     strcat(sql, "' AND active='1'");
 
     if (options.verbose) {
-        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+        fprintf(stdout, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
     if (mysql_query(mysql, sql) != 0) {
@@ -167,7 +167,7 @@ int do_booking(MYSQL *mysql, char *user_pk) {
     }
 
     if (options.verbose) {
-        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+        fprintf(stdout, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
     return mysql_query(mysql, sql);
@@ -229,7 +229,7 @@ int do_nfc_text_mass_booking(MYSQL *mysql, char *nfc_text, char *user_pk) {
             }
 
             if (options.verbose) {
-                fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+                fprintf(stdout, "%s: Executing SQL: %s\n", options.progname, sql);
             }
             if (mysql_query(mysql, sql) != 0) {
                 if (mysql_rollback(mysql) != 0) {
@@ -263,7 +263,7 @@ int get_min_bookingtime_diff(MYSQL *mysql, char *user_pk) {
     strcat(sql, "' and timestamp < now()");
 
     if (options.verbose) {
-        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+        fprintf(stdout, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
     if (mysql_query(mysql, sql) != 0) {
@@ -300,7 +300,7 @@ int update_user_timebalance(MYSQL *mysql, rpnttsUser *user) {
     strcat(sql, "'");
 
     if (options.verbose) {
-        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+        fprintf(stdout, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
     if (mysql_query(mysql, sql) != 0) {
@@ -348,7 +348,7 @@ int call_procedure(MYSQL *mysql, char *procedure) {
     strcat(sql, procedure);
     
     if (options.verbose) {
-        fprintf(stderr, "%s: Executing SQL: %s\n", options.progname, sql);
+        fprintf(stdout, "%s: Executing SQL: %s\n", options.progname, sql);
     }
 
     return mysql_query(mysql, sql);

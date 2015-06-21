@@ -291,7 +291,7 @@ uint16_t detect_card(nxprdlibParams *params, uint8_t *card_uid, uint8_t *card_ui
     }
 
     if (options.verbose) {
-        fprintf(stderr, "%s: Found card: SAK: 0x%02X, ATQA: 0x%02X%02X\n", options.progname, sak[0], atqa[1], atqa[0]);
+        fprintf(stdout, "%s: Found card: SAK: 0x%02X, ATQA: 0x%02X%02X\n", options.progname, sak[0], atqa[1], atqa[0]);
     }
 
     (void) phpalI14443p3a_HaltA(ppalI14443p3a);
@@ -303,7 +303,7 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
     phalTop_Sw_DataParams_t *ptagop = &(params->tagop);
     phStatus_t status;
     uint8_t ndef_presence = 0;
-    uint16_t config_value = 0;
+    /* uint16_t config_value = 0; */
 
     status = phalTop_Reset(ptagop);
     if (status != PH_ERR_SUCCESS) {
@@ -320,22 +320,24 @@ uint16_t detect_ndef(nxprdlibParams *params, uint8_t tag_type) {
        return RPNTTS_NFC_DETECTNDEF_ERR_CHECKNDEF; 
     }
 
+    /*
     if (options.verbose) {
         status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_T4T_GET_TAG_STATE, &config_value);
         if (status != PH_ERR_SUCCESS) {
-            fprintf(stderr, "%s: Error getting ndef tag state\n", options.progname);
+            fprintf(stdout, "%s: Error getting ndef tag state\n", options.progname);
         }
-        fprintf(stderr, "%s: NDEF tag state: %d\n", options.progname, config_value);
+        fprintf(stdout, "%s: NDEF tag state: %d\n", options.progname, config_value);
         status = phalTop_SetConfig(ptagop, PHAL_TOP_CONFIG_T4T_WRITE_ACCESS, PHAL_TOP_T4T_NDEF_FILE_WRITE_ACCESS);
         if (status != PH_ERR_SUCCESS) {
-            fprintf(stderr, "%s: Error setting write access\n", options.progname);
+            fprintf(stdout, "%s: Error setting write access\n", options.progname);
         }
         status = phalTop_GetConfig(ptagop, PHAL_TOP_CONFIG_T4T_GET_TAG_STATE, &config_value);
         if (status != PH_ERR_SUCCESS) {
-            fprintf(stderr, "%s: Error getting ndef tag state\n", options.progname);
+            fprintf(stdout, "%s: Error getting ndef tag state\n", options.progname);
         }
-        fprintf(stderr, "%s: NDEF tag state after seting it to writeable: %d\n", options.progname, config_value);
+        fprintf(stdout, "%s: NDEF tag state after seting it to writeable: %d\n", options.progname, config_value);
     }
+    */
 
     if (ndef_presence) {
         return RPNTTS_NFC_DETECTNDEF_NDEFPRESENT;
@@ -399,11 +401,11 @@ uint16_t get_ndef_text(nxprdlibParams *params, uint8_t tag_type, char *ndef_text
     }
 
     if (options.verbose) {
-        fprintf(stderr, "%s: NDEF Record dump: ", options.progname);
+        fprintf(stdout, "%s: NDEF Record dump: ", options.progname);
         for (i = 0; i < ndef_record_length; i++) {
-            fprintf(stderr, "%02X ", ndef_record[i]);
+            fprintf(stdout, "%02X ", ndef_record[i]);
         }
-        fprintf(stderr, "\n");
+        fprintf(stdout, "\n");
     }
 
     /*
@@ -490,19 +492,19 @@ uint16_t do_discovery_loop(nxprdlibParams *params) {
                 }
                 if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE1)) {
                     if (options.verbose) {
-                        fprintf(stderr, "%s: detected type 1 tag\n", options.progname);
+                        fprintf(stdout, "%s: detected type 1 tag\n", options.progname);
                     }
                     return RPNTTS_NFC_DISCLOOP_DETECTED_T1T;
                 }
                 else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE2)) {
                     if (options.verbose) {
-                        fprintf(stderr, "%s: detected type 2 tag\n", options.progname);
+                        fprintf(stdout, "%s: detected type 2 tag\n", options.progname);
                     }
                     return RPNTTS_NFC_DISCLOOP_DETECTED_T2T;
                 }
                 else if (PHAC_DISCLOOP_CHECK_ANDMASK(config_value, PHAC_DISCLOOP_TYPEA_DETECTED_TAG_TYPE4A)) {
                     if (options.verbose) {
-                        fprintf(stderr, "%s: detected type 4 tag\n", options.progname);
+                        fprintf(stdout, "%s: detected type 4 tag\n", options.progname);
                     }
                     return RPNTTS_NFC_DISCLOOP_DETECTED_T4T;
                 }
