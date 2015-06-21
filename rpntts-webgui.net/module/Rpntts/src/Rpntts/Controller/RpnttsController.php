@@ -183,7 +183,11 @@ class RpnttsController extends AbstractActionController
                     $user_session->successMessage = 'Buchung erfolgreich gespeichert.';
                 } catch (\Exception $e) {
                     $user_session->successMessage = '';
-                    $user_session->errorMessage = $e->getMessage();
+                    if (strpos($e->getMessage(), 'Statement could not be executed (23000 - 1062 - Duplicate entry') === FALSE) {
+                        $user_session->errorMessage = $e->getMessage();
+                    } else {
+                        $user_session->errorMessage = 'Buchung mit selbem Zeitstempel existiert bereits.';
+                    }
                 }
                 
                 // Redirect to list of bookings
