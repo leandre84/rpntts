@@ -81,9 +81,14 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
         // Handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.action_add:
-                // Entry Activity ohne ID, dann ID 0, somit neuer Eintrag.
-                Intent intent = new Intent(this, EntryActivity.class);
-                startActivity(intent);
+                if (db.getSetting("id").getValue().equals("") || db.getSetting("password").getValue().equals("")) {
+                    // Showing a toast message to the user
+                    Toast.makeText(getApplicationContext(), getString(R.string.info_add_id_and_pw), Toast.LENGTH_SHORT).show();
+                } else {
+                    // Entry Activity ohne ID, dann ID 0, somit neuer Eintrag.
+                    Intent intent = new Intent(this, EntryActivity.class);
+                    startActivity(intent);
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -200,10 +205,10 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
     // method to handle the click event when a item in the list is clicked
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        //access to the entry with the item position
+        // access to the entry with the item position
         final Entry entry = (Entry) entryListView.getAdapter().getItem(position);
         if (entry.getId() == -1) return;
-        //swipeDetected is true if this click is a swipe
+        // swipeDetected is true if this click is a swipe
         if (swipeDetector.swipeDetected()) {
             // Wenn geswiped von L nach R, dann löschen und populaten.
             if (swipeDetector.getAction() == SwipeDetector.Action.LR) {
@@ -213,12 +218,12 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
             }
         } else {
             if (!entry.isSent()) {
-                //create a new intent to change the activity
+                // create a new intent to change the activity
                 Intent intent = new Intent(this, EntryActivity.class);
                 // Wenn nicht gesendet, und man drückt drauf zu bearbeiten --> Intent
-                //adding a parameter id to get access to the correct object in the database in EntryActivity
+                // adding a parameter id to get access to the correct object in the database in EntryActivity
                 intent.putExtra("entryPosition", entry.getId());
-                //start the window
+                // start the window
                 startActivity(intent);
             } else {
                 // Wenn Eintrag gesendet, dann kann man nicht mehr bearbeiten
@@ -238,6 +243,7 @@ public class TimeOverviewActivity extends BaseActivity implements View.OnClickLi
         startActivity(intent);
     }
 }
+
 
 
 
