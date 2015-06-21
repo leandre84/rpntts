@@ -102,11 +102,29 @@ class RpnttsController extends AbstractActionController
         $timeBalance = '';
         $staffNumber = '';
         try {
-            if (preg_match('/(\d+)(\.\d+)/', $user->timeBalance, $matches) === 1) {
+            if (preg_match('/^(\d+)(\.\d+)$/', $user->timeBalance, $matches) === 1) {
+                $hours = $matches[1];
+                if (strlen($hours)<=1) {
+                    $hours = '0' . $hours;
+                }
                 $minutes = floatval('0' . ((double) $matches[2]) * 60);
-                $timeBalance = $matches[1] . ' Stunden und ' . floor($minutes) . ' Minuten';
+                $minutes = floor($minutes);
+                if (strlen($minutes<=1)) {
+                    $minutes = '0' . $minutes;
+                }
+                $timeBalance = '<font color="green">' . $hours . ':' . $minutes . '</font>';
+            } elseif (preg_match('/^-(\d+)(\.\d+)$/', $user->timeBalance, $matches) === 1) {
+                $hours = $matches[1];
+                if (strlen($hours)<=1) {
+                    $hours = '0' . $hours;
+                }
+                $minutes = floatval('0' . ((double) $matches[2]) * 60);
+                $minutes = floor($minutes);
+                if (strlen($minutes<=1)) {
+                    $minutes = '0' . $minutes;
+                }
+                $timeBalance = '<font color="red">' . '-' . $hours . ':' . $minutes . ' (negativer Saldo)</font>';
             }
-            $timeBalance = $timeBalance;
             $staffNumber = $user_session->staffNumber;
             $bookings = $this->getBookingTable()->getBookingsMatchingUserId($user_session->userPrimaryKey);
             #$user_session->errorMessage = '';

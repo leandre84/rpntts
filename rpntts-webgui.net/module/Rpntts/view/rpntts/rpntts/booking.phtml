@@ -9,7 +9,7 @@ $this->headTitle($title);
     <?php echo '<strong>Eingeloggt als Benutzer: </strong>' . $this->escapeHtml($userName);?>
     &nbsp;<a href="<?php echo $this->url('logout',
             array('action'=>'logout'));?>">Logout</a>
-    <?php echo ' | <strong>Saldo: </strong>' . $this->escapeHtml($timeBalance);?>
+    <?php echo ' | <strong>Saldo in Stunden: </strong>' . $timeBalance;?>
     <?php echo ' | <strong>Personalnummer: </strong>' . $this->escapeHtml($staffNumber);?>
 </p>
 <p>
