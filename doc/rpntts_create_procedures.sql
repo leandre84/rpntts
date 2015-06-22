@@ -216,7 +216,7 @@ BEGIN
   DECLARE tbsunday FLOAT;
   
   DECLARE saldo_cursor CURSOR FOR
-  select user.pk, monday, tuesday, wednesday, thursday, friday, saturday, sunday from user, timemodel where timemodel_fk=timemodel.pk and exists (select 1 from day where day=str_to_date(forday, '%Y%m%d') and computed=FALSE);
+  select user.pk, monday, tuesday, wednesday, thursday, friday, saturday, sunday from user, timemodel where timemodel_fk=timemodel.pk and active=1 and exists (select 1 from day where day=str_to_date(forday, '%Y%m%d') and computed=FALSE);
 
   DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET loop_finished = TRUE;
