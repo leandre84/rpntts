@@ -12,6 +12,7 @@ class Booking implements InputFilterAwareInterface
     public $type;
     public $text;
     public $userForeignKey;
+    public $computed;
     protected $inputFilter;
 
     public function exchangeArray($data)
@@ -21,6 +22,7 @@ class Booking implements InputFilterAwareInterface
         $this->type = (isset($data['type'])) ? $data['type'] : NULL;
         $this->text = (isset($data['text'])) ? $data['text'] : NULL;
         $this->userForeignKey = (isset($data['user_fk'])) ? $data['user_fk'] : NULL;
+        $this->computed = (isset($data['computed'])) ? $data['computed'] : NULL;
     }
     
     public function getArrayCopy()

@@ -35,6 +35,7 @@ $this->headTitle($title);
     <th>Typ</th>
     <th>Beschreibung</th>
     <th>Benutzer-ID</th>
+    <th>Verarbeitet</th>
     <th>&nbsp;</th>
 </tr>
 <?php foreach ($bookings as $booking) : ?>
@@ -44,6 +45,7 @@ $this->headTitle($title);
     <td><?php echo $this->escapeHtml($booking->type);?></td>
     <td><?php echo $this->escapeHtml($booking->text);?></td>
     <td><?php echo $this->escapeHtml($booking->userForeignKey);?></td>
+    <td><?php echo $this->escapeHtml($booking->computed);?></td>
     <td>
         <a href="<?php echo $this->url('booking',
             array('action'=>'edit', 'id' => $booking->primaryKey));?>">Bearbeiten&nbsp;</a>
