@@ -2,6 +2,7 @@
 namespace Rpntts\Model;
 
 use Zend\Db\TableGateway\TableGateway;
+use Zend\Db\Sql;
 
 class BookingTable
 {
@@ -27,13 +28,11 @@ class BookingTable
         if (!$row) {
             throw new \Exception('Keine Buchungen für Benutzerkennung '  . $id);
         }
-        
-        $rowSet = $this->tableGateway->select(array('user_fk' => $id));
-        
-        /* $dbAdapter = $this->tableGateway->getAdapter();
-        $query = "SELECT * FROM booking WHERE user_fk = " . $id . " ORDER BY timestamp DESC";
-        $statement = $dbAdapter->query($query);
-        $rowSet = $this->tableGateway->select($statement); */   
+
+        $rowSet = $this->tableGateway->select(function (Sql\Select $select) use ($id) {
+            $select->where->equalTo('user_fk', "$id");
+            $select->order('timestamp');
+        });
         
         return $rowSet;
     }
